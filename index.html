@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BTC Scenario Dashboard</title>
+
+<link rel="icon" href="https://cdn-icons-png.flaticon.com/512/5968/5968260.png" type="image/png">
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  background-color: #111;
+  color: #eee;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background-color: #222;
+  border-bottom: 2px solid #444;
+}
+
+.navbar a {
+  color: #eee;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.chart, .scenario, .zones, .footer, .indicators {
+  margin: 20px;
+  padding: 15px;
+  border-radius: 10px;
+  background-color: #222;
+}
+
+.status {
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-weight: bold;
+}
+
+.status-waiting { background-color: gray; }
+.status-active { background-color: #0066ff; }
+.status-completed { background-color: green; }
+.status-invalidated { background-color: red; }
+
+.bias-line {
+  margin: 10px 0;
+  padding: 10px 14px;
+  border-radius: 6px;
+  background-color: #444;
+  font-weight: bold;
+  font-size: 15px;
+}
+
+.overall-status {
+  margin: 8px 0;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background-color: #333;
+  font-weight: bold;
+  color: orange;
+}
+
+.pullback-box {
+  margin: 8px 0;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background-color: #333;
+  font-weight: bold;
+  color: yellow;
+}
+
+.zones h3 {
+  margin-top: 0;
+}
+
+.zones div {
+  margin: 6px 0;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background-color: #333;
+  font-weight: bold;
+}
+
+button {
+  margin-top: 12px;
+  margin-right: 10px;
+  padding: 10px 16px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  background-color: #0000;
+  color: #eee;
+  font-weight: bold;
+}
+
+button:hover { 
+  background-color: #f4f4f4; 
+}
+
+.footer {
+  text-align: center;
+  font-size: 12px;
+  color: #aaa;
+  margin-bottom: 30px;
+}
+
+/* RSI Horizontal Progress Bar */
+.rsi-container {
+  margin-top: 10px;
+  width: 100%;
+  max-width: 300px;
+}
+
+.rsi-bar {
+  position: relative;
+  height: 20px;
+  width: 100%;
+  border: 2px solid #444;
+  background: #111;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.rsi-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 0%;
+  background: yellow;
+  transition: width 0.4s ease, background 0.3s ease;
+}
+</style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div style="display:flex; align-items:center; gap:10px;">
+    <img src="https://cdn-icons-png.flaticon.com/512/5968/5968260.png"
+         style="width:28px; height:28px;">
+    <h2>BTC / USDT – Trading Scalp Signal</h2>
+  </div>
+
+  <nav class="navbar">
+    <a href="link/about.html">Link/USD</a>
+  </nav>
+</div>
+
+<!-- SOUND BUTTON -->
+<button id="muteBtn">🔊 Sound ON</button>
+
+<audio id="tradeSound" preload="auto">
+  <source src="modestas123123-cash-register-kaching-sound-effect-125042.mp3" type="audio/mpeg">
+</audio>
+
+<!-- CHART -->
+<div class="chart">
+  <iframe
+    src="https://s.tradingview.com/widgetembed/?symbol=BINANCE:BTCUSDT&interval=5&theme=dark"
+    style="width:100%; height:700px; border:none;">
+  </iframe>
+</div>
+<!...Aqui...>
+
+<!-- SCENARIO -->
+<div class="scenario">
+
+  <div id="biasLine" class="bias-line">
+    BTC/USDT - WAITING
+  </div>
+
+  <div id="overallStatus" class="overall-status">
+    Overall Status: Waiting...
+  </div>
+
+  <div class="pullback-box">
+    Short Scalp Status: <span id="pullbackStatus">Neutral...</span>
+  </div>
+
+  <p>Status:
+    <span id="status" class="status status-waiting">Waiting</span>
+  </p>
+
+  <p id="priceLine">BTC Price: —</p>
+
+  <div id="alertBox"></div>
+</div>
+
+<!-- ZONES -->
+<div class="zones">
+  <h3>Entry & Target Levels</h3>
+
+  <div id="entryZone">Entry Price: —</div>
+  <div id="stopLoss">Stop Loss: —</div>
+  <div id="tp1">TP1: —</div>
+  <div id="tp2">TP2: —</div>
+  <div id="tp3">TP3: —</div>
+
+  <button onclick="setTrend('up')">Check Uptrend</button>
+  <button onclick="setTrend('down')">Check Downtrend</button>
+</div>
+
+
+
+<!-- INDICATORS -->
+<div class="indicators">
+  <h3>TECHNICAL INDICATORS</h3>
+
+  <p>RSI (14): <span id="rsiValue">—</span></p>
+
+  <!-- RSI Horizontal Progress Bar -->
+  <div class="rsi-container">
+    <div class="rsi-bar">
+      <div id="rsiFill" class="rsi-fill"></div>
+    </div>
+  </div>
+
+  <p>MACD Histogram: <span id="macdValue">—</span></p>
+  <p>BB Upper: <span id="bbUpper">—</span></p>
+  <p>BB Lower: <span id="bbLower">—</span></p>
+</div>
+
+
+
+
+
+<div class="footer">
+  Educational only. No financial advice.
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

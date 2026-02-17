@@ -1,0 +1,37 @@
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px; /* spacing between blocks */
+}
+
+.block {
+  flex: 1 1 200px; /* flexible width, min 200px */
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: #f9f9f9;
+}
+
+
+.rsi-container {
+  margin-top: 10px;
+  width: 60px;
+}
+
+.rsi-bar {
+  position: relative;
+  height: 150px;
+  width: 100%;
+  border: 2px solid #444;
+  background: #111;
+  overflow: hidden;
+}
+
+.rsi-fill {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 0%;
+  background: yellow;
+  transition: height 0.4s ease, background 0.3s ease;
+}
