@@ -4,262 +4,303 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BTC Scenario Dashboard</title>
-
 <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/5968/5968260.png" type="image/png">
 
 <style>
-body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  background-color: #111;
-  color: #eee;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 20px;
-  background-color: #222;
-  border-bottom: 2px solid #444;
-}
-
-.navbar a {
-  color: #eee;
-  text-decoration: none;
-  font-weight: bold;
-}
-
-.chart, .scenario, .zones, .footer, .indicators {
-  margin: 20px;
-  padding: 15px;
-  border-radius: 10px;
-  background-color: #222;
-}
-
-.status {
-  padding: 5px 12px;
-  border-radius: 6px;
-  font-weight: bold;
-}
-
-.status-waiting { background-color: gray; }
-.status-active { background-color: #0066ff; }
-.status-completed { background-color: green; }
-.status-invalidated { background-color: red; }
-
-.bias-line {
-  margin: 10px 0;
-  padding: 10px 14px;
-  border-radius: 6px;
-  background-color: #444;
-  font-weight: bold;
-  font-size: 15px;
-}
-
-.overall-status {
-  margin: 8px 0;
-  padding: 8px 12px;
-  border-radius: 6px;
-  background-color: #333;
-  font-weight: bold;
-  color: orange;
-}
-
-.pullback-box {
-  margin: 8px 0;
-  padding: 8px 12px;
-  border-radius: 6px;
-  background-color: #333;
-  font-weight: bold;
-  color: yellow;
-}
-
-.zones h3 {
-  margin-top: 0;
-}
-
-.zones div {
-  margin: 6px 0;
-  padding: 10px 12px;
-  border-radius: 6px;
-  background-color: #333;
-  font-weight: bold;
-}
-
-button {
-  margin-top: 12px;
-  margin-right: 10px;
-  padding: 10px 16px;
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
-  background-color: #0000;
-  color: #eee;
-  font-weight: bold;
-}
-
-button:hover { 
-  background-color: #f4f4f4; 
-}
-
-.footer {
-  text-align: center;
-  font-size: 12px;
-  color: #aaa;
-  margin-bottom: 30px;
-}
-
-/* RSI Horizontal Progress Bar */
-.rsi-container {
-  margin-top: 10px;
-  width: 100%;
-  max-width: 300px;
-}
-
-.rsi-bar {
-  position: relative;
-  height: 20px;
-  width: 100%;
-  border: 2px solid #444;
-  background: #111;
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.rsi-fill {
-  position: absolute;
-  left: 0;
-  top: 0;
-  height: 100%;
-  width: 0%;
-  background: yellow;
-  transition: width 0.4s ease, background 0.3s ease;
-}
+body { font-family: Arial, sans-serif; margin: 0; background:#111; color:#eee; }
+.main-container { display:flex; gap:20px; padding:20px; }
+.left-panel { width:420px; display:flex; flex-direction:column; gap:20px; }
+.right-panel { flex:1; }
+.header { display:flex; justify-content:space-between; align-items:center; padding:15px 20px; background:#222; border-bottom:2px solid #444; }
+.chart, .scenario, .zones, .footer, .indicators { padding:15px; border-radius:10px; background:#222; }
+.bias-line { margin:10px 0; padding:10px 14px; border-radius:6px; background:#444; font-weight:bold; }
+.overall-status { margin:8px 0; padding:8px 12px; border-radius:6px; background:#333; font-weight:bold; color:orange; }
+.pullback-box { margin:8px 0; padding:8px 12px; border-radius:6px; background:#333; font-weight:bold; color:yellow; }
+.zones div { margin:6px 0; padding:10px 12px; border-radius:6px; background:#333; font-weight:bold; }
+button { padding:10px 15px; margin:5px; border-radius:6px; border:none; cursor:pointer; font-weight:bold; }
+.buy { background:#00c853; color:white; }
+.sell { background:#d50000; color:white; }
+.reset { background:#555; color:white; }
+.tp-hit { color:#00ff66; }
+.sl-hit { color:#ff4444; }
+.rsi-bar { height:20px; width:100%; border:2px solid #444; background:#111; border-radius:6px; overflow:hidden; }
+.rsi-fill { height:100%; width:0%; background:yellow; transition:width 0.4s ease; }
+.footer { text-align:center; font-size:12px; color:#aaa; margin:20px; }
 </style>
 </head>
-
 <body>
 
-<!-- HEADER -->
 <div class="header">
-  <div style="display:flex; align-items:center; gap:10px;">
-    <img src="https://cdn-icons-png.flaticon.com/512/5968/5968260.png"
-         style="width:28px; height:28px;">
-    <h2>BTC / USDT – Trading Scalp Signal</h2>
-  </div>
-
-  <nav class="navbar">
-    <a href="link/about.html">Link/USD</a>
-  </nav>
+  <h2>BTC / USDT – Trading Scalp Signal</h2>
 </div>
 
-<!-- SOUND BUTTON -->
-<button id="muteBtn">🔊 Sound ON</button>
+<div class="main-container">
+<div class="left-panel">
 
-<audio id="tradeSound" preload="auto">
-  <source src="modestas123123-cash-register-kaching-sound-effect-125042.mp3" type="audio/mpeg">
-</audio>
-
-<!-- CHART -->
-<div class="chart">
-  <iframe
-    src="https://s.tradingview.com/widgetembed/?symbol=BINANCE:BTCUSDT&interval=5&theme=dark"
-    style="width:100%; height:700px; border:none;">
-  </iframe>
-</div>
-<!...Aqui...>
-
-<!-- SCENARIO -->
 <div class="scenario">
-
-  <div id="biasLine" class="bias-line">
-    BTC/USDT - WAITING
-  </div>
-
-  <div id="overallStatus" class="overall-status">
-    Overall Status: Waiting...
-  </div>
-
-  <div class="pullback-box">
-    Short Scalp Status: <span id="pullbackStatus">Neutral...</span>
-  </div>
-
-  <p>Status:
-    <span id="status" class="status status-waiting">Waiting</span>
-  </p>
-
+  <div id="biasLine" class="bias-line">BTC/USDT - WAITING</div>
+  <div id="overallStatus" class="overall-status">Overall Status: Waiting...</div>
+  <div class="pullback-box">Short Scalp Status: <span id="pullbackStatus">Neutral...</span></div>
+  <div id="scalpSL" style="margin-top:6px; font-weight:bold;">Stop Loss: —</div>
   <p id="priceLine">BTC Price: —</p>
-
-  <div id="alertBox"></div>
 </div>
 
-<!-- ZONES -->
 <div class="zones">
-  <h3>Entry & Target Levels</h3>
-
-  <div id="entryZone">Entry Price: —</div>
-  <div id="stopLoss">Stop Loss: —</div>
+  <h3>BTC Trade Simulator</h3>
+  <input type="number" id="manualEntry" placeholder="Manual Entry (optional)" /><br><br>
+  <button class="buy" onclick="openTrade('BUY')">BUY Long</button>
+  <button class="sell" onclick="openTrade('SELL')">SELL Short</button>
+  <button class="reset" onclick="resetTrade()">Reset</button>
+  <hr>
+  <div id="tradeStatus">No Active Trade</div>
+  <div id="entry">Entry: —</div>
+  <div id="stop">Stop Loss: —</div>
   <div id="tp1">TP1: —</div>
   <div id="tp2">TP2: —</div>
   <div id="tp3">TP3: —</div>
-
-  <button onclick="setTrend('up')">Check Uptrend</button>
-  <button onclick="setTrend('down')">Check Downtrend</button>
 </div>
 
-
-
-<!-- INDICATORS -->
 <div class="indicators">
   <h3>TECHNICAL INDICATORS</h3>
-
   <p>RSI (14): <span id="rsiValue">—</span></p>
-
-  <!-- RSI Horizontal Progress Bar -->
-  <div class="rsi-container">
-    <div class="rsi-bar">
-      <div id="rsiFill" class="rsi-fill"></div>
-    </div>
-  </div>
-
-  <p>MACD Histogram: <span id="macdValue">—</span></p>
-  <p>BB Upper: <span id="bbUpper">—</span></p>
-  <p>BB Lower: <span id="bbLower">—</span></p>
+  <div class="rsi-bar"><div id="rsiFill" class="rsi-fill"></div></div>
 </div>
 
-
-
-
-
-<div class="footer">
-  Educational only. No financial advice.
 </div>
+
+<div class="right-panel">
+  <iframe src="https://s.tradingview.com/widgetembed/?symbol=BINANCE:BTCUSDT&interval=5&theme=dark"
+          style="width:100%; height:900px; border:none;"></iframe>
+</div>
+</div>
+
+<div style="width:300px; height:100px; background:#111; color:white; font-family:Arial; padding:5px;">
+    <strong>BTC/USDT</strong> - 1D Trend
+    <svg id="chart" width="300" height="60" style="background:#111;">
+        <polyline id="line" style="fill:none;stroke:#00ff99;stroke-width:2" />
+        <polygon id="area" style="fill:rgba(0,255,153,0.1);" />
+    </svg>
+</div>
+
+<script>
+async function loadBTCData() {
+    const response = await fetch(
+        "https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=30"
+    );
+    const data = await response.json();
+    const prices = data.map(candle => parseFloat(candle[4]));
+    drawChart(prices);
+}
+
+function drawChart(prices) {
+    const width = 300;
+    const height = 60;
+    const max = Math.max(...prices);
+    const min = Math.min(...prices);
+
+    const points = prices.map((price, index) => {
+        const x = (index / (prices.length - 1)) * width;
+        const y = height - ((price - min) / (max - min)) * height;
+        return `${x},${y}`;
+    });
+
+    document.getElementById("line").setAttribute("points", points.join(" "));
+    document.getElementById("area")
+        .setAttribute("points", points.join(" ") + ` ${width},${height} 0,${height}`);
+}
+
+loadBTCData();
+</script>
+
+<div class="footer">Educational only. No financial advice.</div>
+
+<script>
+let currentPrice = null;
+let trade = null;
+
+let lastScalp = "Neutral...";
+let confirmCount = 0;
+const confirmNeeded = 3;
+
+const symbol = "BTCUSDT";
+const interval = "5m";
+const rsiPeriod = 14;
+const maPeriod = 200;
+
+function format(n){
+  return '$'+Number(n).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+async function fetchPrice(){
+  try{
+    const res = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`);
+    const data = await res.json();
+    currentPrice = parseFloat(data.price);
+    document.getElementById("priceLine").textContent="BTC Price: "+format(currentPrice);
+    checkTargets();
+  }catch(e){console.error(e);}
+}
+setInterval(fetchPrice,5000);
+fetchPrice();
+
+async function fetchIndicators(){
+  try{
+    const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${maPeriod+1}`);
+    const data = await res.json();
+
+    const closes = data.map(candle => parseFloat(candle[4]));
+    const rsi = calculateRSI(closes.slice(-15), rsiPeriod);
+    const ma200 = calculateMA(closes, maPeriod);
+    const price = closes[closes.length - 1];
+
+    updateRSIUI(rsi);
+    updateScalp(rsi, ma200, price);
+
+  }catch(e){console.error(e);}
+}
+
+function calculateRSI(closes, period){
+  let gains = 0, losses = 0;
+  for(let i = 1; i <= period; i++){
+    const diff = closes[i] - closes[i-1];
+    if(diff >= 0) gains += diff;
+    else losses += Math.abs(diff);
+  }
+  const avgGain = gains / period;
+  const avgLoss = losses / period;
+  if(avgLoss === 0) return 100;
+  const rs = avgGain / avgLoss;
+  return 100 - (100 / (1 + rs));
+}
+
+function calculateMA(closes, period){
+  if(closes.length < period) return null;
+  const slice = closes.slice(-period);
+  return slice.reduce((a,b)=>a+b,0) / period;
+}
+
+function updateRSIUI(rsi){
+  const rounded = Math.round(rsi);
+  document.getElementById("rsiValue").textContent = rounded;
+  document.getElementById("rsiFill").style.width = rounded + "%";
+  document.getElementById("rsiFill").style.background =
+    rounded < 30 ? "#00ff66" :
+    rounded > 70 ? "#ff4444" : "yellow";
+}
+
+// ======= SCALP LOGIC WITH SCALP STOP LOSS =======
+function updateScalp(rsi, ma200, price){
+  if(!ma200) return;
+
+  let newSignal="Neutral...";
+  let overall="";
+  let color="orange";
+
+  if(price < ma200){
+    overall="Overall Status: Bearish (Below MA200)";
+    color="red";
+    if(rsi > 60) newSignal="Sell Short";
+  } else {
+    overall="Overall Status: Bullish (Above MA200)";
+    color="lime";
+    if(rsi < 40) newSignal="Buy Long";
+  }
+
+  if(newSignal !== lastScalp){
+    confirmCount++;
+    if(confirmCount >= confirmNeeded){
+
+      lastScalp = newSignal;
+
+      document.getElementById("pullbackStatus").textContent=newSignal;
+      document.getElementById("overallStatus").textContent=overall;
+      document.getElementById("overallStatus").style.color=color;
+
+      // === SCALP STOP LOSS FROM LAST CLOSED CANDLE ===
+      fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=2`)
+      .then(res => res.json())
+      .then(data => {
+        const lastClosed = data[0]; // previous candle
+        const high = parseFloat(lastClosed[2]);
+        const low  = parseFloat(lastClosed[3]);
+
+        let scalpStop = "—";
+
+        if(newSignal === "Sell Short"){
+          scalpStop = high;
+        }
+        if(newSignal === "Buy Long"){
+          scalpStop = low;
+        }
+
+        document.getElementById("scalpSL").textContent =
+          "Stop Loss: " + (scalpStop !== "—" ? format(scalpStop) : "—");
+      });
+
+      confirmCount=0;
+    }
+  } else {
+    confirmCount=0;
+  }
+}
+
+// ======= TRADE SIMULATOR =======
+async function openTrade(type){
+  if(!currentPrice) return;
+
+  const manual=parseFloat(document.getElementById("manualEntry").value);
+  const entry=manual||currentPrice;
+
+  const risk=0.005,tp1p=0.0103,tp2p=0.0209,tp3p=0.0315;
+  trade={
+    type,entry,
+    stop:type==="BUY"?entry*(1-risk):entry*(1+risk),
+    tp1:type==="BUY"?entry*(1+tp1p):entry*(1-tp1p),
+    tp2:type==="BUY"?entry*(1+tp2p):entry*(1-tp2p),
+    tp3:type==="BUY"?entry*(1+tp3p):entry*(1-tp3p),
+    tp1Hit:false,tp2Hit:false,tp3Hit:false,closed:false
+  };
+  renderTrade();
+}
+
+function renderTrade(){
+  document.getElementById("tradeStatus").textContent="Active Trade: "+trade.type;
+  document.getElementById("entry").textContent="Entry: "+format(trade.entry);
+  document.getElementById("stop").textContent="Stop Loss: "+format(trade.stop);
+  document.getElementById("tp1").textContent="TP1: "+format(trade.tp1);
+  document.getElementById("tp2").textContent="TP2: "+format(trade.tp2);
+  document.getElementById("tp3").textContent="TP3: "+format(trade.tp3);
+}
+
+function checkTargets(){
+  if(!trade||trade.closed||!currentPrice) return;
+  if(trade.type==="BUY"){
+    if(currentPrice<=trade.stop) closeTrade("STOP LOSS HIT","sl-hit");
+    if(currentPrice>=trade.tp3&&!trade.tp3Hit){trade.tp3Hit=true;closeTrade("TP3 HIT","tp-hit");}
+  }else{
+    if(currentPrice>=trade.stop) closeTrade("STOP LOSS HIT","sl-hit");
+    if(currentPrice<=trade.tp3&&!trade.tp3Hit){trade.tp3Hit=true;closeTrade("TP3 HIT","tp-hit");}
+  }
+}
+
+function closeTrade(text,cls){
+  trade.closed=true;
+  const el=document.getElementById("tradeStatus");
+  el.textContent=text;
+  el.classList.add(cls);
+}
+
+function resetTrade(){
+  trade=null;
+  document.getElementById("tradeStatus").textContent="No Active Trade";
+  document.getElementById("entry").textContent="Entry: —";
+  document.getElementById("stop").textContent="Stop Loss: —";
+  document.getElementById("tp1").textContent="TP1: —";
+  document.getElementById("tp2").textContent="TP2: —";
+  document.getElementById("tp3").textContent="TP3: —";
+}
+</script>
 
 <script src="script.js"></script>
-
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
