@@ -1,3 +1,4 @@
+
 /* ========================= 
    DATA STORAGE
 ========================= */
@@ -23,7 +24,6 @@ let currentStatus = 'waiting';
 let shortScalpSignal = 'Neutral';
 let lastPrice = null;
 let entryPrice = null;
-let scalpSL = null;
 
 /* =========================
    SOUND SYSTEM
@@ -32,6 +32,7 @@ const tradeSound = document.getElementById('tradeSound');
 const muteBtn = document.getElementById('muteBtn');
 
 let soundEnabled = true;
+
 if (muteBtn) {
   muteBtn.addEventListener('click', () => {
     soundEnabled = !soundEnabled;
@@ -40,7 +41,9 @@ if (muteBtn) {
 }
 
 function playTradeSound() {
-  if (!soundEnabled || !tradeSound) return;
+  if (!soundEnabled) return;
+  if (!tradeSound) return;
+
   tradeSound.currentTime = 0;
   tradeSound.play().catch(() => {});
 }
@@ -52,14 +55,13 @@ const priceLine = document.getElementById('priceLine');
 const biasLine = document.getElementById('biasLine');
 const overallStatusEl = document.getElementById('overallStatus');
 const pullbackStatusEl = document.getElementById('pullbackStatus');
-const scalpSLEl = document.getElementById('scalpSL');
 const statusEl = document.getElementById('status');
 
 const rsiEl = document.getElementById('rsiValue');
 const macdEl = document.getElementById('macdValue');
 const bbUpperEl = document.getElementById('bbUpper');
 const bbLowerEl = document.getElementById('bbLower');
-const rsiFill = document.getElementById('rsiFill'); 
+const rsiFill = document.getElementById('rsiFill'); // ✅ horizontal bar
 
 /* =========================
    HELPERS
@@ -98,7 +100,9 @@ function TEMA(values, period = 9) {
   const ema1 = EMA(values, period);
   const ema2 = EMA(ema1, period);
   const ema3 = EMA(ema2, period);
-  return 3 * ema1[ema1.length - 1] - 3 * ema2[ema2.length - 1] + ema3[ema3.length - 1];
+  return 3 * ema1[ema1.length - 1]
+       - 3 * ema2[ema2.length - 1]
+       + ema3[ema3.length - 1];
 }
 
 /* =========================
@@ -126,51 +130,74 @@ function calculateRSI(closes, period = 14) {
 
 function calculateMACD(closes) {
   if (closes.length < 26) return null;
+
   const ema12 = EMA(closes, 12);
   const ema26 = EMA(closes, 26);
+
   const macdArray = [];
   for (let i = 0; i < ema12.length; i++) {
     if (ema26[i] !== undefined) {
       macdArray.push(ema12[i] - ema26[i]);
     }
   }
+
   const signal = EMA(macdArray, 9);
-  return macdArray[macdArray.length - 1] - signal[signal.length - 1];
+  const histogram =
+    macdArray[macdArray.length - 1] -
+    signal[signal.length - 1];
+
+  return histogram;
 }
 
 function calculateBollinger(closes, period = 20) {
   if (closes.length < period) return null;
+
   const slice = closes.slice(-period);
   const mean = slice.reduce((a, b) => a + b, 0) / period;
   const variance = slice.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / period;
   const stdDev = Math.sqrt(variance);
-  return { upper: mean + 2 * stdDev, lower: mean - 2 * stdDev };
+
+  return {
+    upper: mean + (2 * stdDev),
+    lower: mean - (2 * stdDev)
+  };
 }
 
 function updateIndicators() {
-  if (candles1m.length < 14) return; // minimum for RSI
-  let closes = candles1m.map(c => c.close);
-  if (current1m) closes.push(current1m.close); // include forming candle
+  if (candles1m.length < 30) return;
+
+  const closes = candles1m.map(c => c.close);
 
   const rsi = calculateRSI(closes);
   const macd = calculateMACD(closes);
   const bb = calculateBollinger(closes);
 
+  // ===== RSI =====
   if (rsiEl && rsi !== null) {
     rsiEl.textContent = rsi.toFixed(2);
-    rsiEl.style.color = rsi < 30 ? '#00ff66' : rsi > 70 ? '#ff4d4d' : 'white';
+
+    rsiEl.style.color =
+      rsi < 30 ? '#00ff66' :
+      rsi > 70 ? '#ff4d4d' : 'white';
+
+    // ✅ Horizontal progress bar
     if (rsiFill) {
-      rsiFill.style.width = rsi + "%";
-      rsiFill.style.height = "100%";
-      rsiFill.style.background = rsi < 30 ? '#00ff66' : rsi > 70 ? '#ff4d4d' : 'yellow';
+      rsiFill.style.width = rsi + "%"; // left-to-right fill
+      rsiFill.style.height = "100%"; // full bar height
+
+      if (rsi < 30) rsiFill.style.background = '#00ff66';
+      else if (rsi > 70) rsiFill.style.background = '#ff4d4d';
+      else rsiFill.style.background = 'yellow';
     }
   }
 
+  // ===== MACD =====
   if (macdEl && macd !== null) {
     macdEl.textContent = macd.toFixed(2);
     macdEl.style.color = macd >= 0 ? '#00ff66' : '#ff4d4d';
   }
 
+  // ===== Bollinger =====
   if (bb && bbUpperEl && bbLowerEl) {
     bbUpperEl.textContent = format(bb.upper);
     bbLowerEl.textContent = format(bb.lower);
@@ -178,7 +205,7 @@ function updateIndicators() {
 }
 
 /* =========================
-   MARKET DATA
+   MARKET DATA (BTC)
 ========================= */
 async function fetchBTC() {
   try {
@@ -200,6 +227,7 @@ function update5mCandle(price) {
     current5m = { start: now, open: price, high: price, low: price, close: price };
     return;
   }
+
   if (now - current5m.start < FIVE_MIN) {
     current5m.high = Math.max(current5m.high, price);
     current5m.low = Math.min(current5m.low, price);
@@ -217,6 +245,7 @@ function update1mCandle(price) {
     current1m = { start: now, open: price, high: price, low: price, close: price };
     return;
   }
+
   if (now - current1m.start < ONE_MIN) {
     current1m.high = Math.max(current1m.high, price);
     current1m.low = Math.min(current1m.low, price);
@@ -229,7 +258,7 @@ function update1mCandle(price) {
 }
 
 /* =========================
-   TREND + STATUS
+   ANALYSIS + TREND + SCALP + STATUS
 ========================= */
 function analyze5m() {
   if (candles5m.length < 200) {
@@ -238,56 +267,61 @@ function analyze5m() {
     ma200Value = null;
     return;
   }
+
   const closes = candles5m.map(c => c.close);
   ma200Value = SMA(closes, 200);
+
   const bias = closes[closes.length - 1] < ma200Value ? 'Bearish' : 'Bullish';
-  overallStatusEl.textContent = `Overall Status: ${bias} MA200 ${format(ma200Value)}`;
-  overallStatusEl.style.color = bias === 'Bullish' ? '#00ff66' : '#ff4d4d';
+
+  overallStatusEl.textContent =
+    `Overall Status: ${bias} MA200 ${format(ma200Value)}`;
+
+  overallStatusEl.style.color =
+    bias === 'Bullish' ? '#00ff66' : '#ff4d4d';
 }
 
 function updateTrend(price) {
   if (!ma200Value) return;
+
   trend = price >= ma200Value ? 'up' : 'down';
-  biasLine.textContent = trend === 'up' ? 'BTC/USDT - BUY' : 'BTC/USDT - Paused';
-}
+  biasLine.textContent =
+    trend === 'up' ? 'BTC/USDT - BUY' : 'BTC/USDT - Paused';
 
-function updateOverallStatus() {
-  currentStatus = 'waiting';
-  if ((trend === 'up' && shortScalpSignal === 'BUY') || (trend === 'down' && shortScalpSignal === 'SELL')) {
-    currentStatus = 'active';
+  if (lastPrice !== null) {
+    if (price > lastPrice) priceLine.style.color = '#00ff66';
+    else if (price < lastPrice) priceLine.style.color = '#ff4d4d';
+    else priceLine.style.color = 'yellow';
   }
-  statusEl.textContent = currentStatus.toUpperCase();
-  statusEl.className = `status status-${currentStatus}`;
+
+  lastPrice = price;
 }
 
-/* =========================
-   SCALP LOGIC (STOP ALWAYS BELOW/ABOVE ENTRY)
-========================= */
 function updateShortScalp(livePrice) {
-  if (candles1m.length < 10) return;
+  if (candles1m.length < 30) return;
 
   const closes = candles1m.map(c => c.close);
-  const highs = candles1m.map(c => c.high);
-  const lows = candles1m.map(c => c.low);
-
   const tema = TEMA(closes, 9);
   const dema = DEMA(closes, 9);
+
   if (!tema || !dema) return;
 
   if (tema > dema) {
-    if (shortScalpSignal !== 'BUY') { entryPrice = livePrice; playTradeSound(); }
+    if (shortScalpSignal !== 'BUY') {
+      entryPrice = livePrice;
+      playTradeSound();
+    }
     shortScalpSignal = 'BUY';
     pullbackStatusEl.style.color = '#00ff66';
-    scalpSL = Math.min(Math.min(...lows.slice(-5)), entryPrice * 0.999);
   } else if (tema < dema) {
-    if (shortScalpSignal !== 'SELL') { entryPrice = livePrice; playTradeSound(); }
+    if (shortScalpSignal !== 'SELL') {
+      entryPrice = livePrice;
+      playTradeSound();
+    }
     shortScalpSignal = 'SELL';
     pullbackStatusEl.style.color = '#ff4d4d';
-    scalpSL = Math.max(Math.max(...highs.slice(-5)), entryPrice * 1.001);
   } else {
     shortScalpSignal = 'Neutral';
     entryPrice = null;
-    scalpSL = null;
     pullbackStatusEl.style.color = 'yellow';
   }
 
@@ -295,7 +329,20 @@ function updateShortScalp(livePrice) {
   if (entryPrice && shortScalpSignal !== 'Neutral') {
     pullbackStatusEl.textContent += ` | Entry: ${format(entryPrice)}`;
   }
-  scalpSLEl.textContent = `Stop Loss: ${scalpSL ? format(scalpSL) : '—'}`;
+}
+
+function updateOverallStatus() {
+  currentStatus = 'waiting';
+
+  if (
+    (trend === 'up' && shortScalpSignal === 'BUY') ||
+    (trend === 'down' && shortScalpSignal === 'SELL')
+  ) {
+    currentStatus = 'active';
+  }
+
+  statusEl.textContent = currentStatus.toUpperCase();
+  statusEl.className = `status status-${currentStatus}`;
 }
 
 /* =========================
@@ -306,6 +353,7 @@ async function updateMarket() {
   if (!price) return;
 
   priceLine.textContent = `BTC Price: ${format(price)}`;
+
   update5mCandle(price);
   update1mCandle(price);
   analyze5m();
