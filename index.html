@@ -31,7 +31,7 @@ button { padding:10px 15px; margin:5px; border-radius:6px; border:none; cursor:p
 <body>
 
 <div class="header">
-  <h2>BTC / USDT – Trading Scalp Signal</h2>
+  <h2>BTC / USDT – Trading Scalp Signal[ does not work on U.S IP] </h2>
 </div>
 
 <div class="main-container">
@@ -41,12 +41,11 @@ button { padding:10px 15px; margin:5px; border-radius:6px; border:none; cursor:p
   <div id="biasLine" class="bias-line">BTC/USDT - WAITING</div>
   <div id="overallStatus" class="overall-status">Overall Status: Waiting...</div>
   <div class="pullback-box">Short Scalp Status: <span id="pullbackStatus">Neutral...</span></div>
-  <div id="scalpSL" style="margin-top:6px; font-weight:bold;">Stop Loss: —</div>
   <p id="priceLine">BTC Price: —</p>
 </div>
 
 <div class="zones">
-  <h3>Simulator For high speed market</h3>
+  <h3>Simulator for high Speed Market</h3>
   <input type="number" id="manualEntry" placeholder="Manual Entry (optional)" /><br><br>
   <button class="buy" onclick="openTrade('BUY')">BUY Long</button>
   <button class="sell" onclick="openTrade('SELL')">SELL Short</button>
@@ -61,7 +60,7 @@ button { padding:10px 15px; margin:5px; border-radius:6px; border:none; cursor:p
 </div>
 
 <div class="indicators">
-  <h3>TECHNICAL INDICATORS</h3>
+  <h3>TECHNICAL INDICATORS [The page needs to load date if refreshed</h3>
   <p>RSI (14): <span id="rsiValue">—</span></p>
   <div class="rsi-bar"><div id="rsiFill" class="rsi-fill"></div></div>
 </div>
@@ -74,27 +73,46 @@ button { padding:10px 15px; margin:5px; border-radius:6px; border:none; cursor:p
 </div>
 </div>
 
+
+
+
+
+
+<!...green trend..,>
+
+
+
+
 <div style="width:300px; height:100px; background:#111; color:white; font-family:Arial; padding:5px;">
     <strong>BTC/USDT</strong> - 1D Trend
     <svg id="chart" width="300" height="60" style="background:#111;">
-        <polyline id="line" style="fill:none;stroke:#00ff99;stroke-width:2" />
-        <polygon id="area" style="fill:rgba(0,255,153,0.1);" />
+        <polyline id="line"
+                  style="fill:none;stroke:#00ff99;stroke-width:2" />
+        <polygon id="area"
+                 style="fill:rgba(0,255,153,0.1);" />
     </svg>
 </div>
 
+
+
 <script>
 async function loadBTCData() {
+    // 1 day candles, last 30 days
     const response = await fetch(
         "https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=30"
     );
     const data = await response.json();
+
+    // Extract closing prices
     const prices = data.map(candle => parseFloat(candle[4]));
+
     drawChart(prices);
 }
 
 function drawChart(prices) {
     const width = 300;
     const height = 60;
+
     const max = Math.max(...prices);
     const min = Math.min(...prices);
 
@@ -104,15 +122,45 @@ function drawChart(prices) {
         return `${x},${y}`;
     });
 
-    document.getElementById("line").setAttribute("points", points.join(" "));
-    document.getElementById("area")
-        .setAttribute("points", points.join(" ") + ` ${width},${height} 0,${height}`);
+    const polyline = document.getElementById("line");
+    polyline.setAttribute("points", points.join(" "));
+
+    const area = document.getElementById("area");
+    area.setAttribute(
+        "points",
+        points.join(" ") + ` ${width},${height} 0,${height}`
+    );
 }
 
 loadBTCData();
 </script>
 
+
+
+
+
+
+
+<!...End green trend..>
+
+
+
+
+
 <div class="footer">Educational only. No financial advice.</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 <script>
 let currentPrice = null;
@@ -122,6 +170,7 @@ let lastScalp = "Neutral...";
 let confirmCount = 0;
 const confirmNeeded = 3;
 
+// SETTINGS
 const symbol = "BTCUSDT";
 const interval = "5m";
 const rsiPeriod = 14;
@@ -131,6 +180,9 @@ function format(n){
   return '$'+Number(n).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
 }
 
+// ============================
+// FETCH CURRENT PRICE
+// ============================
 async function fetchPrice(){
   try{
     const res = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`);
@@ -143,12 +195,16 @@ async function fetchPrice(){
 setInterval(fetchPrice,5000);
 fetchPrice();
 
+// ============================
+// FETCH CANDLES + CALCULATE RSI + MA200
+// ============================
 async function fetchIndicators(){
   try{
     const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${maPeriod+1}`);
     const data = await res.json();
 
     const closes = data.map(candle => parseFloat(candle[4]));
+
     const rsi = calculateRSI(closes.slice(-15), rsiPeriod);
     const ma200 = calculateMA(closes, maPeriod);
     const price = closes[closes.length - 1];
@@ -160,15 +216,19 @@ async function fetchIndicators(){
 }
 
 function calculateRSI(closes, period){
-  let gains = 0, losses = 0;
+  let gains = 0;
+  let losses = 0;
+
   for(let i = 1; i <= period; i++){
     const diff = closes[i] - closes[i-1];
     if(diff >= 0) gains += diff;
     else losses += Math.abs(diff);
   }
+
   const avgGain = gains / period;
   const avgLoss = losses / period;
   if(avgLoss === 0) return 100;
+
   const rs = avgGain / avgLoss;
   return 100 - (100 / (1 + rs));
 }
@@ -176,9 +236,13 @@ function calculateRSI(closes, period){
 function calculateMA(closes, period){
   if(closes.length < period) return null;
   const slice = closes.slice(-period);
-  return slice.reduce((a,b)=>a+b,0) / period;
+  const sum = slice.reduce((a,b)=>a+b,0);
+  return sum / period;
 }
 
+// ============================
+// UPDATE RSI UI
+// ============================
 function updateRSIUI(rsi){
   const rounded = Math.round(rsi);
   document.getElementById("rsiValue").textContent = rounded;
@@ -188,55 +252,45 @@ function updateRSIUI(rsi){
     rounded > 70 ? "#ff4444" : "yellow";
 }
 
-// ======= SCALP LOGIC WITH SCALP STOP LOSS =======
+// ============================
+// SCALP LOGIC WITH MA200 BIAS
+// ============================
 function updateScalp(rsi, ma200, price){
+
   if(!ma200) return;
 
   let newSignal="Neutral...";
   let overall="";
   let color="orange";
 
+  // BEARISH BIAS
   if(price < ma200){
     overall="Overall Status: Bearish (Below MA200)";
     color="red";
-    if(rsi > 60) newSignal="Sell Short";
-  } else {
-    overall="Overall Status: Bullish (Above MA200)";
-    color="lime";
-    if(rsi < 40) newSignal="Buy Long";
+
+    if(rsi > 60){
+      newSignal="Sell Short";
+    }
   }
 
+  // BULLISH BIAS
+  else{
+    overall="Overall Status: Bullish (Above MA200)";
+    color="lime";
+
+    if(rsi < 40){
+      newSignal="Buy Long";
+    }
+  }
+
+  // Confirmation Logic
   if(newSignal !== lastScalp){
     confirmCount++;
     if(confirmCount >= confirmNeeded){
-
       lastScalp = newSignal;
-
       document.getElementById("pullbackStatus").textContent=newSignal;
       document.getElementById("overallStatus").textContent=overall;
       document.getElementById("overallStatus").style.color=color;
-
-      // === SCALP STOP LOSS FROM LAST CLOSED CANDLE ===
-      fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=2`)
-      .then(res => res.json())
-      .then(data => {
-        const lastClosed = data[0]; // previous candle
-        const high = parseFloat(lastClosed[2]);
-        const low  = parseFloat(lastClosed[3]);
-
-        let scalpStop = "—";
-
-        if(newSignal === "Sell Short"){
-          scalpStop = high;
-        }
-        if(newSignal === "Buy Long"){
-          scalpStop = low;
-        }
-
-        document.getElementById("scalpSL").textContent =
-          "Stop Loss: " + (scalpStop !== "—" ? format(scalpStop) : "—");
-      });
-
       confirmCount=0;
     }
   } else {
@@ -244,14 +298,18 @@ function updateScalp(rsi, ma200, price){
   }
 }
 
-// ======= TRADE SIMULATOR =======
-async function openTrade(type){
-  if(!currentPrice) return;
+setInterval(fetchIndicators,15000);
+fetchIndicators();
 
+// ============================
+// TRADE FUNCTIONS (UNCHANGED)
+// ============================
+function openTrade(type){
+  if(!currentPrice) return;
   const manual=parseFloat(document.getElementById("manualEntry").value);
   const entry=manual||currentPrice;
-
   const risk=0.005,tp1p=0.0103,tp2p=0.0209,tp3p=0.0315;
+
   trade={
     type,entry,
     stop:type==="BUY"?entry*(1-risk):entry*(1+risk),
@@ -276,20 +334,19 @@ function checkTargets(){
   if(!trade||trade.closed||!currentPrice) return;
   if(trade.type==="BUY"){
     if(currentPrice<=trade.stop) closeTrade("STOP LOSS HIT","sl-hit");
-    if(currentPrice>=trade.tp3&&!trade.tp3Hit){trade.tp3Hit=true;closeTrade("TP3 HIT","tp-hit");}
+    if(currentPrice>=trade.tp1&&!trade.tp1Hit){markHit("tp1");trade.tp1Hit=true;}
+    if(currentPrice>=trade.tp2&&!trade.tp2Hit){markHit("tp2");trade.tp2Hit=true;}
+    if(currentPrice>=trade.tp3&&!trade.tp3Hit){markHit("tp3");trade.tp3Hit=true;closeTrade("TP3 HIT","tp-hit");}
   }else{
     if(currentPrice>=trade.stop) closeTrade("STOP LOSS HIT","sl-hit");
-    if(currentPrice<=trade.tp3&&!trade.tp3Hit){trade.tp3Hit=true;closeTrade("TP3 HIT","tp-hit");}
+    if(currentPrice<=trade.tp1&&!trade.tp1Hit){markHit("tp1");trade.tp1Hit=true;}
+    if(currentPrice<=trade.tp2&&!trade.tp2Hit){markHit("tp2");trade.tp2Hit=true;}
+    if(currentPrice<=trade.tp3&&!trade.tp3Hit){markHit("tp3");trade.tp3Hit=true;closeTrade("TP3 HIT","tp-hit");}
   }
 }
 
-function closeTrade(text,cls){
-  trade.closed=true;
-  const el=document.getElementById("tradeStatus");
-  el.textContent=text;
-  el.classList.add(cls);
-}
-
+function markHit(id){document.getElementById(id).classList.add("tp-hit");}
+function closeTrade(text,cls){trade.closed=true;const el=document.getElementById("tradeStatus");el.textContent=text;el.classList.add(cls);}
 function resetTrade(){
   trade=null;
   document.getElementById("tradeStatus").textContent="No Active Trade";
@@ -298,9 +355,62 @@ function resetTrade(){
   document.getElementById("tp1").textContent="TP1: —";
   document.getElementById("tp2").textContent="TP2: —";
   document.getElementById("tp3").textContent="TP3: —";
+  document.querySelectorAll(".tp-hit").forEach(el=>el.classList.remove("tp-hit"));
 }
 </script>
-
 <script src="script.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+<script>
+async function loadBTCData() {
+    // 1 day candles, last 30 days
+    const response = await fetch(
+        "https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=30"
+    );
+    const data = await response.json();
+
+    // Extract closing prices
+    const prices = data.map(candle => parseFloat(candle[4]));
+
+    drawChart(prices);
+}
+
+function drawChart(prices) {
+    const width = 300;
+    const height = 60;
+
+    const max = Math.max(...prices);
+    const min = Math.min(...prices);
+
+    const points = prices.map((price, index) => {
+        const x = (index / (prices.length - 1)) * width;
+        const y = height - ((price - min) / (max - min)) * height;
+        return `${x},${y}`;
+    });
+
+    const polyline = document.getElementById("line");
+    polyline.setAttribute("points", points.join(" "));
+
+    const area = document.getElementById("area");
+    area.setAttribute(
+        "points",
+        points.join(" ") + ` ${width},${height} 0,${height}`
+    );
+}
+
+loadBTCData();
+</script>
+
+
+
 </body>
 </html>
