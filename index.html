@@ -1,4 +1,4 @@
-new code backup
+
 
 
 
@@ -155,6 +155,53 @@ new code backup
         color: #facc15;
     }
 
+    /* RSI visual only. It does NOT affect CKS signals. */
+    .rsi-panel {
+        margin-top: 10px;
+    }
+
+    .rsi-track {
+        position: relative;
+        height: 12px;
+        border-radius: 999px;
+        background: linear-gradient(to right, #22c55e 0%, #22c55e 30%, #facc15 30%, #facc15 70%, #ef4444 70%, #ef4444 100%);
+        border: 1px solid #26313c;
+    }
+
+    .rsi-marker {
+        position: absolute;
+        top: -5px;
+        left: 50%;
+        width: 4px;
+        height: 22px;
+        border-radius: 3px;
+        background: #ffffff;
+        box-shadow: 0 0 5px rgba(255,255,255,.65);
+        transform: translateX(-50%);
+        transition: left .35s ease;
+    }
+
+    .rsi-scale {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 5px;
+        color: #697684;
+        font-size: 10px;
+    }
+
+    .rsi-alert {
+        margin-top: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        color: #8b98a5;
+    }
+
+    .target-hit {
+        font-size: 12px;
+        margin-top: 5px;
+        font-weight: 700;
+    }
+
     .chart-container {
         width: 100%;
         overflow: hidden;
@@ -208,151 +255,18 @@ new code backup
         margin-top: 8px;
     }
 
-    /* =========================
-       MOBILE VIEW
-       Desktop layout remains unchanged.
-    ========================= */
-    @media (max-width: 700px) {
-        body {
-            width: 100%;
-            overflow-x: hidden;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 100%;
-            padding: 10px;
-        }
-
-        .card {
-            width: 100%;
-            padding: 14px;
-            margin-bottom: 10px;
-            border-radius: 11px;
-        }
-
-        .header {
-            padding: 13px;
-        }
-
-        .header > div:first-child {
-            margin-bottom: 12px !important;
-        }
-
-        .label {
-            font-size: 11px;
-            margin-bottom: 5px;
-        }
-
-        input,
-        select {
-            min-height: 44px;
-            padding: 10px 11px;
-            font-size: 16px;
-        }
-
-        .bias-line {
-            font-size: 20px;
-            line-height: 1.2;
-            margin-bottom: 5px;
-        }
-
-        .overall {
-            font-size: 15px;
-            line-height: 1.25;
-        }
-
-        .signal-time {
-            font-size: 11px;
-            line-height: 1.35;
-        }
-
-        .section-title {
-            font-size: 16px;
-            margin-bottom: 10px;
-        }
-
+    @media(max-width: 700px) {
         .grid,
         .simulator {
             grid-template-columns: 1fr;
-            gap: 8px;
         }
 
-        .stat {
-            padding: 11px;
-            border-radius: 9px;
-        }
-
-        .value {
-            font-size: 20px;
-            line-height: 1.15;
+        .bias-line {
+            font-size: 21px;
         }
 
         .price {
             font-size: 25px;
-        }
-
-        .status-box {
-            padding: 13px;
-            margin-bottom: 10px;
-        }
-
-        .status-title {
-            font-size: 11px;
-            margin-bottom: 5px;
-        }
-
-        .status-value {
-            font-size: 22px;
-        }
-
-        .small {
-            font-size: 10px;
-            line-height: 1.35;
-        }
-
-        .chart-container {
-            width: 100%;
-            max-width: 100%;
-            overflow: hidden;
-        }
-
-        iframe {
-            display: block;
-            width: 100%;
-            height: 380px;
-            border-radius: 8px;
-        }
-
-        button {
-            min-height: 44px;
-            margin-top: 8px;
-        }
-    }
-
-    @media (max-width: 380px) {
-        .container {
-            padding: 7px;
-        }
-
-        .card {
-            padding: 11px;
-        }
-
-        .bias-line {
-            font-size: 18px;
-        }
-
-        .price {
-            font-size: 23px;
-        }
-
-        .value {
-            font-size: 18px;
-        }
-
-        iframe {
-            height: 330px;
         }
     }
 </style>
@@ -365,7 +279,7 @@ new code backup
     <!-- HEADER -->
     <div class="card header">
         <div style="max-width:420px;margin:0 auto 16px;">
-            <div class="label" style="text-align:left;">Select Market</div>
+            <div class="label" style="text-align:left;">Select Market - (Page Demo)</div>
             <select id="marketSelect" onchange="switchMarket(this.value)">
                 <option value="GOLD" selected>Gold / USD (XAU/USD)</option>
                 <option value="BTC">Bitcoin / USD (BTC/USD)</option>
@@ -426,7 +340,7 @@ new code backup
 
             <div class="stat">
                 <div id="marketPriceLabel" class="label">
-                    Gold Price
+                    Gold Live MK Price
                 </div>
 
                 <div id="marketPrice" class="price">
@@ -436,17 +350,43 @@ new code backup
 
             <div class="stat">
                 <div class="label">
-                    RSI
+                    RSI 14
                 </div>
 
                 <div id="rsiValue" class="value">
                     —
                 </div>
+
+                <div class="rsi-panel">
+                    <div class="rsi-track">
+                        <div id="rsiMarker" class="rsi-marker"></div>
+                    </div>
+                    <div class="rsi-scale">
+                        <span>0</span><span>30</span><span>50</span><span>70</span><span>100</span>
+                    </div>
+                    <div id="rsiAlert" class="rsi-alert">RSI condition: Waiting...</div>
+                </div>
             </div>
 
             <div class="stat">
                 <div class="label">
-                    MA200
+                    TP1 (2R)
+                </div>
+                <div id="tp1Value" class="value">—</div>
+                <div id="tp1Status" class="target-hit">&nbsp;</div>
+            </div>
+
+            <div class="stat">
+                <div class="label">
+                    TP2 (3R)
+                </div>
+                <div id="tp2Value" class="value">—</div>
+                <div id="tp2Status" class="target-hit">&nbsp;</div>
+            </div>
+
+            <div class="stat">
+                <div class="label">
+                    MA200 Status
                 </div>
 
                 <div id="ma200Value" class="value">
@@ -456,7 +396,7 @@ new code backup
 
             <div class="stat">
                 <div class="label">
-                    CKS Timeframe
+                    ECI Timeframe
                 </div>
 
                 <div class="value">
@@ -471,7 +411,7 @@ new code backup
     <div class="card">
 
         <div class="section-title">
-            Chande Kroll Stop — 15m
+            ECI Indicators Stop — 15m
         </div>
 
         <div class="grid">
@@ -1097,70 +1037,99 @@ function getMarketConfig() {
 }
 
 async function fetchMarketData(symbol, interval, limit = 300) {
-    const url = `https://biquote.io/api/${encodeURIComponent(symbol)}/ohlc?interval=${encodeURIComponent(interval)}&limit=${limit}`;
-    const response = await fetch(url, { cache: "no-store" });
-    if (!response.ok) throw new Error(`Market data request failed: ${response.status}`);
+    /*
+       PRIMARY DATA SOURCE: BiQuote.
+       It supports browser CORS and provides XAUUSD/BTCUSD OHLC candles
+       with an explicit isOpen flag. This keeps the 15m CKS feed stable.
+    */
+    const url =
+        `https://biquote.io/api/${encodeURIComponent(symbol)}/ohlc` +
+        `?interval=${encodeURIComponent(interval)}&limit=${Math.min(Math.max(limit, 50), 1000)}`;
+
+    const response = await fetch(url, {
+        cache: "no-store",
+        headers: { "Accept": "application/json" }
+    });
+
+    if (!response.ok) {
+        throw new Error(`BiQuote market data request failed: ${response.status}`);
+    }
 
     const json = await response.json();
     const bars = json?.bars || json?.data?.bars || json?.data || [];
+
     if (!Array.isArray(bars) || !bars.length) {
-        throw new Error("No OHLC market data returned");
+        throw new Error("No BiQuote OHLC market data returned");
     }
+
     return bars;
 }
 
-function biquoteBarsToCandles(bars) {
+function marketBarsToCandles(bars, intervalMinutes = 15) {
+    /*
+       Normalizes BiQuote bars to the existing internal candle format:
+       [time, open, high, low, close, volume, isOpen]
+    */
     return bars.map(bar => {
-        const timeValue = bar.openTime ?? bar.open_time ?? bar.timestamp ?? bar.time ?? bar.t;
+        const timeValue =
+            bar.openTime ?? bar.open_time ?? bar.timestamp ?? bar.time ?? bar.t;
+
         const time = typeof timeValue === "string"
             ? Date.parse(timeValue)
-            : Number(timeValue) < 100000000000 ? Number(timeValue) * 1000 : Number(timeValue);
+            : Number(timeValue) < 100000000000
+                ? Number(timeValue) * 1000
+                : Number(timeValue);
 
         const o = Number(bar.open ?? bar.o);
         const h = Number(bar.high ?? bar.h);
         const l = Number(bar.low ?? bar.l);
         const c = Number(bar.close ?? bar.c);
-        const v = Number(bar.volume ?? bar.v ?? 0);
+        const v = Number(bar.volume ?? bar.v ?? bar.tickVolume ?? 0);
+
         const isOpen =
             bar.isOpen === true
                 ? true
                 : bar.isOpen === false
                     ? false
-                    : null;
+                    : (time + intervalMinutes * 60 * 1000 > Date.now() + 5000);
 
         return [time, o, h, l, c, v, isOpen];
-    }).filter(c => Number.isFinite(c[0]) && [c[1], c[2], c[3], c[4]].every(Number.isFinite))
-      .sort((a, b) => a[0] - b[0]);
+    })
+        .filter(c =>
+            Number.isFinite(c[0]) &&
+            [c[1], c[2], c[3], c[4]].every(Number.isFinite)
+        )
+        .sort((a, b) => a[0] - b[0]);
 }
 
 async function fetchCurrentPrice() {
     try {
         const market = getMarketConfig();
-        const url = `https://biquote.io/api/${encodeURIComponent(market.dataSymbol)}`;
-        const response = await fetch(url, { cache: "no-store" });
+        const url =
+            `https://biquote.io/api/${encodeURIComponent(market.dataSymbol)}`;
+
+        const response = await fetch(url, {
+            cache: "no-store",
+            headers: { "Accept": "application/json" }
+        });
 
         if (!response.ok) {
-            throw new Error(`Live price request failed: ${response.status}`);
+            throw new Error(`BiQuote live price request failed: ${response.status}`);
         }
 
-        // BiQuote returns the single-symbol quote directly.
-        // For Gold/FX/CFD symbols, use MID rather than LAST.
         const quote = await response.json();
-        const price = Number(quote?.mid);
+        const price = Number(quote?.mid ?? quote?.last ?? quote?.price);
 
         if (!Number.isFinite(price)) {
-            throw new Error("Invalid live price returned");
+            throw new Error("Invalid live price returned by BiQuote");
         }
 
         currentPrice = price;
-
-        document.getElementById("marketPrice").textContent =
-            formatPrice(currentPrice);
+        document.getElementById("marketPrice").textContent = formatPrice(currentPrice);
 
         const priceLine = document.getElementById("priceLine");
         if (priceLine) {
-            priceLine.textContent =
-                `${market.name} Price: ${formatPrice(currentPrice)}`;
+            priceLine.textContent = `${market.name} Price: ${formatPrice(currentPrice)}`;
         }
 
     } catch (error) {
@@ -1179,8 +1148,9 @@ async function fetchIndicators() {
         const market = getMarketConfig();
 
         /*
-            CKS/RSI data stays on the same 15m dataset already being used.
-            This section is intentionally unchanged in trading logic.
+            DATA SOURCE CHANGE ONLY:
+            BiQuote 15m OHLC is used for both Gold and BTC.
+            The CKS/RSI/MA200 calculations and signal rules are unchanged.
         */
         const cksBars = await fetchMarketData(
             market.dataSymbol,
@@ -1188,21 +1158,14 @@ async function fetchIndicators() {
             500
         );
 
-        // BiQuote explicitly marks the currently forming bar with isOpen:true.
-        // Exclude it so every indicator uses CLOSED 15m candles only.
-        const closedBars = cksBars.filter(
-            bar => bar.isOpen !== true
-        );
-
-        const closedData = biquoteBarsToCandles(closedBars);
+        const closedData = marketBarsToCandles(cksBars, 15)
+            .filter(candle => candle[6] !== true);
 
         if (!Array.isArray(closedData) || closedData.length < 50) {
             throw new Error("Not enough CLOSED 15m market data returned");
         }
 
-        const closes = closedData.map(
-            candle => parseFloat(candle[4])
-        );
+        const closes = closedData.map(candle => parseFloat(candle[4]));
 
         const rsi = calculateRSI(
             closes.slice(-(rsiPeriod + 1)),
@@ -1211,8 +1174,8 @@ async function fetchIndicators() {
         updateRSIUI(rsi);
 
         /*
-            MA200 gets its own longer history request.
-            This does NOT change the CKS dataset or CKS calculation.
+            MA200 uses the same BiQuote 15m feed and a longer history.
+            This does not change the CKS calculation.
         */
         let ma200 = null;
 
@@ -1223,15 +1186,10 @@ async function fetchIndicators() {
                 1000
             );
 
-            const maClosedBars = maBars.filter(
-                bar => bar.isOpen !== true
-            );
+            const maData = marketBarsToCandles(maBars, 15)
+                .filter(candle => candle[6] !== true);
 
-            const maData = biquoteBarsToCandles(maClosedBars);
-            const maCloses = maData.map(
-                candle => parseFloat(candle[4])
-            );
-
+            const maCloses = maData.map(candle => parseFloat(candle[4]));
             ma200 = calculateMA(maCloses, 200);
         } catch (maError) {
             console.error("MA200 data error:", maError);
@@ -1243,12 +1201,15 @@ async function fetchIndicators() {
         );
 
         /*
-            CKS calculation is intentionally left alone.
+            CKS CALCULATION IS LOCKED.
             P=10, X=1, Q=9 on CLOSED 15m candles.
         */
         const cks = calculateChandeKrollStop(closedData);
         updateCKSUI(cks, closedData);
         updateScalp(cks, closedData, ma200);
+
+        // Informational only. Does not alter the existing signal engine.
+        updateTradeTargets();
 
     } catch (error) {
         console.error("Indicator error:", error);
@@ -1261,29 +1222,107 @@ async function fetchIndicators() {
 
 function updateRSIUI(rsi) {
 
-    const element =
-        document.getElementById(
-            "rsiValue"
-        );
+    const element = document.getElementById("rsiValue");
+    const marker = document.getElementById("rsiMarker");
+    const alert = document.getElementById("rsiAlert");
 
-    if (rsi === null) {
-
+    if (rsi === null || !Number.isFinite(rsi)) {
         element.textContent = "—";
-
+        if (marker) marker.style.left = "50%";
+        if (alert) alert.textContent = "RSI condition: Waiting...";
         return;
     }
 
-    element.textContent =
-        rsi.toFixed(2);
+    element.textContent = rsi.toFixed(2);
+    element.className = "value " + (rsi >= 50 ? "positive" : "negative");
 
-    element.className =
-        "value " +
-        (
-            rsi >= 50
-                ? "positive"
-                : "negative"
-        );
+    // Visual marker only. This never changes the CKS signal.
+    if (marker) {
+        const pct = Math.max(0, Math.min(100, rsi));
+        marker.style.left = pct + "%";
+    }
+
+    if (alert) {
+        if (rsi >= 75) {
+            alert.textContent = "🔴 RSI EXTREME — possible exhaustion";
+            alert.style.color = "#ef4444";
+        } else if (rsi >= 70) {
+            alert.textContent = "🟠 RSI HIGH — watch for momentum loss";
+            alert.style.color = "#facc15";
+        } else if (rsi <= 25) {
+            alert.textContent = "🔴 RSI EXTREME LOW — possible exhaustion";
+            alert.style.color = "#ef4444";
+        } else if (rsi <= 30) {
+            alert.textContent = "🟠 RSI LOW — watch for momentum recovery";
+            alert.style.color = "#facc15";
+        } else {
+            alert.textContent = "RSI condition: Normal";
+            alert.style.color = "#8b98a5";
+        }
+    }
 }
+
+
+/* =========================================================
+   TP TARGETS — DISPLAY ONLY
+   Does NOT modify CKS, RSI, MA200, entry, or signal logic.
+   TP1 = 2R, TP2 = 3R from the existing CKS stop.
+========================================================= */
+
+function updateTradeTargets() {
+
+    const tp1Element = document.getElementById("tp1Value");
+    const tp2Element = document.getElementById("tp2Value");
+    const tp1Status = document.getElementById("tp1Status");
+    const tp2Status = document.getElementById("tp2Status");
+
+    if (!tp1Element || !tp2Element) return;
+
+    if (scalpEntry === null || scalpStop === null || !lastScalpSignal) {
+        tp1Element.textContent = "—";
+        tp2Element.textContent = "—";
+        if (tp1Status) tp1Status.innerHTML = "&nbsp;";
+        if (tp2Status) tp2Status.innerHTML = "&nbsp;";
+        return;
+    }
+
+    const risk = Math.abs(scalpEntry - scalpStop);
+    if (!Number.isFinite(risk) || risk <= 0) return;
+
+    let tp1;
+    let tp2;
+
+    if (lastScalpSignal === "Buy Long") {
+        tp1 = scalpEntry + (risk * 2);
+        tp2 = scalpEntry + (risk * 3);
+    } else {
+        tp1 = scalpEntry - (risk * 2);
+        tp2 = scalpEntry - (risk * 3);
+    }
+
+    tp1Element.textContent = formatPrice(tp1);
+    tp2Element.textContent = formatPrice(tp2);
+
+    // Current live price is used only to report whether a target has been reached.
+    if (currentPrice !== null && Number.isFinite(currentPrice)) {
+        const tp1Reached = lastScalpSignal === "Buy Long"
+            ? currentPrice >= tp1
+            : currentPrice <= tp1;
+        const tp2Reached = lastScalpSignal === "Buy Long"
+            ? currentPrice >= tp2
+            : currentPrice <= tp2;
+
+        if (tp1Status) {
+            tp1Status.textContent = tp1Reached ? "🟢 TP1 reached" : "";
+            tp1Status.style.color = tp1Reached ? "#22c55e" : "";
+        }
+        if (tp2Status) {
+            tp2Status.textContent = tp2Reached ? "🟢 TP2 reached" : "";
+            tp2Status.style.color = tp2Reached ? "#22c55e" : "";
+        }
+    }
+}
+
 
 
 /* =========================================================
@@ -1695,7 +1734,7 @@ function updateScalp(
     document.getElementById(
         "signalTime"
     ).textContent =
-        "15m CKS signal confirmed at " +
+        "15m ECI signal confirmed at " +
         new Date(
             latestClosedTime
         ).toLocaleString();
@@ -1836,6 +1875,11 @@ function switchMarket(value) {
     lastScalpSignal = null;
     scalpEntry = null;
     scalpStop = null;
+
+    const tp1Element = document.getElementById("tp1Value");
+    const tp2Element = document.getElementById("tp2Value");
+    if (tp1Element) tp1Element.textContent = "—";
+    if (tp2Element) tp2Element.textContent = "—";
 
     const market = getMarketConfig();
     document.title = `${market.label} 15m Scalp Dashboard`;
