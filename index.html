@@ -2114,6 +2114,100 @@ setInterval(
 );
 
 </script>
+<...translate here..!>
+   <script>
+const translations = {
+    en: {
+        title: "Gold Trading Dashboard",
+        entry: "Entry",
+        stopLoss: "Stop Loss",
+        takeProfit: "Take Profit",
+        buy: "Buy",
+        sell: "Sell",
+        waiting: "Waiting",
+        price: "Price"
+    },
 
+    pt: {
+        title: "Painel de Trading de Ouro",
+        entry: "Entrada",
+        stopLoss: "Stop Loss",
+        takeProfit: "Take Profit",
+        buy: "Comprar",
+        sell: "Vender",
+        waiting: "Aguardando",
+        price: "Preço"
+    },
+
+    es: {
+        title: "Panel de Trading de Oro",
+        entry: "Entrada",
+        stopLoss: "Stop Loss",
+        takeProfit: "Take Profit",
+        buy: "Comprar",
+        sell: "Vender",
+        waiting: "Esperando",
+        price: "Precio"
+    },
+
+    fr: {
+        title: "Tableau de Trading de l'Or",
+        entry: "Entrée",
+        stopLoss: "Stop Loss",
+        takeProfit: "Prise de Profit",
+        buy: "Acheter",
+        sell: "Vendre",
+        waiting: "En attente",
+        price: "Prix"
+    }
+};
+
+
+// Detect browser language
+function getBrowserLanguage() {
+    const browserLanguage =
+        navigator.language ||
+        navigator.userLanguage ||
+        "en";
+
+    // Example:
+    // en-US → en
+    // pt-BR → pt
+    // fr-FR → fr
+    // es-ES → es
+
+    return browserLanguage.split("-")[0].toLowerCase();
+}
+
+
+// Apply translation
+function translatePage() {
+
+    const language = getBrowserLanguage();
+
+    // If language isn't available, use English
+    const selectedLanguage =
+        translations[language] ? language : "en";
+
+    const t = translations[selectedLanguage];
+
+    document.documentElement.lang = selectedLanguage;
+
+    // Elements using data-i18n
+    document.querySelectorAll("[data-i18n]").forEach(element => {
+
+        const key = element.getAttribute("data-i18n");
+
+        if (t[key]) {
+            element.textContent = t[key];
+        }
+
+    });
+}
+
+
+// Run when page loads
+document.addEventListener("DOMContentLoaded", translatePage);
+</script>
 </body>
 </html>
