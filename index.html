@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -322,448 +323,262 @@
         }
     }
 </style>
+
 </head>
 
 <body>
 
 <div class="container">
 
-    <!-- HEADER -->
-    <div class="card header">
+```
+<!-- HEADER -->
+<div class="card header">
 
-        <div style="max-width:420px;margin:0 auto 16px;">
+    <div style="max-width:420px;margin:0 auto 16px;">
 
-            <div class="label" style="text-align:left;">
-                Select Market - (Page Demo)
-            </div>
-
-            <select id="marketSelect" onchange="switchMarket(this.value)">
-                <option value="GOLD" selected>
-                    Gold / USD (XAU/USD)
-                </option>
-
-                <option value="BTC">
-                    Bitcoin / USD (BTC/USD)
-                </option>
-
-                <option value="SILVER">
-                    Silver / USD (XAG/USD)
-                </option>
-
-                <option value="NASDAQ">
-                    Nasdaq / USD (US Tech 100)
-                </option>
-            </select>
-
+        <div class="label" style="text-align:left;" data-i18n="selectMarket">
+            Select Market - (Page Demo)
         </div>
 
-        <div id="biasLine" class="bias-line waiting">
-            XAU/USD - WAITING
+        <select id="marketSelect" onchange="switchMarket(this.value)">
+            <option value="GOLD" selected data-i18n="goldUsd">
+                Gold / USD (XAU/USD)
+            </option>
+
+            <option value="BTC" data-i18n="bitcoinUsd">
+                Bitcoin / USD (BTC/USD)
+            </option>
+
+            <option value="SILVER" data-i18n="silverUsd">
+                Silver / USD (XAG/USD)
+            </option>
+
+            <option value="NASDAQ" data-i18n="nasdaqUsd">
+                Nasdaq / USD (US Tech 100)
+            </option>
+        </select>
+
+    </div>
+
+    <div id="biasLine" class="bias-line waiting">
+        XAU/USD - WAITING
+    </div>
+
+    <div id="overallStatus" class="overall neutral">
+        Overall Status: Waiting...
+    </div>
+
+    <div id="signalTime" class="signal-time">
+        Waiting for 15m ECI signal...
+    </div>
+
+</div>
+
+
+<!-- MAIN STATUS -->
+<div class="card">
+
+    <div class="section-title" data-i18n="scalpSignal">
+        Scalp Signal
+    </div>
+
+    <div class="status-box">
+
+        <div class="status-title" data-i18n="scalpStatus">
+            Scalp Status
         </div>
 
-        <div id="overallStatus" class="overall neutral">
-            Overall Status: Waiting...
-        </div>
-
-        <div id="signalTime" class="signal-time">
-            Waiting for 15m ECI signal...
+        <div id="pullbaECItatus"
+             class="status-value neutral-text">
+            Waiting...
         </div>
 
     </div>
 
 
-    <!-- MAIN STATUS -->
-    <div class="card">
+    <div class="grid">
 
-        <div class="section-title">
-            Scalp Signal
-        </div>
+        <!-- ENTRY -->
+        <div class="stat">
 
-        <div class="status-box">
-
-            <div class="status-title">
-                Scalp Status
+            <div class="label" data-i18n="entry">
+                Entry
             </div>
 
-            <div id="pullbaECItatus"
-                 class="status-value neutral-text">
-                Waiting...
+            <div id="scalpEntry" class="value">
+                —
             </div>
 
         </div>
 
 
-        <div class="grid">
+        <!-- STOP -->
+        <div class="stat">
 
-            <!-- ENTRY -->
-            <div class="stat">
+            <div class="label" data-i18n="stopLoss">
+                Stop Loss
+            </div>
 
-                <div class="label">
-                    Entry
-                </div>
+            <div id="scalpStop" class="value">
+                —
+            </div>
 
-                <div id="scalpEntry" class="value">
-                    —
-                </div>
+        </div>
+
+
+        <!-- LIVE PRICE -->
+        <div class="stat">
+
+            <div id="marketPriceLabel" class="label">
+                <span id="marketNameText">Gold</span>
+                <span data-i18n="liveMarketPrice"> Live Market Price</span>
+
+                <span id="liveIndicator"
+                      class="live-indicator offline">
+
+                    <span class="live-dot"></span>
+                    LIVE
+
+                </span>
 
             </div>
 
-
-            <!-- STOP -->
-            <div class="stat">
-
-                <div class="label">
-                    Stop Loss
-                </div>
-
-                <div id="scalpStop" class="value">
-                    —
-                </div>
-
+            <div id="marketPrice" class="price">
+                —
             </div>
 
+        </div>
 
-            <!-- LIVE PRICE -->
-            <div class="stat">
 
-                <div id="marketPriceLabel" class="label">
+        <!-- ENTRY DISTANCE -->
+        <div class="stat">
 
-                    Gold Live Market Price
-
-                    <span id="liveIndicator"
-                          class="live-indicator offline">
-
-                        <span class="live-dot"></span>
-                        LIVE
-
-                    </span>
-
-                </div>
-
-                <div id="marketPrice" class="price">
-                    —
-                </div>
-
+            <div class="label" data-i18n="entryDistance">
+                Entry Distance
             </div>
 
-
-            <!-- ENTRY DISTANCE -->
-            <div class="stat">
-
-                <div class="label">
-                    Entry Distance
-                </div>
-
-                <div id="entryDistance"
-                     class="entry-distance">
-                    —
-                </div>
-
-                <div id="entryStatus"
-                     class="entry-status neutral-text">
-                    ⚪ Waiting for Signal
-                </div>
-
-                <div id="entryStatusDetail"
-                     class="small">
-                    Waiting for an active ECI entry.
-                </div>
-
+            <div id="entryDistance"
+                 class="entry-distance">
+                —
             </div>
 
+            <div id="entryStatus"
+                 class="entry-status neutral-text">
+                ⚪ Waiting for Signal
+            </div>
 
-            <!-- RSI -->
-            <div class="stat">
+            <div id="entryStatusDetail"
+                 class="small">
+                Waiting for an active ECI entry.
+            </div>
 
-                <div class="label">
-                    RSI 14
-                </div>
+        </div>
 
-                <div id="rsiValue" class="value">
-                    —
-                </div>
 
-                <div class="rsi-panel">
+        <!-- RSI -->
+        <div class="stat">
 
-                    <div class="rsi-track">
+            <div class="label">
+                RSI 14
+            </div>
 
-                        <div id="rsiMarker"
-                             class="rsi-marker">
-                        </div>
+            <div id="rsiValue" class="value">
+                —
+            </div>
 
-                    </div>
+            <div class="rsi-panel">
 
-                    <div class="rsi-scale">
+                <div class="rsi-track">
 
-                        <span>0</span>
-                        <span>30</span>
-                        <span>50</span>
-                        <span>70</span>
-                        <span>100</span>
-
-                    </div>
-
-                    <div id="rsiAlert"
-                         class="rsi-alert">
-
-                        RSI condition: Waiting...
-
+                    <div id="rsiMarker"
+                         class="rsi-marker">
                     </div>
 
                 </div>
 
-            </div>
-
-
-            <!-- TP1 -->
-            <div class="stat">
-
-                <div class="label">
-                    TP1 (2R)
+                <div class="rsi-scale">
+                    <span>0</span>
+                    <span>30</span>
+                    <span>50</span>
+                    <span>70</span>
+                    <span>100</span>
                 </div>
 
-                <div id="tp1Value" class="value">
-                    —
-                </div>
+                <div id="rsiAlert"
+                     class="rsi-alert">
 
-                <div id="tp1Status"
-                     class="target-hit">
-                    &nbsp;
-                </div>
+                    RSI condition: Waiting...
 
-            </div>
-
-
-            <!-- MA200 -->
-            <div class="stat">
-
-                <div class="label">
-                    MA200 Status
-                </div>
-
-                <div id="ma200Value" class="value">
-                    —
-                </div>
-
-            </div>
-
-
-            <!-- TP2 -->
-            <div class="stat">
-
-                <div class="label">
-                    TP2 (3R)
-                </div>
-
-                <div id="tp2Value" class="value">
-                    —
-                </div>
-
-                <div id="tp2Status"
-                     class="target-hit">
-                    &nbsp;
-                </div>
-
-            </div>
-
-
-            <!-- TIMEFRAME -->
-            <div class="stat">
-
-                <div class="label">
-                    ECI Timeframe
-                </div>
-
-                <div class="value">
-                    15 Minutes
                 </div>
 
             </div>
 
         </div>
 
-    </div>
 
+        <!-- TP1 -->
+        <div class="stat">
 
-    <!-- ECI INDICATORS -->
-    <div class="card">
-
-        <div class="section-title">
-            ECI Indicators Stop — 15m
-        </div>
-
-        <div class="grid">
-
-            <div class="stat">
-
-                <div class="label">
-                    Stop Long
-                </div>
-
-                <div id="stopLongValue"
-                     class="value">
-                    —
-                </div>
-
+            <div class="label">
+                TP1 (2R)
             </div>
 
-
-            <div class="stat">
-
-                <div class="label">
-                    Stop Short
-                </div>
-
-                <div id="stopShortValue"
-                     class="value">
-                    —
-                </div>
-
+            <div id="tp1Value" class="value">
+                —
             </div>
 
-
-            <div class="stat">
-
-                <div class="label">
-                    Resistance (previous candle)
-                </div>
-
-                <div id="previousHighValue"
-                     class="value">
-                    —
-                </div>
-
-            </div>
-
-
-            <div class="stat">
-
-                <div class="label">
-                    Support (previous candle)
-                </div>
-
-                <div id="previousLowValue"
-                     class="value">
-                    —
-                </div>
-
-            </div>
-
-        </div>
-
-        <div class="small">
-            Signal is calculated only from closed 15-minute candles.
-        </div>
-
-    </div>
-
-
-    <!-- TRADINGVIEW -->
-    <div class="card">
-
-        <div class="section-title"
-             id="chartTitle">
-            TradingView — XAU/USD 15m
-        </div>
-
-        <div class="chart-container">
-
-            <iframe
-                id="tvChart"
-                src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_chart_initial&tvwidgetsymbol=OANDA%3AXAUUSD&symbol=OANDA%3AXAUUSD&interval=15&hidesidetoolbar=0&symboledit=1&saveimage=1&toolbarbg=f1f3f6&theme=dark&style=1&timezone=Etc%2FUTC&withdateranges=1&hideideas=1"
-                allowtransparency="true"
-                scrolling="no">
-            </iframe>
-
-        </div>
-
-    </div>
-
-
-    <!-- SIMULATOR -->
-    <div class="card">
-
-        <div class="section-title">
-            Manual Scalp Simulator
-        </div>
-
-        <div class="simulator">
-
-            <div>
-
-                <div class="label">
-                    Direction
-                </div>
-
-                <select id="simDirection">
-
-                    <option value="Buy Long">
-                        Buy Long
-                    </option>
-
-                    <option value="Sell Short">
-                        Sell Short
-                    </option>
-
-                </select>
-
-            </div>
-
-
-            <div>
-
-                <div class="label">
-                    Entry
-                </div>
-
-                <input
-                    id="simEntry"
-                    type="number"
-                    step="0.01"
-                    placeholder="Entry price">
-
-            </div>
-
-
-            <div>
-
-                <div class="label">
-                    Stop Loss
-                </div>
-
-                <input
-                    id="simStop"
-                    type="number"
-                    step="0.01"
-                    placeholder="Stop price">
-
-            </div>
-
-
-            <div>
-
-                <div class="label">
-                    Risk %
-                </div>
-
-                <input
-                    id="simRisk"
-                    type="number"
-                    step="0.1"
-                    value="0.5">
-
+            <div id="tp1Status"
+                 class="target-hit">
+                &nbsp;
             </div>
 
         </div>
 
 
-        <button onclick="calculateSimulator()">
-            Calculate Risk
-        </button>
+        <!-- MA200 -->
+        <div class="stat">
+
+            <div class="label" data-i18n="ma200Status">
+                MA200 Status
+            </div>
+
+            <div id="ma200Value" class="value">
+                —
+            </div>
+
+        </div>
 
 
-        <div id="simResult"
-             class="small">
+        <!-- TP2 -->
+        <div class="stat">
+
+            <div class="label">
+                TP2 (3R)
+            </div>
+
+            <div id="tp2Value" class="value">
+                —
+            </div>
+
+            <div id="tp2Status"
+                 class="target-hit">
+                &nbsp;
+            </div>
+
+        </div>
+
+
+        <!-- TIMEFRAME -->
+        <div class="stat">
+
+            <div class="label" data-i18n="eciTimeframe">
+                ECI Timeframe
+            </div>
+
+            <div class="value">
+                15 Minutes
+            </div>
+
         </div>
 
     </div>
@@ -771,13 +586,628 @@
 </div>
 
 
+<!-- ECI INDICATORS -->
+<div class="card">
+
+    <div class="section-title" data-i18n="eciIndicators">
+        ECI Indicators Stop — 15m
+    </div>
+
+    <div class="grid">
+
+        <div class="stat">
+
+            <div class="label" data-i18n="stopLong">
+                Stop Long
+            </div>
+
+            <div id="stopLongValue"
+                 class="value">
+                —
+            </div>
+
+        </div>
+
+
+        <div class="stat">
+
+            <div class="label" data-i18n="stopShort">
+                Stop Short
+            </div>
+
+            <div id="stopShortValue"
+                 class="value">
+                —
+            </div>
+
+        </div>
+
+
+        <div class="stat">
+
+            <div class="label" data-i18n="resistancePrevious">
+                Resistance (previous candle)
+            </div>
+
+            <div id="previousHighValue"
+                 class="value">
+                —
+            </div>
+
+        </div>
+
+
+        <div class="stat">
+
+            <div class="label" data-i18n="supportPrevious">
+                Support (previous candle)
+            </div>
+
+            <div id="previousLowValue"
+                 class="value">
+                —
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="small" data-i18n="closedCandleSignal">
+        Signal is calculated only from closed 15-minute candles.
+    </div>
+
+</div>
+
+
+<!-- TRADINGVIEW -->
+<div class="card">
+
+    <div class="section-title"
+         id="chartTitle">
+        TradingView — XAU/USD 15m
+    </div>
+
+    <div class="chart-container">
+
+        <iframe
+            id="tvChart"
+            src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_chart_initial&tvwidgetsymbol=OANDA%3AXAUUSD&symbol=OANDA%3AXAUUSD&interval=15&hidesidetoolbar=0&symboledit=1&saveimage=1&toolbarbg=f1f3f6&theme=dark&style=1&timezone=Etc%2FUTC&withdateranges=1&hideideas=1"
+            allowtransparency="true"
+            scrolling="no">
+        </iframe>
+
+    </div>
+
+</div>
+
+
+<!-- SIMULATOR -->
+<div class="card">
+
+    <div class="section-title" data-i18n="manualSimulator">
+        Manual Scalp Simulator
+    </div>
+
+    <div class="simulator">
+
+        <div>
+
+            <div class="label" data-i18n="direction">
+                Direction
+            </div>
+
+            <select id="simDirection">
+
+                <option value="Buy Long" data-i18n="buyLong">
+                    Buy Long
+                </option>
+
+                <option value="Sell Short" data-i18n="sellShort">
+                    Sell Short
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <div>
+
+            <div class="label" data-i18n="entry">
+                Entry
+            </div>
+
+            <input
+                id="simEntry"
+                type="number"
+                step="0.01"
+                data-i18n-placeholder="entryPrice"
+                placeholder="Entry price">
+
+        </div>
+
+
+        <div>
+
+            <div class="label" data-i18n="stopLoss">
+                Stop Loss
+            </div>
+
+            <input
+                id="simStop"
+                type="number"
+                step="0.01"
+                data-i18n-placeholder="stopPrice"
+                placeholder="Stop price">
+
+        </div>
+
+
+        <div>
+
+            <div class="label" data-i18n="riskPercent">
+                Risk %
+            </div>
+
+            <input
+                id="simRisk"
+                type="number"
+                step="0.1"
+                value="0.5">
+
+        </div>
+
+    </div>
+
+
+    <button onclick="calculateSimulator()" data-i18n="calculateRisk">
+        Calculate Risk
+    </button>
+
+
+    <div id="simResult"
+         class="small">
+    </div>
+
+</div>
+```
+
+</div>
+
 <script>
+
+/* =========================================================
+   TRANSLATION SYSTEM
+========================================================= */
+
+const translations = {
+
+    en: {
+
+        selectMarket: "Select Market - (Page Demo)",
+        goldUsd: "Gold / USD (XAU/USD)",
+        bitcoinUsd: "Bitcoin / USD (BTC/USD)",
+        silverUsd: "Silver / USD (XAG/USD)",
+        nasdaqUsd: "Nasdaq / USD (US Tech 100)",
+
+        scalpSignal: "Scalp Signal",
+        scalpStatus: "Scalp Status",
+
+        entry: "Entry",
+        stopLoss: "Stop Loss",
+        liveMarketPrice: " Live Market Price",
+        entryDistance: "Entry Distance",
+
+        ma200Status: "MA200 Status",
+        eciTimeframe: "ECI Timeframe",
+
+        eciIndicators: "ECI Indicators Stop — 15m",
+        stopLong: "Stop Long",
+        stopShort: "Stop Short",
+        resistancePrevious: "Resistance (previous candle)",
+        supportPrevious: "Support (previous candle)",
+        closedCandleSignal:
+            "Signal is calculated only from closed 15-minute candles.",
+
+        manualSimulator: "Manual Scalp Simulator",
+        direction: "Direction",
+        buyLong: "Buy Long",
+        sellShort: "Sell Short",
+        entryPrice: "Entry price",
+        stopPrice: "Stop price",
+        riskPercent: "Risk %",
+        calculateRisk: "Calculate Risk",
+
+        waiting: "Waiting...",
+        waitingSignal: "Waiting for Signal",
+        waitingLivePrice: "Waiting for Live Price",
+        activeEntry: "Waiting for an active 15m ECI entry.",
+        liveUnavailable: "Live market price is unavailable.",
+        nearEntry: "Near Entry",
+        extendedEntry: "Extended from Entry",
+        entryMissed: "Entry Missed",
+
+        buy: "BUY LONG",
+        sell: "SELL SHORT",
+        buyLongStatus: "Buy Long",
+        sellShortStatus: "Sell Short",
+
+        overallStatus: "Overall Status",
+        normal: "Normal",
+        unavailable: "Unavailable",
+
+        rsiWaiting: "RSI condition: Waiting...",
+        rsiNormal: "RSI condition: Normal",
+
+        tp1Reached: "🟢 TP1 reached",
+        tp2Reached: "🟢 TP2 reached",
+
+        live: "LIVE",
+        offline: "OFFLINE",
+
+        signalConfirmed: "15m ECI signal confirmed at",
+        signalConfirmedSimple: "15m ECI signal confirmed",
+        waitingECI: "Waiting for 15m ECI signal...",
+
+        directionResult: "Direction:",
+        entryResult: "Entry:",
+        stopResult: "Stop:",
+        distanceSL: "Distance to SL:",
+        riskSetting: "Risk setting:",
+
+        validValues: "Enter valid values.",
+        invalidStop: "Invalid stop placement for",
+
+        priceClose:
+            "live price is close to the ECI entry.",
+        priceAway:
+            "price has moved away from the ECI entry.",
+        priceFar:
+            "live price is significantly away from the ECI entry."
+    },
+
+    pt: {
+
+        selectMarket: "Selecionar Mercado - (Demonstração)",
+        goldUsd: "Ouro / USD (XAU/USD)",
+        bitcoinUsd: "Bitcoin / USD (BTC/USD)",
+        silverUsd: "Prata / USD (XAG/USD)",
+        nasdaqUsd: "Nasdaq / USD (US Tech 100)",
+
+        scalpSignal: "Sinal de Scalping",
+        scalpStatus: "Status do Scalping",
+
+        entry: "Entrada",
+        stopLoss: "Stop Loss",
+        liveMarketPrice: " Preço de Mercado ao Vivo",
+        entryDistance: "Distância da Entrada",
+
+        ma200Status: "Status da MA200",
+        eciTimeframe: "Timeframe do ECI",
+
+        eciIndicators: "Indicadores ECI Stop — 15m",
+        stopLong: "Stop Long",
+        stopShort: "Stop Short",
+        resistancePrevious: "Resistência (candle anterior)",
+        supportPrevious: "Suporte (candle anterior)",
+        closedCandleSignal:
+            "O sinal é calculado somente com candles de 15 minutos fechados.",
+
+        manualSimulator: "Simulador Manual de Scalping",
+        direction: "Direção",
+        buyLong: "Compra Long",
+        sellShort: "Venda Short",
+        entryPrice: "Preço de entrada",
+        stopPrice: "Preço do stop",
+        riskPercent: "Risco %",
+        calculateRisk: "Calcular Risco",
+
+        waiting: "Aguardando...",
+        waitingSignal: "Aguardando Sinal",
+        waitingLivePrice: "Aguardando Preço ao Vivo",
+        activeEntry: "Aguardando uma entrada ECI 15m ativa.",
+        liveUnavailable: "O preço de mercado ao vivo está indisponível.",
+        nearEntry: "Próximo da Entrada",
+        extendedEntry: "Afastado da Entrada",
+        entryMissed: "Entrada Perdida",
+
+        buy: "COMPRA LONG",
+        sell: "VENDA SHORT",
+        buyLongStatus: "Compra Long",
+        sellShortStatus: "Venda Short",
+
+        overallStatus: "Status Geral",
+        normal: "Normal",
+        unavailable: "Indisponível",
+
+        rsiWaiting: "Condição do RSI: Aguardando...",
+        rsiNormal: "Condição do RSI: Normal",
+
+        tp1Reached: "🟢 TP1 atingido",
+        tp2Reached: "🟢 TP2 atingido",
+
+        live: "AO VIVO",
+        offline: "OFFLINE",
+
+        signalConfirmed: "Sinal ECI 15m confirmado às",
+        signalConfirmedSimple: "Sinal ECI 15m confirmado",
+        waitingECI: "Aguardando sinal ECI de 15m...",
+
+        directionResult: "Direção:",
+        entryResult: "Entrada:",
+        stopResult: "Stop:",
+        distanceSL: "Distância até o SL:",
+        riskSetting: "Configuração de risco:",
+
+        validValues: "Digite valores válidos.",
+        invalidStop: "Posicionamento de stop inválido para",
+
+        priceClose:
+            "o preço ao vivo está próximo da entrada ECI.",
+        priceAway:
+            "o preço se afastou da entrada ECI.",
+        priceFar:
+            "o preço ao vivo está significativamente distante da entrada ECI."
+    },
+
+    es: {
+
+        selectMarket: "Seleccionar Mercado - (Demostración)",
+        goldUsd: "Oro / USD (XAU/USD)",
+        bitcoinUsd: "Bitcoin / USD (BTC/USD)",
+        silverUsd: "Plata / USD (XAG/USD)",
+        nasdaqUsd: "Nasdaq / USD (US Tech 100)",
+
+        scalpSignal: "Señal de Scalping",
+        scalpStatus: "Estado del Scalping",
+
+        entry: "Entrada",
+        stopLoss: "Stop Loss",
+        liveMarketPrice: " Precio de Mercado en Vivo",
+        entryDistance: "Distancia de Entrada",
+
+        ma200Status: "Estado de MA200",
+        eciTimeframe: "Marco Temporal ECI",
+
+        eciIndicators: "Indicadores ECI Stop — 15m",
+        stopLong: "Stop Long",
+        stopShort: "Stop Short",
+        resistancePrevious: "Resistencia (vela anterior)",
+        supportPrevious: "Soporte (vela anterior)",
+        closedCandleSignal:
+            "La señal se calcula únicamente con velas de 15 minutos cerradas.",
+
+        manualSimulator: "Simulador Manual de Scalping",
+        direction: "Dirección",
+        buyLong: "Compra Long",
+        sellShort: "Venta Short",
+        entryPrice: "Precio de entrada",
+        stopPrice: "Precio del stop",
+        riskPercent: "Riesgo %",
+        calculateRisk: "Calcular Riesgo",
+
+        waiting: "Esperando...",
+        waitingSignal: "Esperando Señal",
+        waitingLivePrice: "Esperando Precio en Vivo",
+        activeEntry: "Esperando una entrada ECI 15m activa.",
+        liveUnavailable: "El precio de mercado en vivo no está disponible.",
+        nearEntry: "Cerca de la Entrada",
+        extendedEntry: "Alejado de la Entrada",
+        entryMissed: "Entrada Perdida",
+
+        buy: "COMPRA LONG",
+        sell: "VENTA SHORT",
+        buyLongStatus: "Compra Long",
+        sellShortStatus: "Venta Short",
+
+        overallStatus: "Estado General",
+        normal: "Normal",
+        unavailable: "No disponible",
+
+        rsiWaiting: "Condición del RSI: Esperando...",
+        rsiNormal: "Condición del RSI: Normal",
+
+        tp1Reached: "🟢 TP1 alcanzado",
+        tp2Reached: "🟢 TP2 alcanzado",
+
+        live: "EN VIVO",
+        offline: "SIN CONEXIÓN",
+
+        signalConfirmed: "Señal ECI 15m confirmada a las",
+        signalConfirmedSimple: "Señal ECI 15m confirmada",
+        waitingECI: "Esperando señal ECI de 15m...",
+
+        directionResult: "Dirección:",
+        entryResult: "Entrada:",
+        stopResult: "Stop:",
+        distanceSL: "Distancia al SL:",
+        riskSetting: "Configuración de riesgo:",
+
+        validValues: "Introduce valores válidos.",
+        invalidStop: "Posición de stop inválida para",
+
+        priceClose:
+            "el precio en vivo está cerca de la entrada ECI.",
+        priceAway:
+            "el precio se ha alejado de la entrada ECI.",
+        priceFar:
+            "el precio en vivo está significativamente alejado de la entrada ECI."
+    },
+
+    fr: {
+
+        selectMarket: "Sélectionner le marché - (Démonstration)",
+        goldUsd: "Or / USD (XAU/USD)",
+        bitcoinUsd: "Bitcoin / USD (BTC/USD)",
+        silverUsd: "Argent / USD (XAG/USD)",
+        nasdaqUsd: "Nasdaq / USD (US Tech 100)",
+
+        scalpSignal: "Signal de Scalping",
+        scalpStatus: "État du Scalping",
+
+        entry: "Entrée",
+        stopLoss: "Stop Loss",
+        liveMarketPrice: " Prix du Marché en Direct",
+        entryDistance: "Distance par rapport à l'entrée",
+
+        ma200Status: "État de la MA200",
+        eciTimeframe: "Unité de temps ECI",
+
+        eciIndicators: "Indicateurs ECI Stop — 15m",
+        stopLong: "Stop Long",
+        stopShort: "Stop Short",
+        resistancePrevious: "Résistance (bougie précédente)",
+        supportPrevious: "Support (bougie précédente)",
+        closedCandleSignal:
+            "Le signal est calculé uniquement à partir des bougies de 15 minutes clôturées.",
+
+        manualSimulator: "Simulateur Manuel de Scalping",
+        direction: "Direction",
+        buyLong: "Achat Long",
+        sellShort: "Vente Short",
+        entryPrice: "Prix d'entrée",
+        stopPrice: "Prix du stop",
+        riskPercent: "Risque %",
+        calculateRisk: "Calculer le Risque",
+
+        waiting: "En attente...",
+        waitingSignal: "En attente du Signal",
+        waitingLivePrice: "En attente du Prix en Direct",
+        activeEntry: "En attente d'une entrée ECI 15m active.",
+        liveUnavailable: "Le prix du marché en direct est indisponible.",
+        nearEntry: "Proche de l'Entrée",
+        extendedEntry: "Éloigné de l'Entrée",
+        entryMissed: "Entrée Manquée",
+
+        buy: "ACHAT LONG",
+        sell: "VENTE SHORT",
+        buyLongStatus: "Achat Long",
+        sellShortStatus: "Vente Short",
+
+        overallStatus: "État Général",
+        normal: "Normal",
+        unavailable: "Indisponible",
+
+        rsiWaiting: "Condition RSI : En attente...",
+        rsiNormal: "Condition RSI : Normale",
+
+        tp1Reached: "🟢 TP1 atteint",
+        tp2Reached: "🟢 TP2 atteint",
+
+        live: "EN DIRECT",
+        offline: "HORS LIGNE",
+
+        signalConfirmed: "Signal ECI 15m confirmé à",
+        signalConfirmedSimple: "Signal ECI 15m confirmé",
+        waitingECI: "En attente du signal ECI 15m...",
+
+        directionResult: "Direction :",
+        entryResult: "Entrée :",
+        stopResult: "Stop :",
+        distanceSL: "Distance jusqu'au SL :",
+        riskSetting: "Paramètre de risque :",
+
+        validValues: "Entrez des valeurs valides.",
+        invalidStop: "Position du stop invalide pour",
+
+        priceClose:
+            "le prix en direct est proche de l'entrée ECI.",
+        priceAway:
+            "le prix s'est éloigné de l'entrée ECI.",
+        priceFar:
+            "le prix en direct est considérablement éloigné de l'entrée ECI."
+    }
+};
+
+
+/* =========================================================
+   LANGUAGE DETECTION
+========================================================= */
+
+function getBrowserLanguage() {
+
+    const browserLanguage =
+        navigator.language ||
+        navigator.userLanguage ||
+        "en";
+
+    const language =
+        browserLanguage
+            .split("-")[0]
+            .toLowerCase();
+
+    return translations[language]
+        ? language
+        : "en";
+}
+
+
+const LANG =
+    getBrowserLanguage();
+
+
+const T =
+    key => translations[LANG][key] ||
+           translations.en[key] ||
+           key;
+
+
+/* =========================================================
+   STATIC TRANSLATION
+========================================================= */
+
+function translateStaticPage() {
+
+    document.documentElement.lang =
+        LANG;
+
+    document
+        .querySelectorAll("[data-i18n]")
+        .forEach(element => {
+
+            const key =
+                element.getAttribute(
+                    "data-i18n"
+                );
+
+            if (
+                translations[LANG] &&
+                translations[LANG][key]
+            ) {
+
+                element.textContent =
+                    translations[LANG][key];
+            }
+        });
+
+
+    document
+        .querySelectorAll("[data-i18n-placeholder]")
+        .forEach(element => {
+
+            const key =
+                element.getAttribute(
+                    "data-i18n-placeholder"
+                );
+
+            if (
+                translations[LANG] &&
+                translations[LANG][key]
+            ) {
+
+                element.placeholder =
+                    translations[LANG][key];
+            }
+        });
+}
+
 
 /* =========================================================
    DASHBOARD CONFIGURATION
 ========================================================= */
 
-const API_URL = "https://gold-eci-api.contatoseder.workers.dev";
+const API_URL =
+    "https://gold-eci-api.contatoseder.workers.dev";
 
 
 /* =========================================================
@@ -839,6 +1269,47 @@ function getMarketConfig() {
 
 
 /* =========================================================
+   TRANSLATED MARKET NAME
+========================================================= */
+
+function getTranslatedMarketName() {
+
+    if (selectedMarket === "GOLD") {
+
+        if (LANG === "pt") return "Ouro";
+        if (LANG === "fr") return "Or";
+        if (LANG === "es") return "Oro";
+
+        return "Gold";
+    }
+
+    if (selectedMarket === "BTC") {
+
+        if (LANG === "pt") return "Bitcoin";
+        if (LANG === "fr") return "Bitcoin";
+        if (LANG === "es") return "Bitcoin";
+
+        return "Bitcoin";
+    }
+
+    if (selectedMarket === "SILVER") {
+
+        if (LANG === "pt") return "Prata";
+        if (LANG === "fr") return "Argent";
+        if (LANG === "es") return "Plata";
+
+        return "Silver";
+    }
+
+    if (LANG === "pt") return "Nasdaq";
+    if (LANG === "fr") return "Nasdaq";
+    if (LANG === "es") return "Nasdaq";
+
+    return "Nasdaq";
+}
+
+
+/* =========================================================
    PRICE FORMAT
 ========================================================= */
 
@@ -849,6 +1320,7 @@ function formatPrice(value) {
         value === undefined ||
         !Number.isFinite(Number(value))
     ) {
+
         return "—";
     }
 
@@ -884,7 +1356,8 @@ function updateLiveIndicator(isLive) {
             "live-indicator";
 
         indicator.innerHTML =
-            '<span class="live-dot"></span> LIVE';
+            '<span class="live-dot"></span> ' +
+            T("live");
 
     }
     else {
@@ -893,7 +1366,8 @@ function updateLiveIndicator(isLive) {
             "live-indicator offline";
 
         indicator.innerHTML =
-            '<span class="live-dot"></span> OFFLINE';
+            '<span class="live-dot"></span> ' +
+            T("offline");
     }
 }
 
@@ -934,7 +1408,8 @@ function updateEntryStatus() {
             "—";
 
         statusElement.textContent =
-            "⚪ Waiting for Live Price";
+            "⚪ " +
+            T("waitingLivePrice");
 
         statusElement.className =
             "entry-status neutral-text";
@@ -942,7 +1417,7 @@ function updateEntryStatus() {
         if (detailElement) {
 
             detailElement.textContent =
-                "Live market price is unavailable.";
+                T("liveUnavailable");
         }
 
         return;
@@ -959,7 +1434,8 @@ function updateEntryStatus() {
             "—";
 
         statusElement.textContent =
-            "⚪ Waiting for Signal";
+            "⚪ " +
+            T("waitingSignal");
 
         statusElement.className =
             "entry-status neutral-text";
@@ -967,7 +1443,7 @@ function updateEntryStatus() {
         if (detailElement) {
 
             detailElement.textContent =
-                "Waiting for an active 15m ECI entry.";
+                T("activeEntry");
         }
 
         return;
@@ -1002,7 +1478,8 @@ function updateEntryStatus() {
     ) {
 
         statusElement.textContent =
-            "🟢 Near Entry";
+            "🟢 " +
+            T("nearEntry");
 
         statusElement.className =
             "entry-status positive";
@@ -1010,7 +1487,13 @@ function updateEntryStatus() {
         if (detailElement) {
 
             detailElement.textContent =
-                `${lastScalpSignal}: live price is close to the ECI entry.`;
+                (
+                    lastScalpSignal === "Buy Long"
+                        ? T("buyLongStatus")
+                        : T("sellShortStatus")
+                ) +
+                ": " +
+                T("priceClose");
         }
 
     }
@@ -1020,7 +1503,8 @@ function updateEntryStatus() {
     ) {
 
         statusElement.textContent =
-            "🟡 Extended from Entry";
+            "🟡 " +
+            T("extendedEntry");
 
         statusElement.className =
             "entry-status neutral-text";
@@ -1028,7 +1512,13 @@ function updateEntryStatus() {
         if (detailElement) {
 
             detailElement.textContent =
-                `${lastScalpSignal}: price has moved away from the ECI entry.`;
+                (
+                    lastScalpSignal === "Buy Long"
+                        ? T("buyLongStatus")
+                        : T("sellShortStatus")
+                ) +
+                ": " +
+                T("priceAway");
         }
 
     }
@@ -1036,7 +1526,8 @@ function updateEntryStatus() {
     else {
 
         statusElement.textContent =
-            "🔴 Entry Missed";
+            "🔴 " +
+            T("entryMissed");
 
         statusElement.className =
             "entry-status negative";
@@ -1044,7 +1535,13 @@ function updateEntryStatus() {
         if (detailElement) {
 
             detailElement.textContent =
-                `${lastScalpSignal}: live price is significantly away from the ECI entry.`;
+                (
+                    lastScalpSignal === "Buy Long"
+                        ? T("buyLongStatus")
+                        : T("sellShortStatus")
+                ) +
+                ": " +
+                T("priceFar");
         }
     }
 }
@@ -1086,7 +1583,7 @@ function updateRSIUI(rsi, alertText) {
 
         if (alert) {
             alert.textContent =
-                "RSI condition: Waiting...";
+                T("rsiWaiting");
         }
 
         return;
@@ -1128,8 +1625,39 @@ function updateRSIUI(rsi, alertText) {
 
         if (alertText) {
 
+            /*
+                Preserve API RSI alert content.
+
+                Known English conditions are translated.
+                Unknown/custom API messages are left
+                untouched instead of guessing.
+            */
+
+            let translatedAlert =
+                String(alertText);
+
+            if (
+                translatedAlert ===
+                "RSI condition: Normal"
+            ) {
+
+                translatedAlert =
+                    T("rsiNormal");
+            }
+
+            else if (
+                translatedAlert ===
+                "RSI condition: Waiting..."
+            ) {
+
+                translatedAlert =
+                    T("rsiWaiting");
+            }
+
+
             alert.textContent =
-                alertText;
+                translatedAlert;
+
 
             if (
                 String(alertText)
@@ -1161,7 +1689,7 @@ function updateRSIUI(rsi, alertText) {
         else {
 
             alert.textContent =
-                "RSI condition: Normal";
+                T("rsiNormal");
 
             alert.style.color =
                 "#8b98a5";
@@ -1213,7 +1741,7 @@ function updateTargetUI(
 
         tp1Status.textContent =
             tp1Reached
-                ? "🟢 TP1 reached"
+                ? T("tp1Reached")
                 : "";
 
         tp1Status.style.color =
@@ -1227,7 +1755,7 @@ function updateTargetUI(
 
         tp2Status.textContent =
             tp2Reached
-                ? "🟢 TP2 reached"
+                ? T("tp2Reached")
                 : "";
 
         tp2Status.style.color =
@@ -1277,7 +1805,7 @@ function resetDashboard() {
     document.getElementById(
         "overallStatus"
     ).textContent =
-        "Overall Status: Waiting...";
+        `${T("overallStatus")}: ${T("waiting")}`;
 
     document.getElementById(
         "overallStatus"
@@ -1288,7 +1816,7 @@ function resetDashboard() {
     document.getElementById(
         "pullbaECItatus"
     ).textContent =
-        "Waiting...";
+        T("waiting");
 
     document.getElementById(
         "pullbaECItatus"
@@ -1310,7 +1838,7 @@ function resetDashboard() {
     document.getElementById(
         "signalTime"
     ).textContent =
-        "Waiting for 15m ECI signal...";
+        T("waitingECI");
 
 
     document.getElementById(
@@ -1328,7 +1856,8 @@ function resetDashboard() {
     document.getElementById(
         "entryStatus"
     ).textContent =
-        "⚪ Waiting for Signal";
+        "⚪ " +
+        T("waitingSignal");
 
     document.getElementById(
         "entryStatus"
@@ -1339,7 +1868,7 @@ function resetDashboard() {
     document.getElementById(
         "entryStatusDetail"
     ).textContent =
-        "Waiting for an active ECI entry.";
+        T("activeEntry");
 
 
     document.getElementById(
@@ -1362,7 +1891,7 @@ function resetDashboard() {
     document.getElementById(
         "rsiAlert"
     ).textContent =
-        "RSI condition: Waiting...";
+        T("rsiWaiting");
 
     document.getElementById(
         "rsiAlert"
@@ -1430,11 +1959,12 @@ function resetDashboard() {
     if (priceLabel) {
 
         priceLabel.innerHTML =
-            `${market.name} Live Market Price
-            <span id="liveIndicator"
-                  class="live-indicator offline">
-                <span class="live-dot"></span> LIVE
-            </span>`;
+            `<span id="marketNameText">${getTranslatedMarketName()}</span>` +
+            `<span>${T("liveMarketPrice")}</span>` +
+            `<span id="liveIndicator" class="live-indicator offline">` +
+                `<span class="live-dot"></span> ` +
+                T("offline") +
+            `</span>`;
     }
 
 
@@ -1545,7 +2075,7 @@ function applyDashboardData(data) {
         document.getElementById(
             "marketPrice"
         ).textContent =
-            "Unavailable";
+            T("unavailable");
 
         updateLiveIndicator(false);
     }
@@ -1590,7 +2120,7 @@ function applyDashboardData(data) {
         document.getElementById(
             "biasLine"
         ).textContent =
-            `${market.label} - BUY LONG`;
+            `${market.label} - ${T("buy")}`;
 
         document.getElementById(
             "biasLine"
@@ -1602,8 +2132,8 @@ function applyDashboardData(data) {
             "pullbaECItatus"
         ).textContent =
             data.leverage
-                ? `Buy Long - ${data.leverage}x`
-                : "Buy Long";
+                ? `${T("buyLongStatus")} - ${data.leverage}x`
+                : T("buyLongStatus");
 
         document.getElementById(
             "pullbaECItatus"
@@ -1619,7 +2149,7 @@ function applyDashboardData(data) {
         document.getElementById(
             "biasLine"
         ).textContent =
-            `${market.label} - SELL SHORT`;
+            `${market.label} - ${T("sell")}`;
 
         document.getElementById(
             "biasLine"
@@ -1631,8 +2161,8 @@ function applyDashboardData(data) {
             "pullbaECItatus"
         ).textContent =
             data.leverage
-                ? `Sell Short - ${data.leverage}x`
-                : "Sell Short";
+                ? `${T("sellShortStatus")} - ${data.leverage}x`
+                : T("sellShortStatus");
 
         document.getElementById(
             "pullbaECItatus"
@@ -1657,7 +2187,7 @@ function applyDashboardData(data) {
         document.getElementById(
             "pullbaECItatus"
         ).textContent =
-            "Waiting...";
+            T("waiting");
 
         document.getElementById(
             "pullbaECItatus"
@@ -1704,7 +2234,8 @@ function applyDashboardData(data) {
             document.getElementById(
                 "signalTime"
             ).textContent =
-                "15m ECI signal confirmed at " +
+                T("signalConfirmed") +
+                " " +
                 time.toLocaleString();
 
         }
@@ -1713,7 +2244,7 @@ function applyDashboardData(data) {
             document.getElementById(
                 "signalTime"
             ).textContent =
-                "15m ECI signal confirmed";
+                T("signalConfirmedSimple");
         }
 
     }
@@ -1722,7 +2253,7 @@ function applyDashboardData(data) {
         document.getElementById(
             "signalTime"
         ).textContent =
-            "Waiting for 15m ECI signal...";
+            T("waitingECI");
     }
 
 
@@ -1738,9 +2269,50 @@ function applyDashboardData(data) {
 
     if (data.overallStatus) {
 
+        let translatedOverall =
+            String(data.overallStatus);
+
+        /*
+            Translate the common status values
+            without changing the underlying API value.
+        */
+
+        if (
+            translatedOverall
+                .toLowerCase()
+                .includes("bullish")
+        ) {
+
+            translatedOverall =
+                LANG === "pt"
+                    ? "Bullish"
+                    : LANG === "fr"
+                        ? "Haussier"
+                        : LANG === "es"
+                            ? "Alcista"
+                            : translatedOverall;
+
+        }
+
+        else if (
+            translatedOverall
+                .toLowerCase()
+                .includes("bearish")
+        ) {
+
+            translatedOverall =
+                LANG === "pt"
+                    ? "Bearish"
+                    : LANG === "fr"
+                        ? "Baissier"
+                        : LANG === "es"
+                            ? "Bajista"
+                            : translatedOverall;
+        }
+
+
         overallElement.textContent =
-            "Overall Status: " +
-            data.overallStatus;
+            `${T("overallStatus")}: ${translatedOverall}`;
 
 
         if (
@@ -1775,7 +2347,7 @@ function applyDashboardData(data) {
     else {
 
         overallElement.textContent =
-            "Overall Status: Waiting...";
+            `${T("overallStatus")}: ${T("waiting")}`;
 
         overallElement.className =
             "overall neutral";
@@ -1854,6 +2426,33 @@ function applyDashboardData(data) {
         formatPrice(
             data.previousLow
         );
+
+
+    /*
+        MARKET PRICE LABEL
+    */
+
+    const priceLabel =
+        document.getElementById(
+            "marketPriceLabel"
+        );
+
+    if (priceLabel) {
+
+        priceLabel.innerHTML =
+            `<span id="marketNameText">${getTranslatedMarketName()}</span>` +
+            `<span>${T("liveMarketPrice")}</span>` +
+            `<span id="liveIndicator" class="live-indicator ${data.live !== false ? "" : "offline"}">` +
+                `<span class="live-dot"></span> ` +
+                (data.live !== false
+                    ? T("live")
+                    : T("offline")) +
+            `</span>`;
+
+        updateLiveIndicator(
+            data.live !== false
+        );
+    }
 
 
     /*
@@ -2000,7 +2599,7 @@ function calculateSimulator() {
         document.getElementById(
             "simResult"
         ).textContent =
-            "Enter valid values.";
+            T("validValues");
 
         return;
     }
@@ -2049,8 +2648,13 @@ function calculateSimulator() {
     if (!valid) {
 
         result.textContent =
-            "Invalid stop placement for " +
-            direction +
+            T("invalidStop") +
+            " " +
+            (
+                direction === "Buy Long"
+                    ? T("buyLongStatus")
+                    : T("sellShortStatus")
+            ) +
             ".";
 
         result.className =
@@ -2060,24 +2664,35 @@ function calculateSimulator() {
     }
 
 
+    const translatedDirection =
+        direction === "Buy Long"
+            ? T("buyLongStatus")
+            : T("sellShortStatus");
+
+
     result.innerHTML =
-        "Direction: <strong>" +
-        direction +
+        T("directionResult") +
+        " <strong>" +
+        translatedDirection +
         "</strong><br>" +
 
-        "Entry: <strong>" +
+        T("entryResult") +
+        " <strong>" +
         formatPrice(entry) +
         "</strong><br>" +
 
-        "Stop: <strong>" +
+        T("stopResult") +
+        " <strong>" +
         formatPrice(stop) +
         "</strong><br>" +
 
-        "Distance to SL: <strong>" +
+        T("distanceSL") +
+        " <strong>" +
         percent.toFixed(3) +
         "%</strong><br>" +
 
-        "Risk setting: <strong>" +
+        T("riskSetting") +
+        " <strong>" +
         risk.toFixed(2) +
         "%</strong>";
 
@@ -2092,6 +2707,8 @@ function calculateSimulator() {
 ========================================================= */
 
 async function initialize() {
+
+    translateStaticPage();
 
     await fetchDashboardData();
 }
@@ -2114,100 +2731,6 @@ setInterval(
 );
 
 </script>
-<...translate here..!>
-   <script>
-const translations = {
-    en: {
-        title: "Gold Trading Dashboard",
-        entry: "Entry",
-        stopLoss: "Stop Loss",
-        takeProfit: "Take Profit",
-        buy: "Buy",
-        sell: "Sell",
-        waiting: "Waiting",
-        price: "Price"
-    },
 
-    pt: {
-        title: "Painel de Trading de Ouro",
-        entry: "Entrada",
-        stopLoss: "Stop Loss",
-        takeProfit: "Take Profit",
-        buy: "Comprar",
-        sell: "Vender",
-        waiting: "Aguardando",
-        price: "Preço"
-    },
-
-    es: {
-        title: "Panel de Trading de Oro",
-        entry: "Entrada",
-        stopLoss: "Stop Loss",
-        takeProfit: "Take Profit",
-        buy: "Comprar",
-        sell: "Vender",
-        waiting: "Esperando",
-        price: "Precio"
-    },
-
-    fr: {
-        title: "Tableau de Trading de l'Or",
-        entry: "Entrée",
-        stopLoss: "Stop Loss",
-        takeProfit: "Prise de Profit",
-        buy: "Acheter",
-        sell: "Vendre",
-        waiting: "En attente",
-        price: "Prix"
-    }
-};
-
-
-// Detect browser language
-function getBrowserLanguage() {
-    const browserLanguage =
-        navigator.language ||
-        navigator.userLanguage ||
-        "en";
-
-    // Example:
-    // en-US → en
-    // pt-BR → pt
-    // fr-FR → fr
-    // es-ES → es
-
-    return browserLanguage.split("-")[0].toLowerCase();
-}
-
-
-// Apply translation
-function translatePage() {
-
-    const language = getBrowserLanguage();
-
-    // If language isn't available, use English
-    const selectedLanguage =
-        translations[language] ? language : "en";
-
-    const t = translations[selectedLanguage];
-
-    document.documentElement.lang = selectedLanguage;
-
-    // Elements using data-i18n
-    document.querySelectorAll("[data-i18n]").forEach(element => {
-
-        const key = element.getAttribute("data-i18n");
-
-        if (t[key]) {
-            element.textContent = t[key];
-        }
-
-    });
-}
-
-
-// Run when page loads
-document.addEventListener("DOMContentLoaded", translatePage);
-</script>
 </body>
 </html>
