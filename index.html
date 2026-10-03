@@ -370,6 +370,8 @@ new code backup
             <select id="marketSelect" onchange="switchMarket(this.value)">
                 <option value="GOLD" selected>Gold / USD (XAU/USD)</option>
                 <option value="BTC">Bitcoin / USD (BTC/USD)</option>
+                <option value="SILVER">Silver / USD (XAG/USD)</option>
+                <option value="NASDAQ">NASDAQ / US Tech 100</option>
             </select>
         </div>
 
@@ -427,7 +429,11 @@ new code backup
 
             <div class="stat">
                 <div id="marketPriceLabel" class="label">
-                    Gold Price
+                    <span id="marketPriceLabelText">Gold Live Price</span>
+                    <span id="marketPriceLive" class="live-indicator" style="margin-left:8px;">
+                        <span class="live-dot"></span>
+                        <span>LIVE</span>
+                    </span>
                 </div>
 
                 <div id="marketPrice" class="price">
@@ -686,6 +692,8 @@ new code backup
 
 const GOLD_SYMBOL = "XAUUSD=X";
 const BTC_SYMBOL = "BTC-USD";
+const SILVER_SYMBOL = "XAGUSD";
+const NASDAQ_SYMBOL = "USTEC";
 let selectedMarket = "GOLD";
 
 /*
@@ -1152,21 +1160,43 @@ function getCKSSignal(cks) {
 ========================================================= */
 
 function getMarketConfig() {
-    return selectedMarket === "GOLD"
-        ? {
+    if (selectedMarket === "GOLD") {
+        return {
             label: "XAU/USD",
             name: "Gold",
             yahoo: GOLD_SYMBOL,
             dataSymbol: "XAUUSD",
             tradingView: "OANDA:XAUUSD"
-        }
-        : {
+        };
+    }
+
+    if (selectedMarket === "BTC") {
+        return {
             label: "BTC/USD",
             name: "Bitcoin",
             yahoo: BTC_SYMBOL,
             dataSymbol: "BTCUSD",
             tradingView: "BINANCE:BTCUSDT"
         };
+    }
+
+    if (selectedMarket === "SILVER") {
+        return {
+            label: "XAG/USD",
+            name: "Silver",
+            yahoo: null,
+            dataSymbol: SILVER_SYMBOL,
+            tradingView: "OANDA:XAGUSD"
+        };
+    }
+
+    return {
+        label: "NASDAQ / US Tech 100",
+        name: "Nasdaq",
+        yahoo: null,
+        dataSymbol: NASDAQ_SYMBOL,
+        tradingView: "CAPITALCOM:US100"
+    };
 }
 
 async function fetchMarketData(symbol, interval, limit = 300) {
@@ -2001,7 +2031,7 @@ function calculateSimulator() {
 
 
 function switchMarket(value) {
-    selectedMarket = value === "BTC" ? "BTC" : "GOLD";
+    selectedMarket = ["GOLD", "BTC", "SILVER", "NASDAQ"].includes(value) ? value : "GOLD";
 
     currentPrice = null;
     lastProcessedCandleTime = null;
@@ -2028,7 +2058,12 @@ function switchMarket(value) {
 
     const priceLabel = document.getElementById("marketPriceLabel");
     if (priceLabel) {
-        priceLabel.textContent = `${market.name} Price`;
+        const priceLabelText = document.getElementById("marketPriceLabelText");
+        if (priceLabelText) {
+            priceLabelText.textContent = `${market.name} Live Price`;
+        } else {
+            priceLabel.textContent = `${market.name} Live Price`;
+        }
     }
 
     const oldTv = document.getElementById("tvChart");
@@ -2116,11 +2151,19 @@ function updateDashboardFromCloudflare(data) {
         ? Number(data.price)
         : null;
 
+    const marketPriceLive = document.getElementById("marketPriceLive");
+    if (marketPriceLive) {
+        marketPriceLive.innerHTML = '<span class="live-dot"></span><span>LIVE</span>';
+        marketPriceLive.style.color = "#22c55e";
+    }
+
     document.getElementById("marketPrice").textContent =
         currentPrice !== null ? formatPrice(currentPrice) : "Unavailable";
 
-    document.getElementById("marketPriceLabel").textContent =
-        `${market.name} Live Price`;
+    const priceLabelText = document.getElementById("marketPriceLabelText");
+    if (priceLabelText) {
+        priceLabelText.textContent = `${market.name} Live Price`;
+    }
 
     /* -----------------------------------------------
        Signal / Entry / Stop
@@ -2314,6 +2357,12 @@ function updateAccuracyUI(data) {
 }
 
 function setCloudflareOffline() {
+    const marketPriceLive = document.getElementById("marketPriceLive");
+    if (marketPriceLive) {
+        marketPriceLive.innerHTML = '<span class="live-dot" style="background:#ef4444;animation:none;"></span><span>OFFLINE</span>';
+        marketPriceLive.style.color = "#ef4444";
+    }
+
     const live = document.getElementById("accuracyLive");
     const collecting = document.getElementById("accuracyCollecting");
 
