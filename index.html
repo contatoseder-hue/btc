@@ -155,7 +155,7 @@ new code backup
         color: #facc15;
     }
 
-    /* RSI visual only. It does NOT affect CKS signals. */
+    /* RSI visual only. It does NOT affect ECI signals. */
     .rsi-panel {
         margin-top: 10px;
     }
@@ -384,7 +384,7 @@ new code backup
         </div>
 
         <div id="signalTime" class="signal-time">
-            Waiting for 15m CKS signal...
+            Waiting for 15m ECI signal...
         </div>
     </div>
 
@@ -400,7 +400,7 @@ new code backup
                 Scalp Status
             </div>
 
-            <div id="pullbackStatus" class="status-value neutral-text">
+            <div id="pullbaECItatus" class="status-value neutral-text">
                 Waiting...
             </div>
         </div>
@@ -489,7 +489,7 @@ new code backup
 
             <div class="stat">
                 <div class="label">
-                    CKS Timeframe
+                    ECI Timeframe
                 </div>
 
                 <div class="value">
@@ -546,11 +546,11 @@ new code backup
         </div>
     </div>
 
-    <!-- CKS DETAILS -->
+    <!-- ECI DETAILS -->
     <div class="card">
 
         <div class="section-title">
-            Chande Kroll Stop — 15m
+           ECI Indicators — 15m
         </div>
 
         <div class="grid">
@@ -697,18 +697,18 @@ const NASDAQ_SYMBOL = "USTEC";
 let selectedMarket = "GOLD";
 
 /*
-    CKS is ALWAYS calculated from CLOSED 15-minute candles.
+    ECI is ALWAYS calculated from CLOSED 15-minute candles.
 */
-const cksInterval = "15m";
+const ECIInterval = "15m";
 
 const rsiPeriod = 14;
 
 /*
-    Chande Kroll Stop parameters
+     ECI Indicators parameters
 */
-const cksP = 10;
-const cksX = 1;
-const cksQ = 9;
+const ECIP = 10;
+const ECIX = 1;
+const ECIQ = 9;
 
 
 /*
@@ -901,18 +901,18 @@ function calculateATR(data, period) {
 
 
 /* =========================================================
-   CHANDE KROLL STOP
+    ECI Indicators
 ========================================================= */
 
 function calculateChandeKrollStop(data) {
 
-    if (!data || data.length < cksP + cksQ + 5) {
+    if (!data || data.length < ECIP + ECIQ + 5) {
         return null;
     }
 
     const atr = calculateATR(
         data,
-        cksP
+        ECIP
     );
 
     const preliminaryLong = [];
@@ -925,14 +925,14 @@ function calculateChandeKrollStop(data) {
 
     for (let i = 0; i < data.length; i++) {
 
-        if (i < cksP - 1 || atr[i] === undefined) {
+        if (i < ECIP - 1 || atr[i] === undefined) {
             preliminaryLong.push(null);
             preliminaryShort.push(null);
             continue;
         }
 
         const start =
-            Math.max(0, i - cksP + 1);
+            Math.max(0, i - ECIP + 1);
 
         let highestHigh = -Infinity;
         let lowestLow = Infinity;
@@ -960,11 +960,11 @@ function calculateChandeKrollStop(data) {
 
         const longValue =
             highestHigh -
-            (cksX * atr[i]);
+            (ECIX * atr[i]);
 
         const shortValue =
             lowestLow +
-            (cksX * atr[i]);
+            (ECIX * atr[i]);
 
         preliminaryLong.push(longValue);
         preliminaryShort.push(shortValue);
@@ -983,7 +983,7 @@ function calculateChandeKrollStop(data) {
     for (let i = 0; i < data.length; i++) {
 
         if (
-            i < cksP - 1 ||
+            i < ECIP - 1 ||
             preliminaryLong[i] === null ||
             preliminaryShort[i] === null
         ) {
@@ -994,8 +994,8 @@ function calculateChandeKrollStop(data) {
 
         const start =
             Math.max(
-                cksP - 1,
-                i - cksQ + 1
+                ECIP - 1,
+                i - ECIQ + 1
             );
 
         let highestLong = -Infinity;
@@ -1108,22 +1108,22 @@ function calculateChandeKrollStop(data) {
 
 
 /* =========================================================
-   CKS SIGNAL
+   ECI SIGNAL
 ========================================================= */
 
-function getCKSSignal(cks) {
+function getECISignal(ECI) {
 
-    if (!cks) {
+    if (!ECI) {
         return "Neutral";
     }
 
-    const previous = cks.previous;
-    const last = cks.last;
+    const previous = ECI.previous;
+    const last = ECI.last;
 
 
     /*
         BUY LONG:
-        Previous candle was at/below the upper CKS line,
+        Previous candle was at/below the upper ECI line,
         and the newest closed candle closed above it.
     */
 
@@ -1134,7 +1134,7 @@ function getCKSSignal(cks) {
 
     /*
         SELL SHORT:
-        Previous candle was at/above the lower CKS line,
+        Previous candle was at/above the lower ECI line,
         and the newest closed candle closed below it.
     */
 
@@ -1203,7 +1203,7 @@ async function fetchMarketData(symbol, interval, limit = 300) {
     /*
        PRIMARY DATA SOURCE: BiQuote.
        It supports browser CORS and provides XAUUSD/BTCUSD OHLC candles
-       with an explicit isOpen flag. This keeps the 15m CKS feed stable.
+       with an explicit isOpen flag. This keeps the 15m ECI feed stable.
     */
     const url =
         `https://biquote.io/api/${encodeURIComponent(symbol)}/ohlc` +
@@ -1313,15 +1313,15 @@ async function fetchIndicators() {
         /*
             DATA SOURCE CHANGE ONLY:
             BiQuote 15m OHLC is used for both Gold and BTC.
-            The CKS/RSI/MA200 calculations and signal rules are unchanged.
+            The ECI/RSI/MA200 calculations and signal rules are unchanged.
         */
-        const cksBars = await fetchMarketData(
+        const ECIBars = await fetchMarketData(
             market.dataSymbol,
             "15m",
             500
         );
 
-        const closedData = marketBarsToCandles(cksBars, 15)
+        const closedData = marketBarsToCandles(ECIBars, 15)
             .filter(candle => candle[6] !== true);
 
         if (!Array.isArray(closedData) || closedData.length < 50) {
@@ -1338,7 +1338,7 @@ async function fetchIndicators() {
 
         /*
             MA200 uses the same BiQuote 15m feed and a longer history.
-            This does not change the CKS calculation.
+            This does not change the ECI calculation.
         */
         let ma200 = null;
 
@@ -1364,12 +1364,12 @@ async function fetchIndicators() {
         );
 
         /*
-            CKS CALCULATION IS LOCKED.
+            ECI CALCULATION IS LOCKED.
             P=10, X=1, Q=9 on CLOSED 15m candles.
         */
-        const cks = calculateChandeKrollStop(closedData);
-        updateCKSUI(cks, closedData);
-        updateScalp(cks, closedData, ma200);
+        const ECI = calculateChandeKrollStop(closedData);
+        updateECIUI(ECI, closedData);
+        updateScalp(ECI, closedData, ma200);
 
         // Informational only. Does not alter the existing signal engine.
         updateTradeTargets();
@@ -1399,7 +1399,7 @@ function updateRSIUI(rsi) {
     element.textContent = rsi.toFixed(2);
     element.className = "value " + (rsi >= 50 ? "positive" : "negative");
 
-    // Visual marker only. This never changes the CKS signal.
+    // Visual marker only. This never changes the ECI signal.
     if (marker) {
         const pct = Math.max(0, Math.min(100, rsi));
         marker.style.left = pct + "%";
@@ -1428,8 +1428,8 @@ function updateRSIUI(rsi) {
 
 /* =========================================================
    TP TARGETS — DISPLAY ONLY
-   Does NOT modify CKS, RSI, MA200, entry, or signal logic.
-   TP1 = 2R, TP2 = 3R from the existing CKS stop.
+   Does NOT modify ECI, RSI, MA200, entry, or signal logic.
+   TP1 = 2R, TP2 = 3R from the existing ECI stop.
 ========================================================= */
 
 function updateTradeTargets() {
@@ -1547,15 +1547,15 @@ function updateMAUI(
 
 
 /* =========================================================
-   CKS UI
+   ECI UI
 ========================================================= */
 
-function updateCKSUI(
-    cks,
+function updateECIUI(
+    ECI,
     closedData
 ) {
 
-    if (!cks) {
+    if (!ECI) {
         return;
     }
 
@@ -1564,7 +1564,7 @@ function updateCKSUI(
         "stopLongValue"
     ).textContent =
         formatPrice(
-            cks.last.stopLong
+            ECI.last.stopLong
         );
 
 
@@ -1572,13 +1572,13 @@ function updateCKSUI(
         "stopShortValue"
     ).textContent =
         formatPrice(
-            cks.last.stopShort
+            ECI.last.stopShort
         );
 
 
     /*
         The previous candle high/low are displayed as reference levels.
-        The actual scalp stop uses the 15m CKS line.
+        The actual scalp stop uses the 15m ECI line.
     */
 
     const signalIndex =
@@ -1624,12 +1624,12 @@ function updateCKSUI(
 ========================================================= */
 
 function updateScalp(
-    cks,
+    ECI,
     closedData,
     ma200
 ) {
 
-    if (!cks || !closedData.length) {
+    if (!ECI || !closedData.length) {
         return;
     }
 
@@ -1672,17 +1672,17 @@ function updateScalp(
 
 
     /*
-        Determine the CKS crossover first.
+        Determine the ECI crossover first.
         If there is no NEW crossover, retain the currently active
-        CKS direction instead of leaving Entry/Stop Loss blank.
+        ECI direction instead of leaving Entry/Stop Loss blank.
 
-        This uses the SAME Chande Kroll Stop and the SAME 15m
+        This uses the SAME  ECI Indicators and the SAME 15m
         closed-candle data. No additional indicator or timeframe
         is introduced.
     */
 
     const crossoverSignal =
-        getCKSSignal(cks);
+        getECISignal(ECI);
 
 
     const lastClose =
@@ -1693,7 +1693,7 @@ function updateScalp(
 
     /*
         Show current overall status.
-        MA200 does NOT override the CKS signal.
+        MA200 does NOT override the ECI signal.
     */
 
     if (ma200 !== null) {
@@ -1720,24 +1720,24 @@ function updateScalp(
 
     /*
         If a fresh crossover occurred, use it.
-        Otherwise determine the current CKS direction from the
+        Otherwise determine the current ECI direction from the
         latest CLOSED 15m candle.
 
-        Buy Long  = close is above the CKS short stop.
-        Sell Short = close is below the CKS long stop.
+        Buy Long  = close is above the ECI short stop.
+        Sell Short = close is below the ECI long stop.
 
         This prevents the dashboard from showing "Waiting" when
-        the current 15m CKS state is already directional.
+        the current 15m ECI state is already directional.
     */
 
     let signal = crossoverSignal;
 
     if (signal === "Neutral") {
 
-        if (lastClose > cks.last.stopShort) {
+        if (lastClose > ECI.last.stopShort) {
             signal = "Buy Long";
         }
-        else if (lastClose < cks.last.stopLong) {
+        else if (lastClose < ECI.last.stopLong) {
             signal = "Sell Short";
         }
         else {
@@ -1809,17 +1809,17 @@ function updateScalp(
         STOP LOSS:
 
         Buy Long:
-            lower CKS line (stopShort)
+            lower ECI line (stopShort)
 
         Sell Short:
-            upper CKS line (stopLong)
+            upper ECI line (stopLong)
     */
 
-    // CKS stop: Buy uses the lower CKS line; Sell uses the upper CKS line.
+    // ECI stop: Buy uses the lower ECI line; Sell uses the upper ECI line.
     const stop =
         signal === "Buy Long"
-            ? cks.last.stopShort
-            : cks.last.stopLong;
+            ? ECI.last.stopShort
+            : ECI.last.stopLong;
 
 
     /*
@@ -1842,7 +1842,7 @@ function updateScalp(
 
     const statusElement =
         document.getElementById(
-            "pullbackStatus"
+            "pullbaECItatus"
         );
 
     const biasElement =
@@ -1897,7 +1897,7 @@ function updateScalp(
     document.getElementById(
         "signalTime"
     ).textContent =
-        "15m CKS signal confirmed at " +
+        "15m ECI signal confirmed at " +
         new Date(
             latestClosedTime
         ).toLocaleString();
@@ -2049,11 +2049,11 @@ function switchMarket(value) {
 
     document.getElementById("biasLine").textContent = `${market.label} - WAITING`;
     document.getElementById("biasLine").className = "bias-line waiting";
-    document.getElementById("pullbackStatus").textContent = "Waiting...";
-    document.getElementById("pullbackStatus").className = "status-value neutral-text";
+    document.getElementById("pullbaECItatus").textContent = "Waiting...";
+    document.getElementById("pullbaECItatus").className = "status-value neutral-text";
     document.getElementById("scalpEntry").textContent = "—";
     document.getElementById("scalpStop").textContent = "—";
-    document.getElementById("signalTime").textContent = "Waiting for 15m CKS signal...";
+    document.getElementById("signalTime").textContent = "Waiting for 15m ECI signal...";
     document.getElementById("marketPrice").textContent = "—";
 
     const priceLabel = document.getElementById("marketPriceLabel");
@@ -2170,7 +2170,7 @@ function updateDashboardFromCloudflare(data) {
     ----------------------------------------------- */
 
     const statusElement =
-        document.getElementById("pullbackStatus");
+        document.getElementById("pullbaECItatus");
 
     const biasElement =
         document.getElementById("biasLine");
