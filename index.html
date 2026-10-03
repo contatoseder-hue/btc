@@ -2515,6 +2515,146 @@ setInterval(
 );
 
 </script>
+<!-- Translation Script -->
+   <script>
+(function () {
+    const translations = {
+        en: {
+            "Select Market": "Select Market",
+            "Gold / USD (XAU/USD)": "Gold / USD (XAU/USD)",
+            "Bitcoin / USD (BTC/USD)": "Bitcoin / USD (BTC/USD)",
+            "Silver / USD (XAG/USD)": "Silver / USD (XAG/USD)",
+            "NASDAQ / US Tech 100": "NASDAQ / US Tech 100",
+            "Scalp Signal": "Scalp Signal",
+            "Scalp Status": "Scalp Status",
+            "Entry Distance": "Entry Distance",
+            "Sell Short": "Sell Short",
+            "Buy Long": "Buy Long",
+            "Entry": "Entry",
+            "Stop Loss": "Stop Loss",
+            "Gold Live Price": "Gold Live Price",
+            "RSI 14": "RSI 14",
+            "TP1 (2R)": "TP1 (2R)",
+            "TP2 (3R)": "TP2 (3R)",
+            "MA200": "MA200",
+            "ECI Timeframe": "ECI Timeframe",
+            "ECI Signal Accuracy": "ECI Signal Accuracy",
+            "Wins": "Wins",
+            "Losses": "Losses",
+            "Evaluated": "Evaluated",
+            "Near Entry": "Near Entry",
+            "Extended": "Extended",
+            "Entry Missed": "Entry Missed"
+        },
 
+        pt: {
+            "Select Market": "Selecionar Mercado",
+            "Gold / USD (XAU/USD)": "Ouro / USD (XAU/USD)",
+            "Bitcoin / USD (BTC/USD)": "Bitcoin / USD (BTC/USD)",
+            "Silver / USD (XAG/USD)": "Prata / USD (XAG/USD)",
+            "NASDAQ / US Tech 100": "NASDAQ / US Tech 100",
+            "Scalp Signal": "Sinal de Scalp",
+            "Scalp Status": "Status do Scalp",
+            "Entry Distance": "Distância da Entrada",
+            "Sell Short": "Venda",
+            "Buy Long": "Compra",
+            "Entry": "Entrada",
+            "Stop Loss": "Stop Loss",
+            "Gold Live Price": "Preço do Ouro ao Vivo",
+            "RSI 14": "RSI 14",
+            "TP1 (2R)": "TP1 (2R)",
+            "TP2 (3R)": "TP2 (3R)",
+            "MA200": "MA200",
+            "ECI Timeframe": "Período ECI",
+            "ECI Signal Accuracy": "Precisão dos Sinais ECI",
+            "Wins": "Acertos",
+            "Losses": "Perdas",
+            "Evaluated": "Avaliados",
+            "Near Entry": "Próximo da Entrada",
+            "Extended": "Estendido",
+            "Entry Missed": "Entrada Perdida"
+        },
+
+        es: {
+            "Select Market": "Seleccionar Mercado",
+            "Gold / USD (XAU/USD)": "Oro / USD (XAU/USD)",
+            "Bitcoin / USD (BTC/USD)": "Bitcoin / USD (BTC/USD)",
+            "Silver / USD (XAG/USD)": "Plata / USD (XAG/USD)",
+            "NASDAQ / US Tech 100": "NASDAQ / US Tech 100",
+            "Scalp Signal": "Señal de Scalp",
+            "Scalp Status": "Estado del Scalp",
+            "Entry Distance": "Distancia de Entrada",
+            "Sell Short": "Venta",
+            "Buy Long": "Compra",
+            "Entry": "Entrada",
+            "Stop Loss": "Stop Loss",
+            "Gold Live Price": "Precio del Oro en Vivo",
+            "RSI 14": "RSI 14",
+            "TP1 (2R)": "TP1 (2R)",
+            "TP2 (3R)": "TP2 (3R)",
+            "MA200": "MA200",
+            "ECI Timeframe": "Período ECI",
+            "ECI Signal Accuracy": "Precisión de Señales ECI",
+            "Wins": "Ganadas",
+            "Losses": "Perdidas",
+            "Evaluated": "Evaluadas",
+            "Near Entry": "Cerca de Entrada",
+            "Extended": "Extendido",
+            "Entry Missed": "Entrada Perdida"
+        }
+    };
+
+    function getLanguage() {
+        const language = (
+            navigator.language ||
+            navigator.userLanguage ||
+            "en"
+        ).toLowerCase();
+
+        if (language.startsWith("pt")) return "pt";
+        if (language.startsWith("es")) return "es";
+
+        return "en";
+    }
+
+    function translatePage() {
+        const language = getLanguage();
+        const dictionary = translations[language];
+
+        if (!dictionary) return;
+
+        const walker = document.createTreeWalker(
+            document.body,
+            NodeFilter.SHOW_TEXT
+        );
+
+        const textNodes = [];
+
+        while (walker.nextNode()) {
+            textNodes.push(walker.currentNode);
+        }
+
+        textNodes.forEach(function (node) {
+            const original = node.nodeValue.trim();
+
+            if (!original) return;
+
+            if (dictionary[original]) {
+                node.nodeValue = node.nodeValue.replace(
+                    original,
+                    dictionary[original]
+                );
+            }
+        });
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", translatePage);
+    } else {
+        translatePage();
+    }
+})();
+</script>
+   <!-- Translation Script end -->
 </body>
 </html>
