@@ -1,9 +1,3 @@
-
-
-
-
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -151,6 +145,17 @@
         font-size: 22px;
         font-weight: 800;
         white-space: nowrap;
+    }
+
+    /* ENTRY WARNING */
+    .entry-warning {
+        color: #facc15;
+        font-size: 11px;
+        font-weight: 700;
+        line-height: 1.35;
+        margin-bottom: 9px;
+        max-width: 340px;
+        margin-left: auto;
     }
 
     .entry-distance-near {
@@ -392,6 +397,11 @@
             font-size: 18px;
         }
 
+        .entry-warning {
+            font-size: 10px;
+            max-width: 240px;
+        }
+
         .grid,
         .simulator {
             grid-template-columns: 1fr;
@@ -458,6 +468,11 @@
                 </div>
 
                 <div class="entry-distance-box">
+
+                    <div class="entry-warning">
+                        ⚠️ Do not buy/sell at market. Wait for the ECI entry level with a limit order.
+                    </div>
+
                     <div class="status-title">
                         Entry Distance
                     </div>
