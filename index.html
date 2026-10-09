@@ -1,3 +1,10 @@
+new code backup
+
+
+
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -147,17 +154,6 @@
         white-space: nowrap;
     }
 
-    /* ENTRY WARNING */
-    .entry-warning {
-        color: #facc15;
-        font-size: 11px;
-        font-weight: 700;
-        line-height: 1.35;
-        margin-bottom: 9px;
-        max-width: 340px;
-        margin-left: auto;
-    }
-
     .entry-distance-near {
         color: #22c55e;
     }
@@ -257,45 +253,18 @@
         border-radius: 10px;
     }
 
-    /* =====================================================
-       READ ME BEFORE TRADE
-    ===================================================== */
-
-    .read-me-card {
-        border: 1px solid #facc15;
-        background: #17140d;
-        padding: 20px;
+    /* Only affects the new fullscreen option. */
+    #exchangeFrameContainer:fullscreen {
+        width: 100vw;
+        height: 100vh;
+        background: #0b0f14;
+        border-radius: 0;
     }
 
-    .read-me-header {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 10px;
-    }
-
-    .read-me-icon {
-        font-size: 24px;
-        line-height: 1;
-    }
-
-    .read-me-title {
-        color: #facc15;
-        font-size: 20px;
-        font-weight: 900;
-        letter-spacing: 0.4px;
-    }
-
-    .read-me-text {
-        color: #ffffff;
-        font-size: 15px;
-        line-height: 1.55;
-        font-weight: 700;
-    }
-
-    .read-me-limit {
-        color: #facc15;
-        font-weight: 900;
+    #exchangeFrameContainer:fullscreen iframe {
+        width: 100%;
+        height: 100%;
+        border-radius: 0;
     }
 
     button {
@@ -338,13 +307,6 @@
         margin-top: 8px;
     }
 
-    .signal-age {
-        color: #facc15;
-        font-size: 12px;
-        font-weight: 700;
-        margin-top: 4px;
-    }
-
     /* =====================================================
        LIVE ECI ACCURACY PANEL
     ===================================================== */
@@ -382,20 +344,9 @@
     }
 
     @keyframes livePulse {
-        0% {
-            box-shadow: 0 0 0 0 rgba(34,197,94,.7);
-            opacity: 1;
-        }
-
-        70% {
-            box-shadow: 0 0 0 9px rgba(34,197,94,0);
-            opacity: .8;
-        }
-
-        100% {
-            box-shadow: 0 0 0 0 rgba(34,197,94,0);
-            opacity: 1;
-        }
+        0% { box-shadow: 0 0 0 0 rgba(34,197,94,.7); opacity: 1; }
+        70% { box-shadow: 0 0 0 9px rgba(34,197,94,0); opacity: .8; }
+        100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); opacity: 1; }
     }
 
     .accuracy-main {
@@ -444,7 +395,6 @@
     }
 
     @media(max-width: 700px) {
-
         .status-row {
             gap: 12px;
         }
@@ -455,11 +405,6 @@
 
         .entry-distance-value {
             font-size: 18px;
-        }
-
-        .entry-warning {
-            font-size: 10px;
-            max-width: 240px;
         }
 
         .grid,
@@ -474,19 +419,61 @@
         .price {
             font-size: 25px;
         }
-
-        .read-me-card {
-            padding: 17px;
-        }
-
-        .read-me-title {
-            font-size: 17px;
-        }
-
-        .read-me-text {
-            font-size: 13px;
-        }
     }
+
+
+    /* =====================================================
+       MULTI-TIMEFRAME WMA TREND PANEL (add-on only)
+    ===================================================== */
+    .mtf-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+    }
+    .mtf-cell {
+        min-width: 0;
+        padding: 13px 8px;
+        text-align: center;
+        border: 1px solid #26313c;
+        border-radius: 10px;
+        background: #0d131a;
+    }
+    .mtf-timeframe {
+        color: #8b98a5;
+        font-size: 12px;
+        font-weight: 700;
+        margin-bottom: 7px;
+    }
+    .mtf-status {
+        font-size: 13px;
+        line-height: 1.25;
+        font-weight: 800;
+        overflow-wrap: anywhere;
+    }
+    .mtf-status.bullish { color: #22c55e; }
+    .mtf-status.bearish { color: #ef4444; }
+    .mtf-status.neutral { color: #facc15; }
+    .mtf-status.offline { color: #8b98a5; }
+    .mtf-overall {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 13px;
+        padding: 13px 14px;
+        border-radius: 10px;
+        border: 1px solid #26313c;
+        background: #0d131a;
+    }
+    .mtf-overall-label { color: #8b98a5; font-size: 13px; }
+    .mtf-overall-value { font-size: 16px; font-weight: 800; text-align: right; }
+    .mtf-note { margin-top: 10px; font-size: 12px; color: #7f8b96; line-height: 1.45; }
+    @media (max-width: 600px) {
+        .mtf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .mtf-overall { align-items: flex-start; flex-direction: column; gap: 6px; }
+        .mtf-overall-value { text-align: left; }
+    }
+
 </style>
 </head>
 
@@ -496,20 +483,14 @@
 
     <!-- HEADER -->
     <div class="card header">
-
         <div style="max-width:420px;margin:0 auto 16px;">
-
-            <div class="label" style="text-align:left;">
-                Select Market
-            </div>
-
+            <div class="label" style="text-align:left;">Select Market</div>
             <select id="marketSelect" onchange="switchMarket(this.value)">
                 <option value="GOLD" selected>Gold / USD (XAU/USD)</option>
                 <option value="BTC">Bitcoin / USD (BTC/USD)</option>
                 <option value="SILVER">Silver / USD (XAG/USD)</option>
                 <option value="NASDAQ">NASDAQ / US Tech 100</option>
             </select>
-
         </div>
 
         <div id="biasLine" class="bias-line waiting">
@@ -523,12 +504,7 @@
         <div id="signalTime" class="signal-time">
             Waiting for 15m ECI signal...
         </div>
-
-        <div id="signalAge" class="signal-age">
-        </div>
-
     </div>
-
 
     <!-- MAIN STATUS -->
     <div class="card">
@@ -538,27 +514,19 @@
         </div>
 
         <div class="status-box">
-
             <div class="status-row">
 
                 <div class="status-main">
-
                     <div class="status-title">
                         Scalp Status
                     </div>
 
-                    <div id="pullbaECItatus" class="status-value neutral-text">
+                    <div id="pullbackStatus" class="status-value neutral-text">
                         Waiting...
                     </div>
-
                 </div>
 
                 <div class="entry-distance-box">
-
-                    <div class="entry-warning">
-                        ⚠️ Read below.
-                    </div>
-
                     <div class="status-title">
                         Entry Distance
                     </div>
@@ -566,17 +534,14 @@
                     <div id="entryDistanceValue" class="entry-distance-value entry-distance-waiting">
                         —
                     </div>
-
                 </div>
 
             </div>
-
         </div>
 
         <div class="grid">
 
             <div class="stat">
-
                 <div class="label">
                     Entry
                 </div>
@@ -584,12 +549,9 @@
                 <div id="scalpEntry" class="value">
                     —
                 </div>
-
             </div>
 
-
             <div class="stat">
-
                 <div class="label">
                     Stop Loss
                 </div>
@@ -597,38 +559,23 @@
                 <div id="scalpStop" class="value">
                     —
                 </div>
-
             </div>
 
-
             <div class="stat">
-
                 <div id="marketPriceLabel" class="label">
-
-                    <span id="marketPriceLabelText">
-                        Gold Live Price
-                    </span>
-
-                    <span id="marketPriceLive"
-                          class="live-indicator"
-                          style="margin-left:8px;">
-
+                    <span id="marketPriceLabelText">Gold Live Price</span>
+                    <span id="marketPriceLive" class="live-indicator" style="margin-left:8px;">
                         <span class="live-dot"></span>
                         <span>LIVE</span>
-
                     </span>
-
                 </div>
 
                 <div id="marketPrice" class="price">
                     —
                 </div>
-
             </div>
 
-
             <div class="stat">
-
                 <div class="label">
                     RSI 14
                 </div>
@@ -638,64 +585,33 @@
                 </div>
 
                 <div class="rsi-panel">
-
                     <div class="rsi-track">
                         <div id="rsiMarker" class="rsi-marker"></div>
                     </div>
-
                     <div class="rsi-scale">
-                        <span>0</span>
-                        <span>30</span>
-                        <span>50</span>
-                        <span>70</span>
-                        <span>100</span>
+                        <span>0</span><span>30</span><span>50</span><span>70</span><span>100</span>
                     </div>
-
-                    <div id="rsiAlert" class="rsi-alert">
-                        RSI condition: Waiting...
-                    </div>
-
+                    <div id="rsiAlert" class="rsi-alert">RSI condition: Waiting...</div>
                 </div>
-
             </div>
 
-
             <div class="stat">
-
                 <div class="label">
                     TP1 (2R)
                 </div>
-
-                <div id="tp1Value" class="value">
-                    —
-                </div>
-
-                <div id="tp1Status" class="target-hit">
-                    &nbsp;
-                </div>
-
+                <div id="tp1Value" class="value">—</div>
+                <div id="tp1Status" class="target-hit">&nbsp;</div>
             </div>
 
-
             <div class="stat">
-
                 <div class="label">
                     TP2 (3R)
                 </div>
-
-                <div id="tp2Value" class="value">
-                    —
-                </div>
-
-                <div id="tp2Status" class="target-hit">
-                    &nbsp;
-                </div>
-
+                <div id="tp2Value" class="value">—</div>
+                <div id="tp2Status" class="target-hit">&nbsp;</div>
             </div>
 
-
             <div class="stat">
-
                 <div class="label">
                     MA200
                 </div>
@@ -703,12 +619,9 @@
                 <div id="ma200Value" class="value">
                     —
                 </div>
-
             </div>
 
-
             <div class="stat">
-
                 <div class="label">
                     ECI Timeframe
                 </div>
@@ -716,103 +629,56 @@
                 <div class="value">
                     15 Minutes
                 </div>
-
             </div>
 
         </div>
-
     </div>
-
 
     <!-- LIVE ECI SIGNAL ACCURACY -->
     <div class="card accuracy-card">
-
         <div class="accuracy-header">
-
             <div class="section-title" style="margin-bottom:0;">
                 ECI Signal Accuracy
             </div>
-
             <div id="accuracyLive" class="live-indicator">
-
                 <span class="live-dot"></span>
                 <span>LIVE</span>
-
             </div>
-
         </div>
 
-
         <div class="accuracy-main">
-
             <div class="stat">
-
                 <div class="label">
                     TP1 Before SL
                 </div>
-
                 <div id="accuracyPercent" class="accuracy-percent">
                     —
                 </div>
-
                 <div id="accuracyCollecting" class="accuracy-subtitle">
                     Waiting for signal data...
                 </div>
-
             </div>
-
 
             <div class="accuracy-stats">
-
                 <div class="accuracy-mini">
-
-                    <div class="accuracy-mini-label">
-                        Wins
-                    </div>
-
-                    <div id="accuracyWins" class="accuracy-mini-value positive">
-                        0
-                    </div>
-
+                    <div class="accuracy-mini-label">Wins</div>
+                    <div id="accuracyWins" class="accuracy-mini-value positive">0</div>
                 </div>
-
-
                 <div class="accuracy-mini">
-
-                    <div class="accuracy-mini-label">
-                        Losses
-                    </div>
-
-                    <div id="accuracyLosses" class="accuracy-mini-value negative">
-                        0
-                    </div>
-
+                    <div class="accuracy-mini-label">Losses</div>
+                    <div id="accuracyLosses" class="accuracy-mini-value negative">0</div>
                 </div>
-
-
                 <div class="accuracy-mini">
-
-                    <div class="accuracy-mini-label">
-                        Evaluated
-                    </div>
-
-                    <div id="accuracyEvaluated" class="accuracy-mini-value">
-                        0
-                    </div>
-
+                    <div class="accuracy-mini-label">Evaluated</div>
+                    <div id="accuracyEvaluated" class="accuracy-mini-value">0</div>
                 </div>
-
             </div>
-
         </div>
-
 
         <div class="small">
             Historical and live ECI signals. TP1 = 2R. Same-candle TP1/SL conflicts are not counted.
         </div>
-
     </div>
-
 
     <!-- ECI DETAILS -->
     <div class="card">
@@ -824,7 +690,6 @@
         <div class="grid">
 
             <div class="stat">
-
                 <div class="label">
                     Stop Long
                 </div>
@@ -832,12 +697,9 @@
                 <div id="stopLongValue" class="value">
                     —
                 </div>
-
             </div>
 
-
             <div class="stat">
-
                 <div class="label">
                     Stop Short
                 </div>
@@ -845,12 +707,9 @@
                 <div id="stopShortValue" class="value">
                     —
                 </div>
-
             </div>
 
-
             <div class="stat">
-
                 <div class="label">
                     Resistance (previous candle)
                 </div>
@@ -858,12 +717,9 @@
                 <div id="previousHighValue" class="value">
                     —
                 </div>
-
             </div>
 
-
             <div class="stat">
-
                 <div class="label">
                     Support (previous candle)
                 </div>
@@ -871,11 +727,9 @@
                 <div id="previousLowValue" class="value">
                     —
                 </div>
-
             </div>
 
         </div>
-
 
         <div class="small">
             Signal is calculated only from closed 15-minute candles.
@@ -883,72 +737,65 @@
 
     </div>
 
+    <!-- MULTI-TIMEFRAME WMA TREND PANEL (new; separate from ECI) -->
+    <div class="card" id="multiTimeframePanel">
+        <div class="section-title">Multi-Timeframe Trend</div>
+        <div class="mtf-grid">
+            <div class="mtf-cell"><div class="mtf-timeframe">1 MINUTE</div><div id="mtfStatus1m" class="mtf-status offline">Loading…</div></div>
+            <div class="mtf-cell"><div class="mtf-timeframe">5 MINUTES</div><div id="mtfStatus5m" class="mtf-status offline">Loading…</div></div>
+            <div class="mtf-cell"><div class="mtf-timeframe">15 MINUTES</div><div id="mtfStatus15m" class="mtf-status offline">Loading…</div></div>
+            <div class="mtf-cell"><div class="mtf-timeframe">30 MINUTES</div><div id="mtfStatus30m" class="mtf-status offline">Loading…</div></div>
+            <div class="mtf-cell"><div class="mtf-timeframe">1 HOUR</div><div id="mtfStatus1h" class="mtf-status offline">Loading…</div></div>
+            <div class="mtf-cell"><div class="mtf-timeframe">2 HOURS</div><div id="mtfStatus2h" class="mtf-status offline">Loading…</div></div>
+            <div class="mtf-cell"><div class="mtf-timeframe">4 HOURS</div><div id="mtfStatus4h" class="mtf-status offline">Loading…</div></div>
+            <div class="mtf-cell"><div class="mtf-timeframe">1 DAY</div><div id="mtfStatus1d" class="mtf-status offline">Loading…</div></div>
+        </div>
+        <div class="mtf-overall">
+            <div class="mtf-overall-label">Overall WMA Trend (15-minute timeframe)</div>
+            <div id="mtfOverallStatus" class="mtf-overall-value neutral">Loading…</div>
+        </div>
+        <div id="mtfUpdatedAt" class="mtf-note">Waiting for market data…</div>
+        <div class="mtf-note">Timeframe status: latest candle open compared with WMA 200 calculated from prior completed candles. Overall status: 15-minute WMA 100 compared with WMA 200, using completed candles. This panel does not change ECI signals.</div>
+    </div>
 
-    <!-- TRADINGVIEW -->
+    <!-- TRADINGVIEW / EXCHANGE WEBSITE PANEL (added option only) -->
     <div class="card">
 
-        <div class="section-title">
+        <div class="section-title" id="chartTitle">
             TradingView — XAU/USD 15m
         </div>
 
-        <div class="chart-container">
+        <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:end; margin-bottom:12px;">
+            <div style="flex:1; min-width:190px;">
+                <div class="label">Open Exchange Website Inside Dashboard</div>
+                <select id="exchangeWebsiteSelector" onchange="openExchangeWebsite()">
+                    <option value="CHART" selected>TradingView Chart (default)</option>
+                    <option value="OANDA">OANDA Website</option>
+                    <option value="BINANCE">Binance Website</option>
+                    <option value="BINGX">BingX Website</option>
+                </select>
+            </div>
+            <button type="button" id="exchangeFullscreenButton" onclick="toggleExchangeFullscreen()" style="width:auto; min-width:150px; margin-top:0;">
+                ⛶ Fullscreen
+            </button>
+        </div>
+        <div id="exchangeFrameNotice" class="small" style="margin-bottom:10px;">
+            Choose an exchange above to try opening its full website in this panel. Some exchanges block iframe embedding.
+        </div>
 
+        <div class="chart-container" id="exchangeFrameContainer">
             <iframe
                 id="tvChart"
-                src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_chart_initial&tvwidgetsymbol=OANDA%3AXAUUSD&symbol=OANDA%3AXAUUSD&interval=15&hidesidetoolbar=0&symboledit=1&saveimage=1&toolbarbg=f1f3f6&studies=%20&theme=dark&style=1&timezone=Etc%2FUTC&withdateranges=1&hideideas=1"
+                title="TradingView chart or embedded exchange website"
+                src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_chart_initial&tvwidgetsymbol=OANDA%3AXAUUSD&symbol=OANDA%3AXAUUSD&interval=15&hidesidetoolbar=0&symboledit=1&saveimage=1&toolbarbg=f1f3f6&studies=Chande%20Kroll%20Stop&theme=dark&style=1&timezone=Etc%2FUTC&withdateranges=1&hideideas=1"
+                allow="fullscreen; clipboard-read; clipboard-write"
+                allowfullscreen
                 allowtransparency="true"
                 scrolling="no">
             </iframe>
-
         </div>
 
     </div>
-
-
-    <!-- =====================================================
-         READ ME BEFORE TRADE
-         POSITION: BELOW CHART / ABOVE CALCULATOR
-    ====================================================== -->
-
-    <div class="card read-me-card">
-
-    <div class="read-me-header">
-
-        <div class="read-me-icon">
-            ⚠️
-        </div>
-
-        <div class="read-me-title">
-            READ ME BEFORE TRADE
-        </div>
-
-    </div>
-
-    <div class="read-me-text">
-
-        <span class="read-me-limit">
-            Do NOT buy or sell at market.
-        </span>
-
-        Wait for the ECI entry level and use a
-        <span class="read-me-limit">
-            LIMIT order.
-        </span>
-
-        <br><br>
-
-        <span class="read-me-limit">
-            ⚠️ DISCLAIMER:
-        </span>
-
-        This dashboard is for informational and educational purposes only.
-        Signals are not financial advice. Leveraged trading involves substantial
-        risk, including loss of your trading capital. Trade responsibly.
-
-    </div>
-
-</div>
-
 
     <!-- SIMULATOR -->
     <div class="card">
@@ -960,77 +807,49 @@
         <div class="simulator">
 
             <div>
-
-                <div class="label">
-                    Direction
-                </div>
+                <div class="label">Direction</div>
 
                 <select id="simDirection">
-
-                    <option value="Buy Long">
-                        Buy Long
-                    </option>
-
-                    <option value="Sell Short">
-                        Sell Short
-                    </option>
-
+                    <option value="Buy Long">Buy Long</option>
+                    <option value="Sell Short">Sell Short</option>
                 </select>
-
             </div>
 
-
             <div>
-
-                <div class="label">
-                    Entry
-                </div>
+                <div class="label">Entry</div>
 
                 <input
                     id="simEntry"
                     type="number"
                     step="0.01"
                     placeholder="Entry price">
-
             </div>
 
-
             <div>
-
-                <div class="label">
-                    Stop Loss
-                </div>
+                <div class="label">Stop Loss</div>
 
                 <input
                     id="simStop"
                     type="number"
                     step="0.01"
                     placeholder="Stop price">
-
             </div>
 
-
             <div>
-
-                <div class="label">
-                    Risk %
-                </div>
+                <div class="label">Risk %</div>
 
                 <input
                     id="simRisk"
                     type="number"
                     step="0.1"
                     value="0.5">
-
             </div>
 
         </div>
 
-
         <button onclick="calculateSimulator()">
             Calculate Risk
         </button>
-
 
         <div id="simResult" class="small"></div>
 
@@ -1072,29 +891,6 @@ const eciQ = 9;
     A candle is processed only once when it closes.
 */
 const refreshMilliseconds = 15000;
-
-
-/*
-    =========================================================
-    PREVIEW SIGNAL TIME ONLY
-    =========================================================
-
-    This timestamp is being used ONLY so you can preview
-    how the "Signal age" display will look.
-
-    It does NOT change:
-    - ECI calculation
-    - signal logic
-    - entry
-    - stop loss
-    - TP1
-    - TP2
-    - accuracy
-
-    Remove this preview logic later when you want the
-    dashboard to use the API's actual signalTime again.
-*/
-const PREVIEW_SIGNAL_TIME = "2026-10-08T00:15:00";
 
 
 /* =========================================================
@@ -1279,7 +1075,7 @@ function calculateATR(data, period) {
 
 
 /* =========================================================
-   ECI Indicators
+   CHANDE KROLL STOP
 ========================================================= */
 
 function calculateECI(data) {
@@ -1538,9 +1334,7 @@ function getECISignal(eci) {
 ========================================================= */
 
 function getMarketConfig() {
-
     if (selectedMarket === "GOLD") {
-
         return {
             label: "XAU/USD",
             name: "Gold",
@@ -1548,11 +1342,9 @@ function getMarketConfig() {
             dataSymbol: "XAUUSD",
             tradingView: "OANDA:XAUUSD"
         };
-
     }
 
     if (selectedMarket === "BTC") {
-
         return {
             label: "BTC/USD",
             name: "Bitcoin",
@@ -1560,11 +1352,9 @@ function getMarketConfig() {
             dataSymbol: "BTCUSD",
             tradingView: "BINANCE:BTCUSDT"
         };
-
     }
 
     if (selectedMarket === "SILVER") {
-
         return {
             label: "XAG/USD",
             name: "Silver",
@@ -1572,7 +1362,6 @@ function getMarketConfig() {
             dataSymbol: SILVER_SYMBOL,
             tradingView: "OANDA:XAGUSD"
         };
-
     }
 
     return {
@@ -1584,339 +1373,175 @@ function getMarketConfig() {
     };
 }
 
-
 async function fetchMarketData(symbol, interval, limit = 300) {
-
     /*
        PRIMARY DATA SOURCE: BiQuote.
        It supports browser CORS and provides XAUUSD/BTCUSD OHLC candles
        with an explicit isOpen flag. This keeps the 15m ECI feed stable.
     */
-
     const url =
         `https://biquote.io/api/${encodeURIComponent(symbol)}/ohlc` +
         `?interval=${encodeURIComponent(interval)}&limit=${Math.min(Math.max(limit, 50), 1000)}`;
 
     const response = await fetch(url, {
         cache: "no-store",
-        headers: {
-            "Accept": "application/json"
-        }
+        headers: { "Accept": "application/json" }
     });
 
     if (!response.ok) {
-
-        throw new Error(
-            `BiQuote market data request failed: ${response.status}`
-        );
-
+        throw new Error(`BiQuote market data request failed: ${response.status}`);
     }
 
     const json = await response.json();
-
-    const bars =
-        json?.bars ||
-        json?.data?.bars ||
-        json?.data ||
-        [];
+    const bars = json?.bars || json?.data?.bars || json?.data || [];
 
     if (!Array.isArray(bars) || !bars.length) {
-
-        throw new Error(
-            "No BiQuote OHLC market data returned"
-        );
-
+        throw new Error("No BiQuote OHLC market data returned");
     }
 
     return bars;
 }
 
-
-function marketBarsToCandles(
-    bars,
-    intervalMinutes = 15
-) {
-
+function marketBarsToCandles(bars, intervalMinutes = 15) {
     /*
        Normalizes BiQuote bars to the existing internal candle format:
        [time, open, high, low, close, volume, isOpen]
     */
+    return bars.map(bar => {
+        const timeValue =
+            bar.openTime ?? bar.open_time ?? bar.timestamp ?? bar.time ?? bar.t;
 
-    return bars
-        .map(bar => {
+        const time = typeof timeValue === "string"
+            ? Date.parse(timeValue)
+            : Number(timeValue) < 100000000000
+                ? Number(timeValue) * 1000
+                : Number(timeValue);
 
-            const timeValue =
-                bar.openTime ??
-                bar.open_time ??
-                bar.timestamp ??
-                bar.time ??
-                bar.t;
+        const o = Number(bar.open ?? bar.o);
+        const h = Number(bar.high ?? bar.h);
+        const l = Number(bar.low ?? bar.l);
+        const c = Number(bar.close ?? bar.c);
+        const v = Number(bar.volume ?? bar.v ?? bar.tickVolume ?? 0);
 
-            const time =
-                typeof timeValue === "string"
-                    ? Date.parse(timeValue)
-                    : Number(timeValue) < 100000000000
-                        ? Number(timeValue) * 1000
-                        : Number(timeValue);
+        const isOpen =
+            bar.isOpen === true
+                ? true
+                : bar.isOpen === false
+                    ? false
+                    : (time + intervalMinutes * 60 * 1000 > Date.now() + 5000);
 
-            const o =
-                Number(
-                    bar.open ??
-                    bar.o
-                );
-
-            const h =
-                Number(
-                    bar.high ??
-                    bar.h
-                );
-
-            const l =
-                Number(
-                    bar.low ??
-                    bar.l
-                );
-
-            const c =
-                Number(
-                    bar.close ??
-                    bar.c
-                );
-
-            const v =
-                Number(
-                    bar.volume ??
-                    bar.v ??
-                    bar.tickVolume ??
-                    0
-                );
-
-            const isOpen =
-                bar.isOpen === true
-                    ? true
-                    : bar.isOpen === false
-                        ? false
-                        : (
-                            time +
-                            intervalMinutes * 60 * 1000 >
-                            Date.now() + 5000
-                        );
-
-            return [
-                time,
-                o,
-                h,
-                l,
-                c,
-                v,
-                isOpen
-            ];
-
-        })
+        return [time, o, h, l, c, v, isOpen];
+    })
         .filter(c =>
             Number.isFinite(c[0]) &&
-            [c[1], c[2], c[3], c[4]]
-                .every(Number.isFinite)
+            [c[1], c[2], c[3], c[4]].every(Number.isFinite)
         )
-        .sort(
-            (a, b) => a[0] - b[0]
-        );
+        .sort((a, b) => a[0] - b[0]);
 }
 
-
 async function fetchCurrentPrice() {
-
     try {
-
-        const market =
-            getMarketConfig();
-
+        const market = getMarketConfig();
         const url =
             `https://biquote.io/api/${encodeURIComponent(market.dataSymbol)}`;
 
-        const response =
-            await fetch(
-                url,
-                {
-                    cache: "no-store",
-                    headers: {
-                        "Accept": "application/json"
-                    }
-                }
-            );
+        const response = await fetch(url, {
+            cache: "no-store",
+            headers: { "Accept": "application/json" }
+        });
 
         if (!response.ok) {
-
-            throw new Error(
-                `BiQuote live price request failed: ${response.status}`
-            );
-
+            throw new Error(`BiQuote live price request failed: ${response.status}`);
         }
 
-        const quote =
-            await response.json();
-
-        const price =
-            Number(
-                quote?.mid ??
-                quote?.last ??
-                quote?.price
-            );
+        const quote = await response.json();
+        const price = Number(quote?.mid ?? quote?.last ?? quote?.price);
 
         if (!Number.isFinite(price)) {
-
-            throw new Error(
-                "Invalid live price returned by BiQuote"
-            );
-
+            throw new Error("Invalid live price returned by BiQuote");
         }
 
-        currentPrice =
-            price;
+        currentPrice = price;
+        document.getElementById("marketPrice").textContent = formatPrice(currentPrice);
 
-        document.getElementById(
-            "marketPrice"
-        ).textContent =
-            formatPrice(
-                currentPrice
-            );
+        // A market quote can remain live even when the ECI Worker is unavailable.
+        const marketPriceLive = document.getElementById("marketPriceLive");
+        if (marketPriceLive) {
+            marketPriceLive.innerHTML = '<span class="live-dot"></span><span>LIVE • PRICE FEED</span>';
+            marketPriceLive.style.color = "#22c55e";
+        }
 
-        const priceLine =
-            document.getElementById(
-                "priceLine"
-            );
-
+        const priceLine = document.getElementById("priceLine");
         if (priceLine) {
-
-            priceLine.textContent =
-                `${market.name} Price: ${formatPrice(currentPrice)}`;
-
+            priceLine.textContent = `${market.name} Price: ${formatPrice(currentPrice)}`;
         }
 
-    }
-    catch (error) {
-
-        console.error(
-            "Price error:",
-            error
-        );
-
+    } catch (error) {
+        console.error("BiQuote price fallback error:", error);
         currentPrice = null;
-
-        document.getElementById(
-            "marketPrice"
-        ).textContent =
-            "Unavailable";
+        document.getElementById("marketPrice").textContent = "Unavailable";
+        const marketPriceLive = document.getElementById("marketPriceLive");
+        if (marketPriceLive) {
+            marketPriceLive.innerHTML = '<span class="live-dot" style="background:#ef4444;animation:none;"></span><span>OFFLINE</span>';
+            marketPriceLive.style.color = "#ef4444";
+        }
     }
 }
-
 
 /* =========================================================
    FETCH INDICATORS
 ========================================================= */
 
 async function fetchIndicators() {
-
     try {
-
-        const market =
-            getMarketConfig();
+        const market = getMarketConfig();
 
         /*
             DATA SOURCE CHANGE ONLY:
             BiQuote 15m OHLC is used for both Gold and BTC.
             The ECI/RSI/MA200 calculations and signal rules are unchanged.
         */
+        const eciBars = await fetchMarketData(
+            market.dataSymbol,
+            "15m",
+            500
+        );
 
-        const eciBars =
-            await fetchMarketData(
-                market.dataSymbol,
-                "15m",
-                500
-            );
+        const closedData = marketBarsToCandles(eciBars, 15)
+            .filter(candle => candle[6] !== true);
 
-        const closedData =
-            marketBarsToCandles(
-                eciBars,
-                15
-            )
-            .filter(
-                candle => candle[6] !== true
-            );
-
-        if (
-            !Array.isArray(closedData) ||
-            closedData.length < 50
-        ) {
-
-            throw new Error(
-                "Not enough CLOSED 15m market data returned"
-            );
-
+        if (!Array.isArray(closedData) || closedData.length < 50) {
+            throw new Error("Not enough CLOSED 15m market data returned");
         }
 
-        const closes =
-            closedData.map(
-                candle =>
-                    parseFloat(candle[4])
-            );
+        const closes = closedData.map(candle => parseFloat(candle[4]));
 
-        const rsi =
-            calculateRSI(
-                closes.slice(
-                    -(rsiPeriod + 1)
-                ),
-                rsiPeriod
-            );
-
+        const rsi = calculateRSI(
+            closes.slice(-(rsiPeriod + 1)),
+            rsiPeriod
+        );
         updateRSIUI(rsi);
-
 
         /*
             MA200 uses the same BiQuote 15m feed and a longer history.
             This does not change the ECI calculation.
         */
-
         let ma200 = null;
 
         try {
-
-            const maBars =
-                await fetchMarketData(
-                    market.dataSymbol,
-                    "15m",
-                    1000
-                );
-
-            const maData =
-                marketBarsToCandles(
-                    maBars,
-                    15
-                )
-                .filter(
-                    candle => candle[6] !== true
-                );
-
-            const maCloses =
-                maData.map(
-                    candle =>
-                        parseFloat(candle[4])
-                );
-
-            ma200 =
-                calculateMA(
-                    maCloses,
-                    200
-                );
-
-        }
-        catch (maError) {
-
-            console.error(
-                "MA200 data error:",
-                maError
+            const maBars = await fetchMarketData(
+                market.dataSymbol,
+                "15m",
+                1000
             );
 
+            const maData = marketBarsToCandles(maBars, 15)
+                .filter(candle => candle[6] !== true);
+
+            const maCloses = maData.map(candle => parseFloat(candle[4]));
+            ma200 = calculateMA(maCloses, 200);
+        } catch (maError) {
+            console.error("MA200 data error:", maError);
         }
 
         updateMAUI(
@@ -1924,43 +1549,21 @@ async function fetchIndicators() {
             closes[closes.length - 1]
         );
 
-
         /*
             ECI CALCULATION IS LOCKED.
             P=10, X=1, Q=9 on CLOSED 15m candles.
         */
-
-        const eci =
-            calculateECI(
-                closedData
-            );
-
-        updateECIUI(
-            eci,
-            closedData
-        );
-
-        updateScalp(
-            eci,
-            closedData,
-            ma200
-        );
-
+        const eci = calculateECI(closedData);
+        updateECIUI(eci, closedData);
+        updateScalp(eci, closedData, ma200);
 
         // Informational only. Does not alter the existing signal engine.
         updateTradeTargets();
 
-    }
-    catch (error) {
-
-        console.error(
-            "Indicator error:",
-            error
-        );
-
+    } catch (error) {
+        console.error("Indicator error:", error);
     }
 }
-
 
 /* =========================================================
    RSI UI
@@ -1968,121 +1571,43 @@ async function fetchIndicators() {
 
 function updateRSIUI(rsi) {
 
-    const element =
-        document.getElementById(
-            "rsiValue"
-        );
+    const element = document.getElementById("rsiValue");
+    const marker = document.getElementById("rsiMarker");
+    const alert = document.getElementById("rsiAlert");
 
-    const marker =
-        document.getElementById(
-            "rsiMarker"
-        );
-
-    const alert =
-        document.getElementById(
-            "rsiAlert"
-        );
-
-
-    if (
-        rsi === null ||
-        !Number.isFinite(rsi)
-    ) {
-
-        element.textContent =
-            "—";
-
-        if (marker) {
-            marker.style.left =
-                "50%";
-        }
-
-        if (alert) {
-            alert.textContent =
-                "RSI condition: Waiting...";
-        }
-
+    if (rsi === null || !Number.isFinite(rsi)) {
+        element.textContent = "—";
+        if (marker) marker.style.left = "50%";
+        if (alert) alert.textContent = "RSI condition: Waiting...";
         return;
     }
 
-
-    element.textContent =
-        rsi.toFixed(2);
-
-    element.className =
-        "value " +
-        (
-            rsi >= 50
-                ? "positive"
-                : "negative"
-        );
-
+    element.textContent = rsi.toFixed(2);
+    element.className = "value " + (rsi >= 50 ? "positive" : "negative");
 
     // Visual marker only. This never changes the ECI signal.
-
     if (marker) {
-
-        const pct =
-            Math.max(
-                0,
-                Math.min(
-                    100,
-                    rsi
-                )
-            );
-
-        marker.style.left =
-            pct + "%";
+        const pct = Math.max(0, Math.min(100, rsi));
+        marker.style.left = pct + "%";
     }
 
-
     if (alert) {
-
         if (rsi >= 75) {
-
-            alert.textContent =
-                "🔴 RSI EXTREME — possible exhaustion";
-
-            alert.style.color =
-                "#ef4444";
-
+            alert.textContent = "🔴 RSI EXTREME — possible exhaustion";
+            alert.style.color = "#ef4444";
+        } else if (rsi >= 70) {
+            alert.textContent = "🟠 RSI HIGH — watch for momentum loss";
+            alert.style.color = "#facc15";
+        } else if (rsi <= 25) {
+            alert.textContent = "🔴 RSI EXTREME LOW — possible exhaustion";
+            alert.style.color = "#ef4444";
+        } else if (rsi <= 30) {
+            alert.textContent = "🟠 RSI LOW — watch for momentum recovery";
+            alert.style.color = "#facc15";
+        } else {
+            alert.textContent = "RSI condition: Normal";
+            alert.style.color = "#8b98a5";
         }
-        else if (rsi >= 70) {
-
-            alert.textContent =
-                "🟠 RSI HIGH — watch for momentum loss";
-
-            alert.style.color =
-                "#facc15";
-
-        }
-        else if (rsi <= 25) {
-
-            alert.textContent =
-                "🔴 RSI EXTREME LOW — possible exhaustion";
-
-            alert.style.color =
-                "#ef4444";
-
-        }
-        else if (rsi <= 30) {
-
-            alert.textContent =
-                "🟠 RSI LOW — watch for momentum recovery";
-
-            alert.style.color =
-                "#facc15";
-
-        }
-        else {
-
-            alert.textContent =
-                "RSI condition: Normal";
-
-            alert.style.color =
-                "#8b98a5";
-        }
-
     }
 }
 
@@ -2095,163 +1620,58 @@ function updateRSIUI(rsi) {
 
 function updateTradeTargets() {
 
-    const tp1Element =
-        document.getElementById(
-            "tp1Value"
-        );
+    const tp1Element = document.getElementById("tp1Value");
+    const tp2Element = document.getElementById("tp2Value");
+    const tp1Status = document.getElementById("tp1Status");
+    const tp2Status = document.getElementById("tp2Status");
 
-    const tp2Element =
-        document.getElementById(
-            "tp2Value"
-        );
+    if (!tp1Element || !tp2Element) return;
 
-    const tp1Status =
-        document.getElementById(
-            "tp1Status"
-        );
-
-    const tp2Status =
-        document.getElementById(
-            "tp2Status"
-        );
-
-
-    if (
-        !tp1Element ||
-        !tp2Element
-    ) {
+    if (scalpEntry === null || scalpStop === null || !lastScalpSignal) {
+        tp1Element.textContent = "—";
+        tp2Element.textContent = "—";
+        if (tp1Status) tp1Status.innerHTML = "&nbsp;";
+        if (tp2Status) tp2Status.innerHTML = "&nbsp;";
         return;
     }
 
-
-    if (
-        scalpEntry === null ||
-        scalpStop === null ||
-        !lastScalpSignal
-    ) {
-
-        tp1Element.textContent =
-            "—";
-
-        tp2Element.textContent =
-            "—";
-
-        if (tp1Status) {
-            tp1Status.innerHTML =
-                "&nbsp;";
-        }
-
-        if (tp2Status) {
-            tp2Status.innerHTML =
-                "&nbsp;";
-        }
-
-        return;
-    }
-
-
-    const risk =
-        Math.abs(
-            scalpEntry -
-            scalpStop
-        );
-
-
-    if (
-        !Number.isFinite(risk) ||
-        risk <= 0
-    ) {
-        return;
-    }
-
+    const risk = Math.abs(scalpEntry - scalpStop);
+    if (!Number.isFinite(risk) || risk <= 0) return;
 
     let tp1;
     let tp2;
 
-
-    if (
-        lastScalpSignal ===
-        "Buy Long"
-    ) {
-
-        tp1 =
-            scalpEntry +
-            (risk * 2);
-
-        tp2 =
-            scalpEntry +
-            (risk * 3);
-
-    }
-    else {
-
-        tp1 =
-            scalpEntry -
-            (risk * 2);
-
-        tp2 =
-            scalpEntry -
-            (risk * 3);
-
+    if (lastScalpSignal === "Buy Long") {
+        tp1 = scalpEntry + (risk * 2);
+        tp2 = scalpEntry + (risk * 3);
+    } else {
+        tp1 = scalpEntry - (risk * 2);
+        tp2 = scalpEntry - (risk * 3);
     }
 
-
-    tp1Element.textContent =
-        formatPrice(tp1);
-
-    tp2Element.textContent =
-        formatPrice(tp2);
-
+    tp1Element.textContent = formatPrice(tp1);
+    tp2Element.textContent = formatPrice(tp2);
 
     // Current live price is used only to report whether a target has been reached.
-
-    if (
-        currentPrice !== null &&
-        Number.isFinite(currentPrice)
-    ) {
-
-        const tp1Reached =
-            lastScalpSignal === "Buy Long"
-                ? currentPrice >= tp1
-                : currentPrice <= tp1;
-
-        const tp2Reached =
-            lastScalpSignal === "Buy Long"
-                ? currentPrice >= tp2
-                : currentPrice <= tp2;
-
+    if (currentPrice !== null && Number.isFinite(currentPrice)) {
+        const tp1Reached = lastScalpSignal === "Buy Long"
+            ? currentPrice >= tp1
+            : currentPrice <= tp1;
+        const tp2Reached = lastScalpSignal === "Buy Long"
+            ? currentPrice >= tp2
+            : currentPrice <= tp2;
 
         if (tp1Status) {
-
-            tp1Status.textContent =
-                tp1Reached
-                    ? "🟢 TP1 reached"
-                    : "";
-
-            tp1Status.style.color =
-                tp1Reached
-                    ? "#22c55e"
-                    : "";
-
+            tp1Status.textContent = tp1Reached ? "🟢 TP1 reached" : "";
+            tp1Status.style.color = tp1Reached ? "#22c55e" : "";
         }
-
-
         if (tp2Status) {
-
-            tp2Status.textContent =
-                tp2Reached
-                    ? "🟢 TP2 reached"
-                    : "";
-
-            tp2Status.style.color =
-                tp2Reached
-                    ? "#22c55e"
-                    : "";
-
+            tp2Status.textContent = tp2Reached ? "🟢 TP2 reached" : "";
+            tp2Status.style.color = tp2Reached ? "#22c55e" : "";
         }
-
     }
 }
+
 
 
 /* =========================================================
@@ -2276,8 +1696,7 @@ function updateMAUI(
 
     if (ma200 === null) {
 
-        maElement.textContent =
-            "—";
+        maElement.textContent = "—";
 
         overallElement.textContent =
             "Overall Status: Waiting...";
@@ -2360,6 +1779,7 @@ function updateECIUI(
         const previousCandle =
             closedData[previousIndex];
 
+
         const previousHigh =
             parseFloat(
                 previousCandle[2]
@@ -2374,18 +1794,13 @@ function updateECIUI(
         document.getElementById(
             "previousHighValue"
         ).textContent =
-            formatPrice(
-                previousHigh
-            );
+            formatPrice(previousHigh);
 
 
         document.getElementById(
             "previousLowValue"
         ).textContent =
-            formatPrice(
-                previousLow
-            );
-
+            formatPrice(previousLow);
     }
 }
 
@@ -2400,10 +1815,7 @@ function updateScalp(
     ma200
 ) {
 
-    if (
-        !eci ||
-        !closedData.length
-    ) {
+    if (!eci || !closedData.length) {
         return;
     }
 
@@ -2504,35 +1916,19 @@ function updateScalp(
         the current 15m ECI state is already directional.
     */
 
-    let signal =
-        crossoverSignal;
-
+    let signal = crossoverSignal;
 
     if (signal === "Neutral") {
 
-        if (
-            lastClose >
-            eci.last.stopShort
-        ) {
-
-            signal =
-                "Buy Long";
-
+        if (lastClose > eci.last.stopShort) {
+            signal = "Buy Long";
         }
-        else if (
-            lastClose <
-            eci.last.stopLong
-        ) {
-
-            signal =
-                "Sell Short";
-
+        else if (lastClose < eci.last.stopLong) {
+            signal = "Sell Short";
         }
         else {
-
             return;
         }
-
     }
 
 
@@ -2592,9 +1988,7 @@ function updateScalp(
     */
 
     // ENTRY is the latest CLOSED 15m signal candle close.
-
-    const entry =
-        lastClose;
+    const entry = lastClose;
 
 
     /*
@@ -2608,7 +2002,6 @@ function updateScalp(
     */
 
     // ECI stop: Buy uses the lower ECI line; Sell uses the upper ECI line.
-
     const stop =
         signal === "Buy Long"
             ? eci.last.stopShort
@@ -2635,7 +2028,7 @@ function updateScalp(
 
     const statusElement =
         document.getElementById(
-            "pullbaECItatus"
+            "pullbackStatus"
         );
 
     const biasElement =
@@ -2644,9 +2037,7 @@ function updateScalp(
         );
 
 
-    if (
-        signal === "Buy Long"
-    ) {
+    if (signal === "Buy Long") {
 
         statusElement.textContent =
             "Buy Long";
@@ -2689,18 +2080,12 @@ function updateScalp(
         formatPrice(stop);
 
 
-    /*
-        The actual live signal timestamp is still available
-        from the API, but the preview timestamp below is used
-        temporarily for layout testing.
-    */
-
     document.getElementById(
         "signalTime"
     ).textContent =
         "15m ECI signal confirmed at " +
         new Date(
-            PREVIEW_SIGNAL_TIME
+            latestClosedTime
         ).toLocaleString();
 
 }
@@ -2763,8 +2148,7 @@ function calculateSimulator() {
         (distance / entry) * 100;
 
 
-    let valid =
-        true;
+    let valid = true;
 
 
     if (
@@ -2772,8 +2156,7 @@ function calculateSimulator() {
         stop >= entry
     ) {
 
-        valid =
-            false;
+        valid = false;
     }
 
 
@@ -2782,8 +2165,7 @@ function calculateSimulator() {
         stop <= entry
     ) {
 
-        valid =
-            false;
+        valid = false;
     }
 
 
@@ -2834,197 +2216,124 @@ function calculateSimulator() {
 }
 
 
-/* =========================================================
-   SWITCH MARKET
-========================================================= */
+let exchangeWebsiteMode = false;
+
+/* Added option only: load an exchange website in the existing iframe. */
+function openExchangeWebsite() {
+    const selector = document.getElementById("exchangeWebsiteSelector");
+    const frame = document.getElementById("tvChart");
+    const title = document.getElementById("chartTitle");
+    const notice = document.getElementById("exchangeFrameNotice");
+    if (!selector || !frame || !title || !notice) return;
+
+    const choice = selector.value;
+    if (choice === "CHART") {
+        exchangeWebsiteMode = false;
+        const market = getMarketConfig();
+        frame.src = `https://s.tradingview.com/widgetembed/?frameElementId=tradingview_chart_${Date.now()}&tvwidgetsymbol=${encodeURIComponent(market.tradingView)}&symbol=${encodeURIComponent(market.tradingView)}&interval=15&hidesidetoolbar=0&symboledit=1&saveimage=1&toolbarbg=f1f3f6&theme=dark&style=1&timezone=Etc%2FUTC&withdateranges=1&hideideas=1`;
+        title.textContent = `TradingView — ${market.label} 15m`;
+        notice.textContent = "TradingView chart mode. ECI calculations and data sources are unchanged.";
+        return;
+    }
+
+    /* BingX blocks iframe embedding, so open it in a separate tab.
+       Keep the current dashboard panel and its content unchanged. */
+    if (choice === "BINGX") {
+        window.open("https://bingx.com/en-us/", "_blank", "noopener,noreferrer");
+        notice.textContent = "BingX is opening in a new browser tab. Your dashboard remains open here. If no tab appears, allow pop-ups for this dashboard and select BingX again.";
+        return;
+    }
+
+    const sites = {
+        OANDA: { url: "https://www.oanda.com/", label: "OANDA" },
+        BINANCE: { url: "https://www.binance.com/en", label: "Binance" }
+    };
+    const site = sites[choice];
+    if (!site) return;
+
+    exchangeWebsiteMode = true;
+    title.textContent = `${site.label} Website`;
+    notice.textContent = `Trying to load ${site.label} inside this panel. If the page is blocked or blank, ${site.label} does not permit this website to be embedded; use the exchange's own tab instead.`;
+    frame.src = site.url;
+}
+
+function toggleExchangeFullscreen() {
+    const panel = document.getElementById("exchangeFrameContainer");
+    const frame = document.getElementById("tvChart");
+    const button = document.getElementById("exchangeFullscreenButton");
+    if (!panel) return;
+
+    if (document.fullscreenElement) {
+        document.exitFullscreen?.();
+        if (button) button.textContent = "⛶ Fullscreen";
+        return;
+    }
+
+    const target = panel.requestFullscreen ? panel : (frame && frame.requestFullscreen ? frame : null);
+    if (target) {
+        target.requestFullscreen().then(() => {
+            if (button) button.textContent = "⤢ Exit Fullscreen";
+        }).catch(() => {
+            const notice = document.getElementById("exchangeFrameNotice");
+            if (notice) notice.textContent = "Fullscreen was blocked by the browser. Try the browser's fullscreen shortcut instead.";
+        });
+    }
+}
+
+document.addEventListener("fullscreenchange", () => {
+    const button = document.getElementById("exchangeFullscreenButton");
+    if (button) button.textContent = document.fullscreenElement ? "⤢ Exit Fullscreen" : "⛶ Fullscreen";
+});
 
 function switchMarket(value) {
+    selectedMarket = ["GOLD", "BTC", "SILVER", "NASDAQ"].includes(value) ? value : "GOLD";
 
-    selectedMarket =
-        [
-            "GOLD",
-            "BTC",
-            "SILVER",
-            "NASDAQ"
-        ].includes(value)
-            ? value
-            : "GOLD";
+    currentPrice = null;
+    lastProcessedCandleTime = null;
+    lastScalpSignal = null;
+    scalpEntry = null;
+    scalpStop = null;
 
+    const tp1Element = document.getElementById("tp1Value");
+    const tp2Element = document.getElementById("tp2Value");
+    if (tp1Element) tp1Element.textContent = "—";
+    if (tp2Element) tp2Element.textContent = "—";
 
-    currentPrice =
-        null;
+    const market = getMarketConfig();
+    document.title = `${market.label} 15m Scalp Dashboard`;
 
-    lastProcessedCandleTime =
-        null;
-
-    lastScalpSignal =
-        null;
-
-    scalpEntry =
-        null;
-
-    scalpStop =
-        null;
-
-
-    const tp1Element =
-        document.getElementById(
-            "tp1Value"
-        );
-
-    const tp2Element =
-        document.getElementById(
-            "tp2Value"
-        );
-
-
-    if (tp1Element) {
-        tp1Element.textContent =
-            "—";
-    }
-
-    if (tp2Element) {
-        tp2Element.textContent =
-            "—";
-    }
-
-
-    const market =
-        getMarketConfig();
-
-
-    document.title =
-        `${market.label} 15m Scalp Dashboard`;
-
-
-    document.getElementById(
-        "biasLine"
-    ).textContent =
-        `${market.label} - WAITING`;
-
-
-    document.getElementById(
-        "biasLine"
-    ).className =
-        "bias-line waiting";
-
-
-    document.getElementById(
-        "pullbaECItatus"
-    ).textContent =
-        "Waiting...";
-
-
-    document.getElementById(
-        "pullbaECItatus"
-    ).className =
-        "status-value neutral-text";
-
-
-    document.getElementById(
-        "scalpEntry"
-    ).textContent =
-        "—";
-
-
-    document.getElementById(
-        "scalpStop"
-    ).textContent =
-        "—";
-
-
-    const entryDistanceElement =
-        document.getElementById(
-            "entryDistanceValue"
-        );
-
-
+    document.getElementById("biasLine").textContent = `${market.label} - WAITING`;
+    document.getElementById("biasLine").className = "bias-line waiting";
+    document.getElementById("pullbackStatus").textContent = "Waiting...";
+    document.getElementById("pullbackStatus").className = "status-value neutral-text";
+    document.getElementById("scalpEntry").textContent = "—";
+    document.getElementById("scalpStop").textContent = "—";
+    const entryDistanceElement = document.getElementById("entryDistanceValue");
     if (entryDistanceElement) {
-
-        entryDistanceElement.textContent =
-            "—";
-
-        entryDistanceElement.className =
-            "entry-distance-value entry-distance-waiting";
+        entryDistanceElement.textContent = "—";
+        entryDistanceElement.className = "entry-distance-value entry-distance-waiting";
     }
+    document.getElementById("signalTime").textContent = "Waiting for 15m ECI signal...";
+    document.getElementById("marketPrice").textContent = "—";
 
-
-    document.getElementById(
-        "signalTime"
-    ).textContent =
-        "Waiting for 15m ECI signal...";
-
-
-    document.getElementById(
-        "signalAge"
-    ).textContent =
-        "";
-
-
-    document.getElementById(
-        "marketPrice"
-    ).textContent =
-        "—";
-
-
-    const priceLabel =
-        document.getElementById(
-            "marketPriceLabel"
-        );
-
-
+    const priceLabel = document.getElementById("marketPriceLabel");
     if (priceLabel) {
-
-        const priceLabelText =
-            document.getElementById(
-                "marketPriceLabelText"
-            );
-
-
+        const priceLabelText = document.getElementById("marketPriceLabelText");
         if (priceLabelText) {
-
-            priceLabelText.textContent =
-                `${market.name} Live Price`;
-
+            priceLabelText.textContent = `${market.name} Live Price`;
+        } else {
+            priceLabel.textContent = `${market.name} Live Price`;
         }
-        else {
-
-            priceLabel.textContent =
-                `${market.name} Live Price`;
-
-        }
-
     }
 
+    const oldTv = document.getElementById("tvChart");
+    if (oldTv && !exchangeWebsiteMode) {
+        const cacheBust = Date.now();
+        const tv = document.createElement("iframe");
 
-    const oldTv =
-        document.getElementById(
-            "tvChart"
-        );
-
-
-    if (oldTv) {
-
-        const cacheBust =
-            Date.now();
-
-
-        const tv =
-            document.createElement(
-                "iframe"
-            );
-
-
-        tv.id =
-            "tvChart";
-
-        tv.allowTransparency =
-            true;
-
-        tv.scrolling =
-            "no";
-
-
+        tv.id = "tvChart";
+        tv.allowTransparency = true;
+        tv.scrolling = "no";
         tv.src =
             `https://s.tradingview.com/widgetembed/` +
             `?frameElementId=tradingview_chart_${cacheBust}` +
@@ -3035,7 +2344,7 @@ function switchMarket(value) {
             `&symboledit=1` +
             `&saveimage=1` +
             `&toolbarbg=f1f3f6` +
-            `&studies=%20%20` +
+            `&studies=Chande%20Kroll%20Stop` +
             `&theme=dark` +
             `&style=1` +
             `&timezone=Etc%2FUTC` +
@@ -3043,37 +2352,126 @@ function switchMarket(value) {
             `&hideideas=1` +
             `&cache=${cacheBust}`;
 
-
         oldTv.replaceWith(tv);
-
     }
 
-
-    const chartTitle =
-        document.querySelector(
-            ".chart-container"
-        )
-        ?.parentElement
-        ?.querySelector(
-            ".section-title"
-        );
-
-
-    if (chartTitle) {
-
-        chartTitle.textContent =
-            `TradingView — ${market.label} 15m`;
-
+    const chartTitle = document.getElementById("chartTitle");
+    if (chartTitle && !exchangeWebsiteMode) {
+        chartTitle.textContent = `TradingView — ${market.label} 15m`;
     }
-
 
     initialize();
 }
 
 
 /* =========================================================
-   CLOUDFLARE API
+   MULTI-TIMEFRAME WMA TREND PANEL
+   Independent add-on; does not feed or alter ECI logic.
+========================================================= */
+const mtfFrames = [
+    { key: "1m", interval: "1m", minutes: 1 },
+    { key: "5m", interval: "5m", minutes: 5 },
+    { key: "15m", interval: "15m", minutes: 15 },
+    { key: "30m", interval: "30m", minutes: 30 },
+    { key: "1h", interval: "1h", minutes: 60 },
+    { key: "2h", interval: "2h", minutes: 120 },
+    { key: "4h", interval: "4h", minutes: 240 },
+    { key: "1d", interval: "1d", minutes: 1440 }
+];
+let mtfRefreshing = false;
 
+function calculateWMA(values, period) {
+    if (!Array.isArray(values) || values.length < period) return null;
+    const slice = values.slice(-period);
+    let weightedSum = 0;
+    let weightTotal = 0;
+    for (let i = 0; i < slice.length; i++) {
+        const weight = i + 1;
+        weightedSum += Number(slice[i]) * weight;
+        weightTotal += weight;
+    }
+    return weightTotal ? weightedSum / weightTotal : null;
+}
+
+function setMtfStatus(key, label, state) {
+    const el = document.getElementById(`mtfStatus${key}`);
+    if (!el) return;
+    el.textContent = label;
+    el.className = `mtf-status ${state}`;
+}
+
+async function refreshMultiTimeframePanel() {
+    if (mtfRefreshing) return;
+    mtfRefreshing = true;
+    const market = getMarketConfig();
+    try {
+        await Promise.all(mtfFrames.map(async frame => {
+            try {
+                const bars = await fetchMarketData(market.dataSymbol, frame.interval, 300);
+                const candles = marketBarsToCandles(bars, frame.minutes);
+                if (candles.length < 202) throw new Error("Not enough candle history for WMA 200");
+
+                const latest = candles[candles.length - 1];
+                const completed = candles.filter(candle => candle[6] !== true);
+                const priorCompleted = latest[6] === true
+                    ? completed
+                    : completed.slice(0, -1);
+                const wma200 = calculateWMA(priorCompleted.map(candle => candle[4]), 200);
+                if (!Number.isFinite(latest[1]) || !Number.isFinite(wma200)) {
+                    throw new Error("WMA 200 unavailable");
+                }
+
+                if (latest[1] < wma200) setMtfStatus(frame.key, "BEARISH", "bearish");
+                else if (latest[1] > wma200) setMtfStatus(frame.key, "BULLISH", "bullish");
+                else setMtfStatus(frame.key, "AT WMA 200", "neutral");
+            } catch (error) {
+                console.warn(`Multi-timeframe ${frame.key} data unavailable:`, error);
+                setMtfStatus(frame.key, "UNAVAILABLE", "offline");
+            }
+        }));
+
+        // Overall status is based only on the 15-minute chart's WMA 100/200 relationship.
+        try {
+            const bars15m = await fetchMarketData(market.dataSymbol, "15m", 300);
+            const candles15m = marketBarsToCandles(bars15m, 15)
+                .filter(candle => candle[6] !== true);
+            const closes = candles15m.map(candle => candle[4]);
+            const wma100 = calculateWMA(closes, 100);
+            const wma200 = calculateWMA(closes, 200);
+            const overall = document.getElementById("mtfOverallStatus");
+            if (!overall || !Number.isFinite(wma100) || !Number.isFinite(wma200)) {
+                throw new Error("15-minute WMA data unavailable");
+            }
+            if (wma100 < wma200) {
+                overall.textContent = "BEARISH";
+                overall.className = "mtf-overall-value bearish";
+            } else if (wma100 > wma200) {
+                overall.textContent = "BULLISH";
+                overall.className = "mtf-overall-value bullish";
+            } else {
+                overall.textContent = "NEUTRAL";
+                overall.className = "mtf-overall-value neutral";
+            }
+        } catch (error) {
+            console.warn("Multi-timeframe overall WMA status unavailable:", error);
+            const overall = document.getElementById("mtfOverallStatus");
+            if (overall) {
+                overall.textContent = "UNAVAILABLE";
+                overall.className = "mtf-overall-value neutral";
+            }
+        }
+
+        const updated = document.getElementById("mtfUpdatedAt");
+        if (updated) {
+            updated.textContent = `Last checked: ${new Date().toLocaleTimeString()} • ${market.label}`;
+        }
+    } finally {
+        mtfRefreshing = false;
+    }
+}
+
+/* =========================================================
+   CLOUDFLARE API
    The Cloudflare Worker is now the authoritative source for
    signal, Entry, Stop, TP1, TP2 and Signal Accuracy.
 ========================================================= */
@@ -3081,79 +2479,43 @@ function switchMarket(value) {
 const CLOUDFLARE_API =
     "https://gold-eci-api.contatoseder.workers.dev";
 
-
 async function fetchCloudflareData() {
-
     try {
-
         const url =
             `${CLOUDFLARE_API}?market=${encodeURIComponent(selectedMarket)}&t=${Date.now()}`;
 
-
-        const response =
-            await fetch(
-                url,
-                {
-                    cache: "no-store",
-                    headers: {
-                        "Accept": "application/json"
-                    }
-                }
-            );
-
+        const response = await fetch(url, {
+            cache: "no-store",
+            headers: {
+                "Accept": "application/json"
+            }
+        });
 
         if (!response.ok) {
-
-            throw new Error(
-                `Cloudflare API request failed: ${response.status}`
-            );
-
+            throw new Error(`Cloudflare API request failed: ${response.status}`);
         }
 
-
-        const data =
-            await response.json();
-
+        const data = await response.json();
 
         if (data?.error) {
-
-            throw new Error(
-                data.message ||
-                data.error
-            );
-
+            throw new Error(data.message || data.error);
         }
 
+        updateDashboardFromCloudflare(data);
 
-        updateDashboardFromCloudflare(
-            data
-        );
-
-    }
-    catch (error) {
-
-        console.error(
-            "Cloudflare API error:",
-            error
-        );
-
-        setCloudflareOffline();
+    } catch (error) {
+        console.error("Cloudflare API error:", error);
+        setCloudflareOffline(error);
+        // Keep the live price available through the independent quote endpoint
+        // if only the Cloudflare ECI/signal endpoint is failing.
+        fetchCurrentPrice();
     }
 }
 
-
 function updateEntryDistanceUI() {
 
-    const element =
-        document.getElementById(
-            "entryDistanceValue"
-        );
-
-
-    if (!element) {
-        return;
-    }
-
+    const element = document.getElementById("entryDistanceValue");
+    if (!element) return;
 
     if (
         currentPrice === null ||
@@ -3163,655 +2525,267 @@ function updateEntryDistanceUI() {
         scalpEntry === 0 ||
         !lastScalpSignal
     ) {
-
-        element.textContent =
-            "—";
-
-        element.className =
-            "entry-distance-value entry-distance-waiting";
-
+        element.textContent = "—";
+        element.className = "entry-distance-value entry-distance-waiting";
         return;
     }
 
-
     const distancePct =
-        (
-            Math.abs(
-                currentPrice -
-                scalpEntry
-            ) /
-            Math.abs(
-                scalpEntry
-            )
-        ) * 100;
-
+        (Math.abs(currentPrice - scalpEntry) / Math.abs(scalpEntry)) * 100;
 
     let status;
     let statusClass;
 
-
     if (distancePct <= 0.25) {
-
-        status =
-            "Near Entry";
-
-        statusClass =
-            "entry-distance-near";
-
-    }
-    else if (distancePct <= 0.75) {
-
-        status =
-            "Extended";
-
-        statusClass =
-            "entry-distance-extended";
-
-    }
-    else {
-
-        status =
-            "Entry Missed";
-
-        statusClass =
-            "entry-distance-missed";
+        status = "Near Entry";
+        statusClass = "entry-distance-near";
+    } else if (distancePct <= 0.75) {
+        status = "Extended";
+        statusClass = "entry-distance-extended";
+    } else {
+        status = "Entry Missed";
+        statusClass = "entry-distance-missed";
     }
 
-
-    element.textContent =
-        `${distancePct.toFixed(3)}% • ${status}`;
-
-
-    element.className =
-        `entry-distance-value ${statusClass}`;
+    element.textContent = `${distancePct.toFixed(3)}% • ${status}`;
+    element.className = `entry-distance-value ${statusClass}`;
 }
 
 
 function updateDashboardFromCloudflare(data) {
 
-    const market =
-        getMarketConfig();
+    const market = getMarketConfig();
+    const signal = data.signal || "Neutral";
 
+    currentPrice = Number.isFinite(Number(data.price))
+        ? Number(data.price)
+        : null;
 
-    const signal =
-        data.signal ||
-        "Neutral";
-
-
-    currentPrice =
-        Number.isFinite(
-            Number(data.price)
-        )
-            ? Number(data.price)
-            : null;
-
-
-    const marketPriceLive =
-        document.getElementById(
-            "marketPriceLive"
-        );
-
-
+    const marketPriceLive = document.getElementById("marketPriceLive");
     if (marketPriceLive) {
-
-        marketPriceLive.innerHTML =
-            '<span class="live-dot"></span><span>LIVE</span>';
-
-        marketPriceLive.style.color =
-            "#22c55e";
+        marketPriceLive.innerHTML = '<span class="live-dot"></span><span>LIVE</span>';
+        marketPriceLive.style.color = "#22c55e";
     }
 
+    document.getElementById("marketPrice").textContent =
+        currentPrice !== null ? formatPrice(currentPrice) : "Unavailable";
 
-    document.getElementById(
-        "marketPrice"
-    ).textContent =
-        currentPrice !== null
-            ? formatPrice(currentPrice)
-            : "Unavailable";
-
-
-    const priceLabelText =
-        document.getElementById(
-            "marketPriceLabelText"
-        );
-
-
+    const priceLabelText = document.getElementById("marketPriceLabelText");
     if (priceLabelText) {
-
-        priceLabelText.textContent =
-            `${market.name} Live Price`;
-
+        priceLabelText.textContent = `${market.name} Live Price`;
     }
-
 
     /* -----------------------------------------------
        Signal / Entry / Stop
     ----------------------------------------------- */
 
     const statusElement =
-        document.getElementById(
-            "pullbaECItatus"
-        );
-
+        document.getElementById("pullbackStatus");
 
     const biasElement =
-        document.getElementById(
-            "biasLine"
-        );
+        document.getElementById("biasLine");
 
-
-    if (
-        signal === "Buy Long"
-    ) {
-
-        statusElement.textContent =
-            "Buy Long";
-
-        statusElement.className =
-            "status-value buy";
-
-        biasElement.textContent =
-            `${market.label} - BUY LONG`;
-
-        biasElement.className =
-            "bias-line buy";
-
+    if (signal === "Buy Long") {
+        statusElement.textContent = "Buy Long";
+        statusElement.className = "status-value buy";
+        biasElement.textContent = `${market.label} - BUY LONG`;
+        biasElement.className = "bias-line buy";
     }
-    else if (
-        signal === "Sell Short"
-    ) {
-
-        statusElement.textContent =
-            "Sell Short";
-
-        statusElement.className =
-            "status-value sell";
-
-        biasElement.textContent =
-            `${market.label} - SELL SHORT`;
-
-        biasElement.className =
-            "bias-line sell";
-
+    else if (signal === "Sell Short") {
+        statusElement.textContent = "Sell Short";
+        statusElement.className = "status-value sell";
+        biasElement.textContent = `${market.label} - SELL SHORT`;
+        biasElement.className = "bias-line sell";
     }
     else {
-
-        statusElement.textContent =
-            "Waiting...";
-
-        statusElement.className =
-            "status-value neutral-text";
-
-        biasElement.textContent =
-            `${market.label} - WAITING`;
-
-        biasElement.className =
-            "bias-line waiting";
+        statusElement.textContent = "Waiting...";
+        statusElement.className = "status-value neutral-text";
+        biasElement.textContent = `${market.label} - WAITING`;
+        biasElement.className = "bias-line waiting";
     }
 
-
     lastScalpSignal =
-        signal === "Buy Long" ||
-        signal === "Sell Short"
+        signal === "Buy Long" || signal === "Sell Short"
             ? signal
             : null;
 
+    scalpEntry = data.entry !== null && data.entry !== undefined
+        ? Number(data.entry)
+        : null;
 
-    scalpEntry =
-        data.entry !== null &&
-        data.entry !== undefined
-            ? Number(data.entry)
-            : null;
+    scalpStop = data.stop !== null && data.stop !== undefined
+        ? Number(data.stop)
+        : null;
 
-
-    scalpStop =
-        data.stop !== null &&
-        data.stop !== undefined
-            ? Number(data.stop)
-            : null;
-
-
-    document.getElementById(
-        "scalpEntry"
-    ).textContent =
-        scalpEntry !== null &&
-        Number.isFinite(scalpEntry)
+    document.getElementById("scalpEntry").textContent =
+        scalpEntry !== null && Number.isFinite(scalpEntry)
             ? formatPrice(scalpEntry)
             : "—";
 
-
-    document.getElementById(
-        "scalpStop"
-    ).textContent =
-        scalpStop !== null &&
-        Number.isFinite(scalpStop)
+    document.getElementById("scalpStop").textContent =
+        scalpStop !== null && Number.isFinite(scalpStop)
             ? formatPrice(scalpStop)
             : "—";
 
-
     updateEntryDistanceUI();
 
-
     /* -----------------------------------------------
-       SIGNAL TIME + SIGNAL AGE
-       PREVIEW VERSION
+       Signal time
     ----------------------------------------------- */
 
-    const previewSignalDate =
-        new Date(
-            PREVIEW_SIGNAL_TIME
-        );
-
-
-    if (
-        !Number.isNaN(
-            previewSignalDate.getTime()
-        )
-    ) {
-
-        document.getElementById(
-            "signalTime"
-        ).textContent =
-            `15m ECI signal confirmed at ${previewSignalDate.toLocaleString()}`;
-
-
-        const ageMinutes =
-            Math.max(
-                0,
-                Math.floor(
-                    (
-                        Date.now() -
-                        previewSignalDate.getTime()
-                    ) / 60000
-                )
-            );
-
-
-        const ageElement =
-            document.getElementById(
-                "signalAge"
-            );
-
-
-        if (ageElement) {
-
-            ageElement.textContent =
-                `Signal age: ${ageMinutes} minute${ageMinutes === 1 ? "" : "s"} ago`;
-        }
-
+    if (data.signalTime) {
+        const parsed = new Date(data.signalTime);
+        document.getElementById("signalTime").textContent =
+            Number.isNaN(parsed.getTime())
+                ? `15m ECI signal: ${data.signalTime}`
+                : `15m ECI signal confirmed at ${parsed.toLocaleString()}`;
     }
-
 
     /* -----------------------------------------------
        ECI stops / previous levels
     ----------------------------------------------- */
 
-    document.getElementById(
-        "stopLongValue"
-    ).textContent =
-        data.stopLong !== null &&
-        data.stopLong !== undefined
-            ? formatPrice(
-                Number(
-                    data.stopLong
-                )
-            )
+    document.getElementById("stopLongValue").textContent =
+        data.stopLong !== null && data.stopLong !== undefined
+            ? formatPrice(Number(data.stopLong))
             : "—";
 
-
-    document.getElementById(
-        "stopShortValue"
-    ).textContent =
-        data.stopShort !== null &&
-        data.stopShort !== undefined
-            ? formatPrice(
-                Number(
-                    data.stopShort
-                )
-            )
+    document.getElementById("stopShortValue").textContent =
+        data.stopShort !== null && data.stopShort !== undefined
+            ? formatPrice(Number(data.stopShort))
             : "—";
 
-
-    document.getElementById(
-        "previousHighValue"
-    ).textContent =
-        data.previousHigh !== null &&
-        data.previousHigh !== undefined
-            ? formatPrice(
-                Number(
-                    data.previousHigh
-                )
-            )
+    document.getElementById("previousHighValue").textContent =
+        data.previousHigh !== null && data.previousHigh !== undefined
+            ? formatPrice(Number(data.previousHigh))
             : "—";
 
-
-    document.getElementById(
-        "previousLowValue"
-    ).textContent =
-        data.previousLow !== null &&
-        data.previousLow !== undefined
-            ? formatPrice(
-                Number(
-                    data.previousLow
-                )
-            )
+    document.getElementById("previousLowValue").textContent =
+        data.previousLow !== null && data.previousLow !== undefined
+            ? formatPrice(Number(data.previousLow))
             : "—";
-
 
     /* -----------------------------------------------
        RSI
     ----------------------------------------------- */
 
     updateRSIUI(
-        data.rsi !== null &&
-        data.rsi !== undefined
+        data.rsi !== null && data.rsi !== undefined
             ? Number(data.rsi)
             : null
     );
 
-
     if (data.rsiAlert) {
-
-        const alert =
-            document.getElementById(
-                "rsiAlert"
-            );
-
-
-        if (alert) {
-
-            alert.textContent =
-                data.rsiAlert;
-
-        }
-
+        const alert = document.getElementById("rsiAlert");
+        if (alert) alert.textContent = data.rsiAlert;
     }
-
 
     /* -----------------------------------------------
        MA200 / overall status
     ----------------------------------------------- */
 
     const ma200 =
-        data.ma200 !== null &&
-        data.ma200 !== undefined
+        data.ma200 !== null && data.ma200 !== undefined
             ? Number(data.ma200)
             : null;
 
-
     updateMAUI(
         ma200,
-        currentPrice !== null
-            ? currentPrice
-            : Number(data.price)
+        currentPrice !== null ? currentPrice : Number(data.price)
     );
-
 
     /* -----------------------------------------------
        TP1 / TP2
     ----------------------------------------------- */
 
-    const tp1Element =
-        document.getElementById(
-            "tp1Value"
-        );
+    const tp1Element = document.getElementById("tp1Value");
+    const tp2Element = document.getElementById("tp2Value");
+    const tp1Status = document.getElementById("tp1Status");
+    const tp2Status = document.getElementById("tp2Status");
 
-
-    const tp2Element =
-        document.getElementById(
-            "tp2Value"
-        );
-
-
-    const tp1Status =
-        document.getElementById(
-            "tp1Status"
-        );
-
-
-    const tp2Status =
-        document.getElementById(
-            "tp2Status"
-        );
-
-
-    if (
-        data.tp1 !== null &&
-        data.tp1 !== undefined
-    ) {
-
-        tp1Element.textContent =
-            formatPrice(
-                Number(
-                    data.tp1
-                )
-            );
-
-    }
-    else {
-
-        tp1Element.textContent =
-            "—";
+    if (data.tp1 !== null && data.tp1 !== undefined) {
+        tp1Element.textContent = formatPrice(Number(data.tp1));
+    } else {
+        tp1Element.textContent = "—";
     }
 
-
-    if (
-        data.tp2 !== null &&
-        data.tp2 !== undefined
-    ) {
-
-        tp2Element.textContent =
-            formatPrice(
-                Number(
-                    data.tp2
-                )
-            );
-
-    }
-    else {
-
-        tp2Element.textContent =
-            "—";
+    if (data.tp2 !== null && data.tp2 !== undefined) {
+        tp2Element.textContent = formatPrice(Number(data.tp2));
+    } else {
+        tp2Element.textContent = "—";
     }
 
-
-    tp1Status.textContent =
-        data.tp1Reached
-            ? "🟢 TP1 reached"
-            : "";
-
-
-    tp2Status.textContent =
-        data.tp2Reached
-            ? "🟢 TP2 reached"
-            : "";
-
-
-    tp1Status.style.color =
-        data.tp1Reached
-            ? "#22c55e"
-            : "";
-
-
-    tp2Status.style.color =
-        data.tp2Reached
-            ? "#22c55e"
-            : "";
-
+    tp1Status.textContent = data.tp1Reached ? "🟢 TP1 reached" : "";
+    tp2Status.textContent = data.tp2Reached ? "🟢 TP2 reached" : "";
+    tp1Status.style.color = data.tp1Reached ? "#22c55e" : "";
+    tp2Status.style.color = data.tp2Reached ? "#22c55e" : "";
 
     /* -----------------------------------------------
        LIVE SIGNAL ACCURACY
     ----------------------------------------------- */
 
-    updateAccuracyUI(
-        data
-    );
+    updateAccuracyUI(data);
 }
-
 
 function updateAccuracyUI(data) {
 
     const accuracy =
-        data.signalAccuracy !== null &&
-        data.signalAccuracy !== undefined
-            ? Number(
-                data.signalAccuracy
-            )
+        data.signalAccuracy !== null && data.signalAccuracy !== undefined
+            ? Number(data.signalAccuracy)
             : null;
 
+    const wins = Number(data.wins || 0);
+    const losses = Number(data.losses || 0);
+    const evaluated = Number(data.evaluated || 0);
 
-    const wins =
-        Number(
-            data.wins || 0
-        );
+    const percent = document.getElementById("accuracyPercent");
+    const collecting = document.getElementById("accuracyCollecting");
+    const live = document.getElementById("accuracyLive");
 
+    document.getElementById("accuracyWins").textContent = wins;
+    document.getElementById("accuracyLosses").textContent = losses;
+    document.getElementById("accuracyEvaluated").textContent = evaluated;
 
-    const losses =
-        Number(
-            data.losses || 0
-        );
-
-
-    const evaluated =
-        Number(
-            data.evaluated || 0
-        );
-
-
-    const percent =
-        document.getElementById(
-            "accuracyPercent"
-        );
-
-
-    const collecting =
-        document.getElementById(
-            "accuracyCollecting"
-        );
-
-
-    const live =
-        document.getElementById(
-            "accuracyLive"
-        );
-
-
-    document.getElementById(
-        "accuracyWins"
-    ).textContent =
-        wins;
-
-
-    document.getElementById(
-        "accuracyLosses"
-    ).textContent =
-        losses;
-
-
-    document.getElementById(
-        "accuracyEvaluated"
-    ).textContent =
-        evaluated;
-
-
-    if (
-        accuracy !== null &&
-        Number.isFinite(
-            accuracy
-        )
-    ) {
-
-        percent.textContent =
-            `${accuracy.toFixed(1)}%`;
-
+    if (accuracy !== null && Number.isFinite(accuracy)) {
+        percent.textContent = `${accuracy.toFixed(1)}%`;
+    } else {
+        percent.textContent = "—";
     }
-    else {
-
-        percent.textContent =
-            "—";
-    }
-
 
     if (data.accuracyDataCollecting) {
-
         collecting.textContent =
             `${evaluated} signal${evaluated === 1 ? "" : "s"} evaluated • collecting live data`;
-
-    }
-    else {
-
-        collecting.textContent =
-            "Waiting for signal data...";
+    } else {
+        collecting.textContent = "Waiting for signal data...";
     }
 
-
-    if (
-        data.accuracyStatus ===
-        "LIVE"
-    ) {
-
-        live.innerHTML =
-            '<span class="live-dot"></span><span>LIVE</span>';
-
-        live.style.color =
-            "#22c55e";
-
-    }
-    else {
-
-        live.innerHTML =
-            '<span class="live-dot"></span><span>OFFLINE</span>';
-
-        live.style.color =
-            "#ef4444";
+    if (data.accuracyStatus === "LIVE") {
+        live.innerHTML = '<span class="live-dot"></span><span>LIVE</span>';
+        live.style.color = "#22c55e";
+    } else {
+        live.innerHTML = '<span class="live-dot"></span><span>OFFLINE</span>';
+        live.style.color = "#ef4444";
     }
 }
 
-
-function setCloudflareOffline() {
-
-    const marketPriceLive =
-        document.getElementById(
-            "marketPriceLive"
-        );
-
-
+function setCloudflareOffline(error) {
+    const marketPriceLive = document.getElementById("marketPriceLive");
     if (marketPriceLive) {
-
-        marketPriceLive.innerHTML =
-            '<span class="live-dot" style="background:#ef4444;animation:none;"></span><span>OFFLINE</span>';
-
-        marketPriceLive.style.color =
-            "#ef4444";
+        marketPriceLive.innerHTML = '<span class="live-dot" style="background:#ef4444;animation:none;"></span><span>OFFLINE</span>';
+        marketPriceLive.style.color = "#ef4444";
     }
 
-
-    const live =
-        document.getElementById(
-            "accuracyLive"
-        );
-
-
-    const collecting =
-        document.getElementById(
-            "accuracyCollecting"
-        );
-
+    const live = document.getElementById("accuracyLive");
+    const collecting = document.getElementById("accuracyCollecting");
 
     if (live) {
-
-        live.innerHTML =
-            '<span class="live-dot" style="background:#ef4444;animation:none;"></span><span>OFFLINE</span>';
-
-        live.style.color =
-            "#ef4444";
+        live.innerHTML = '<span class="live-dot" style="background:#ef4444;animation:none;"></span><span>OFFLINE</span>';
+        live.style.color = "#ef4444";
     }
 
-
     if (collecting) {
-
-        collecting.textContent =
-            "Cloudflare signal data unavailable";
+        const reason = error && error.message ? ` (${error.message})` : "";
+        collecting.textContent = `ECI API unavailable${reason}. Live price may still load separately.`;
     }
 }
 
@@ -3823,6 +2797,7 @@ function setCloudflareOffline() {
 async function initialize() {
 
     await fetchCloudflareData();
+    refreshMultiTimeframePanel();
 }
 
 
@@ -3844,6 +2819,9 @@ setInterval(
     fetchCloudflareData,
     refreshMilliseconds
 );
+
+// Independent trend-panel refresh; does not modify the ECI refresh cadence.
+setInterval(refreshMultiTimeframePanel, 60000);
 
 </script>
 
