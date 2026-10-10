@@ -1,3 +1,10 @@
+new code backup
+
+
+
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1419,10 +1426,19 @@ async function fetchMarketData(symbol, interval, limit = 300, historyRange = nul
     }
 
     const json = await response.json();
-    const bars = json?.bars || json?.data?.bars || json?.data || [];
+    const bars = Array.isArray(json?.bars)
+        ? json.bars
+        : Array.isArray(json?.data?.bars)
+            ? json.data.bars
+            : Array.isArray(json?.data)
+                ? json.data
+                : [];
 
-    if (!Array.isArray(bars) || !bars.length) {
-        throw new Error("No BiQuote OHLC market data returned");
+    if (!bars.length) {
+        // Keep the provider's response visible in the console. This distinguishes
+        // a valid empty date window from an API error/response-schema change.
+        const responseSummary = JSON.stringify(json).slice(0, 350);
+        throw new Error(`No BiQuote OHLC market data returned. Response: ${responseSummary}`);
     }
 
     return bars;
@@ -2479,12 +2495,13 @@ async function fetchMtfCandleHistory(market, frame) {
     const sourceMinutes = frame.sourceMinutes || frame.minutes;
     const cacheKey = `${market.dataSymbol}:${frame.interval}`;
 
-    // Refresh the recent end, then merge with any older bars already paged in this session.
+    // Always start with the provider's normal latest-bars response (no date range).
+    // BiQuote may return an empty result when a multi-year from/to range is combined
+    // with a large limit. Earlier candles are requested separately in bounded pages below.
     const latestBars = await fetchMarketData(
         market.dataSymbol,
         frame.interval,
-        MTF_FETCH_LIMIT,
-        mtfHistoryRange()
+        MTF_FETCH_LIMIT
     );
     const latestCandles = marketBarsToCandles(latestBars, sourceMinutes);
     if (!latestCandles.length) throw new Error("No valid candles returned");
@@ -2507,6 +2524,8 @@ async function fetchMtfCandleHistory(market, frame) {
     ) {
         const oldestTime = sourceCandles[0][0];
         const pageToMs = oldestTime - 1;
+        // Size each historical window to roughly 1,000 source candles. `from` and `to`
+        // are ISO-8601 UTC values documented by BiQuote for historical OHLC requests.
         const pageSpanMs = MTF_FETCH_LIMIT * sourceMinutes * 60 * 1000;
         const pageFromMs = pageToMs - pageSpanMs;
         const historyRange = {
@@ -2514,12 +2533,24 @@ async function fetchMtfCandleHistory(market, frame) {
             to: new Date(pageToMs).toISOString()
         };
 
-        const olderBars = await fetchMarketData(
-            market.dataSymbol,
-            frame.interval,
-            MTF_FETCH_LIMIT,
-            historyRange
-        );
+        let olderBars;
+        try {
+            olderBars = await fetchMarketData(
+                market.dataSymbol,
+                frame.interval,
+                MTF_FETCH_LIMIT,
+                historyRange
+            );
+        } catch (historyError) {
+            // A failed/empty older page must not discard valid recent candles.
+            // Stop backfilling and let the caller report the actual history shortfall.
+            console.warn(
+                `Multi-timeframe ${frame.key}: historical page returned no usable bars ` +
+                `for ${historyRange.from} to ${historyRange.to}; retaining recent candles.`,
+                historyError
+            );
+            break;
+        }
         const olderCandles = marketBarsToCandles(olderBars, sourceMinutes)
             .filter(candle => candle[0] >= pageFromMs && candle[0] < oldestTime);
         const knownTimes = new Set(sourceCandles.map(candle => candle[0]));
@@ -2572,7 +2603,8 @@ async function refreshMultiTimeframePanel() {
                 if (history.referenceCandles.length < MTF_WMA_PERIOD) {
                     throw new Error(
                         `Insufficient historical candles for WMA 200: ` +
-                        `${history.referenceCandles.length} prior completed candles after ${history.pagesFetched} older-history page(s)`
+                        `${history.referenceCandles.length} prior completed candles; ` +
+                        `${history.sourceBars} source candles retrieved across ${history.pagesFetched} older-history page(s)`
                     );
                 }
 
