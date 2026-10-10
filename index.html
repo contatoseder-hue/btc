@@ -1378,20 +1378,15 @@ function getMarketConfig() {
     };
 }
 
-async function fetchMarketData(symbol, interval, limit = 300, historyRange = null) {
+async function fetchMarketData(symbol, interval, limit = 300) {
     /*
        PRIMARY DATA SOURCE: BiQuote.
-       Optional from/to bounds request historical candles when the default
-       response does not include enough history for long-period indicators.
+       It supports browser CORS and provides XAUUSD/BTCUSD OHLC candles
+       with an explicit isOpen flag. This keeps the 15m ECI feed stable.
     */
-    const params = new URLSearchParams({
-        interval: String(interval),
-        limit: String(Math.min(Math.max(limit, 50), 1000))
-    });
-    if (historyRange?.from) params.set("from", historyRange.from);
-    if (historyRange?.to) params.set("to", historyRange.to);
     const url =
-        `https://biquote.io/api/${encodeURIComponent(symbol)}/ohlc?${params.toString()}`;
+        `https://biquote.io/api/${encodeURIComponent(symbol)}/ohlc` +
+        `?interval=${encodeURIComponent(interval)}&limit=${Math.min(Math.max(limit, 50), 1000)}`;
 
     const response = await fetch(url, {
         cache: "no-store",
@@ -2384,40 +2379,11 @@ const mtfFrames = [
     { key: "15m", interval: "15m", minutes: 15 },
     { key: "30m", interval: "30m", minutes: 30 },
     { key: "1h", interval: "1h", minutes: 60 },
-    // BiQuote does not document a 2h interval; build it from 1h candles.
-    { key: "2h", interval: "1h", aggregateMinutes: 120, minutes: 120 },
+    { key: "2h", interval: "2h", minutes: 120 },
     { key: "4h", interval: "4h", minutes: 240 },
     { key: "1d", interval: "1d", minutes: 1440 }
 ];
 let mtfRefreshing = false;
-
-function aggregateCandles(candles, targetMinutes) {
-    const bucketMs = targetMinutes * 60 * 1000;
-    const buckets = new Map();
-    for (const candle of candles.slice().sort((a, b) => a[0] - b[0])) {
-        const bucketTime = Math.floor(candle[0] / bucketMs) * bucketMs;
-        let bucket = buckets.get(bucketTime);
-        if (!bucket) {
-            bucket = [bucketTime, candle[1], candle[2], candle[3], candle[4], candle[5] || 0, false];
-            buckets.set(bucketTime, bucket);
-        } else {
-            bucket[2] = Math.max(bucket[2], candle[2]);
-            bucket[3] = Math.min(bucket[3], candle[3]);
-            bucket[4] = candle[4];
-            bucket[5] += candle[5] || 0;
-        }
-        if (candle[6] === true || bucketTime + bucketMs > Date.now()) bucket[6] = true;
-    }
-    return Array.from(buckets.values()).sort((a, b) => a[0] - b[0]);
-}
-
-function mtfHistoryRange() {
-    const to = new Date().toISOString();
-    // Five years allows the endpoint to return up to 1,000 recent bars
-    // even when its default history window is short.
-    const from = new Date(Date.now() - 5 * 365 * 24 * 60 * 60 * 1000).toISOString();
-    return { from, to };
-}
 
 function calculateWMA(values, period) {
     if (!Array.isArray(values) || values.length < period) return null;
@@ -2446,32 +2412,18 @@ async function refreshMultiTimeframePanel() {
     try {
         await Promise.all(mtfFrames.map(async frame => {
             try {
-                // Ask BiQuote for an explicit historical range so WMA 200 has
-                // enough bars. The 2h panel is aggregated from documented 1h bars.
-                const bars = await fetchMarketData(
-                    market.dataSymbol,
-                    frame.interval,
-                    1000,
-                    mtfHistoryRange()
-                );
-                let candles = marketBarsToCandles(bars, frame.minutes);
-                if (frame.aggregateMinutes) {
-                    candles = aggregateCandles(candles, frame.aggregateMinutes);
-                }
-                if (candles.length < 200) {
-                    throw new Error(`Only ${candles.length} candles returned for ${frame.key}; 200 are required`);
-                }
+                const bars = await fetchMarketData(market.dataSymbol, frame.interval, 300);
+                const candles = marketBarsToCandles(bars, frame.minutes);
+                if (candles.length < 202) throw new Error("Not enough candle history for WMA 200");
 
-                // Compare the CURRENT candle's opening price with WMA 200 calculated
-                // from the 200 most recent completed candle closes.
+                // Use the latest candle's OPEN price as the direction trigger.
+                // Build WMA 200 from the 200 most recent fully closed candles only,
+                // so the live candle cannot change the reference line mid-candle.
                 const latestCandle = candles[candles.length - 1];
                 const closedCandles = candles.filter(candle => candle[6] !== true);
                 const referenceCandles = latestCandle[6] === true
                     ? closedCandles
                     : closedCandles.slice(0, -1);
-                if (referenceCandles.length < 200) {
-                    throw new Error(`Only ${referenceCandles.length} completed candles available for WMA 200`);
-                }
                 const wma200 = calculateWMA(
                     referenceCandles.slice(-200).map(candle => candle[4]),
                     200
@@ -2497,7 +2449,7 @@ async function refreshMultiTimeframePanel() {
 
         // Overall status is based only on the 15-minute chart's WMA 100/200 relationship.
         try {
-            const bars15m = await fetchMarketData(market.dataSymbol, "15m", 1000, mtfHistoryRange());
+            const bars15m = await fetchMarketData(market.dataSymbol, "15m", 300);
             const candles15m = marketBarsToCandles(bars15m, 15)
                 .filter(candle => candle[6] !== true);
             const closes = candles15m.map(candle => candle[4]);
