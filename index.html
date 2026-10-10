@@ -1788,11 +1788,13 @@ function updateECIUI(
     }
 
 
+    // Display protective stop levels by trade direction:
+    // Long stop = lower ECI line (stopShort); short stop = upper ECI line (stopLong).
     document.getElementById(
         "stopLongValue"
     ).textContent =
         formatPrice(
-            eci.last.stopLong
+            eci.last.stopShort
         );
 
 
@@ -1800,7 +1802,7 @@ function updateECIUI(
         "stopShortValue"
     ).textContent =
         formatPrice(
-            eci.last.stopShort
+            eci.last.stopLong
         );
 
 
