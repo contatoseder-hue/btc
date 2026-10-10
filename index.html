@@ -2546,6 +2546,13 @@ async function fetchMtfCandleHistory(market, frame) {
     };
 }
 
+function setMtfStatus(key, label, state) {
+    const el = document.getElementById(`mtfStatus${key}`);
+    if (!el) return;
+    el.textContent = label;
+    el.className = `mtf-status ${state}`;
+}
+
 async function refreshMultiTimeframePanel() {
     if (mtfRefreshing) return;
     mtfRefreshing = true;
