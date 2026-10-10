@@ -2518,7 +2518,20 @@ async function fetchMtfCandleHistory(market, frame) {
         );
     }
 
-    const candles = marketBarsToCandles(bars, frame.minutes)
+    // Defensive frontend validation: Yahoo may represent no-trade intervals with
+    // null OHLC values. Number(null) becomes zero, so reject zero/invalid-price
+    // rows before WMA calculations even if the Worker already filtered them.
+    const usableBars = bars.filter(bar => {
+        const raw = [bar?.open ?? bar?.o, bar?.high ?? bar?.h, bar?.low ?? bar?.l, bar?.close ?? bar?.c];
+        if (raw.some(value => value === null || value === undefined || value === "")) return false;
+        const values = raw.map(Number);
+        return values.every(value => Number.isFinite(value) && value > 0) && values[1] >= values[2];
+    });
+    if (!usableBars.length) {
+        throw new Error(`Historical response had ${bars.length} rows but none had valid positive OHLC prices`);
+    }
+
+    const candles = marketBarsToCandles(usableBars, frame.minutes)
         .sort((a, b) => a[0] - b[0]);
     if (!candles.length) throw new Error("Historical response contained no valid OHLC candles");
 
@@ -2527,7 +2540,8 @@ async function fetchMtfCandleHistory(market, frame) {
         candles: normalizedCandles,
         referenceCandles: getMtfReferenceCandles(normalizedCandles),
         pagesFetched: 1,
-        sourceBars: bars.length,
+        sourceBars: usableBars.length,
+        rejectedBars: bars.length - usableBars.length,
         source: payload?.source || "Cloudflare historical feed"
     };
 }
