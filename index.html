@@ -2411,21 +2411,17 @@ function switchMarket(value) {
    Historical paging below is isolated from the ECI/Cloudflare logic.
 ========================================================= */
 const mtfFrames = [
-    { key: "1m", interval: "1m", minutes: 1, sourceMinutes: 1 },
-    { key: "5m", interval: "5m", minutes: 5, sourceMinutes: 5 },
-    { key: "15m", interval: "15m", minutes: 15, sourceMinutes: 15 },
-    { key: "30m", interval: "30m", minutes: 30, sourceMinutes: 30 },
-    { key: "1h", interval: "1h", minutes: 60, sourceMinutes: 60 },
-    // BiQuote does not document a 2h interval; aggregate its supported 1h candles.
-    { key: "2h", interval: "1h", minutes: 120, sourceMinutes: 60, aggregateMinutes: 120 },
-    { key: "4h", interval: "4h", minutes: 240, sourceMinutes: 240 },
-    { key: "1d", interval: "1d", minutes: 1440, sourceMinutes: 1440 }
+    { key: "1m", interval: "1m", minutes: 1 },
+    { key: "5m", interval: "5m", minutes: 5 },
+    { key: "15m", interval: "15m", minutes: 15 },
+    { key: "30m", interval: "30m", minutes: 30 },
+    { key: "1h", interval: "1h", minutes: 60 },
+    { key: "2h", interval: "2h", minutes: 120 },
+    { key: "4h", interval: "4h", minutes: 240 },
+    { key: "1d", interval: "1d", minutes: 1440 }
 ];
 let mtfRefreshing = false;
-const mtfHistoryCache = new Map();
 const MTF_WMA_PERIOD = 200;
-const MTF_MAX_BACKFILL_PAGES = 10;
-const MTF_FETCH_LIMIT = 1000;
 
 function aggregateCandles(candles, targetMinutes) {
     // Roll source candles into fixed UTC buckets. First source bar supplies open;
@@ -2492,98 +2488,48 @@ function getMtfTargetCandles(sourceCandles, frame) {
 }
 
 async function fetchMtfCandleHistory(market, frame) {
-    const sourceMinutes = frame.sourceMinutes || frame.minutes;
-    const cacheKey = `${market.dataSymbol}:${frame.interval}`;
+    // The MTF trend panel uses the Cloudflare Worker history endpoint. That endpoint
+    // uses a separate historical feed so the current ECI calculation and its BiQuote
+    // data source remain unchanged.
+    const params = new URLSearchParams({
+        market: selectedMarket,
+        candles: "1",
+        interval: frame.interval,
+        t: String(Date.now())
+    });
+    const response = await fetch(`${CLOUDFLARE_API}?${params.toString()}`, {
+        cache: "no-store",
+        headers: { "Accept": "application/json" }
+    });
 
-    // Always start with the provider's normal latest-bars response (no date range).
-    // BiQuote may return an empty result when a multi-year from/to range is combined
-    // with a large limit. Earlier candles are requested separately in bounded pages below.
-    const latestBars = await fetchMarketData(
-        market.dataSymbol,
-        frame.interval,
-        MTF_FETCH_LIMIT
-    );
-    const latestCandles = marketBarsToCandles(latestBars, sourceMinutes);
-    if (!latestCandles.length) throw new Error("No valid candles returned");
-
-    let sourceCandles = mergeMtfCandles(
-        mtfHistoryCache.get(cacheKey) || [],
-        latestCandles
-    );
-
-    let targetCandles = getMtfTargetCandles(sourceCandles, frame);
-    let referenceCandles = getMtfReferenceCandles(targetCandles);
-    let pagesFetched = 0;
-
-    // BiQuote may return fewer candles than requested for some intervals. Page backward
-    // in non-overlapping date windows until WMA 200 has enough prior completed candles.
-    while (
-        referenceCandles.length < MTF_WMA_PERIOD &&
-        pagesFetched < MTF_MAX_BACKFILL_PAGES &&
-        sourceCandles.length
-    ) {
-        const oldestTime = sourceCandles[0][0];
-        const pageToMs = oldestTime - 1;
-        // Size each historical window to roughly 1,000 source candles. `from` and `to`
-        // are ISO-8601 UTC values documented by BiQuote for historical OHLC requests.
-        const pageSpanMs = MTF_FETCH_LIMIT * sourceMinutes * 60 * 1000;
-        const pageFromMs = pageToMs - pageSpanMs;
-        const historyRange = {
-            from: new Date(pageFromMs).toISOString(),
-            to: new Date(pageToMs).toISOString()
-        };
-
-        let olderBars;
-        try {
-            olderBars = await fetchMarketData(
-                market.dataSymbol,
-                frame.interval,
-                MTF_FETCH_LIMIT,
-                historyRange
-            );
-        } catch (historyError) {
-            // A failed/empty older page must not discard valid recent candles.
-            // Stop backfilling and let the caller report the actual history shortfall.
-            console.warn(
-                `Multi-timeframe ${frame.key}: historical page returned no usable bars ` +
-                `for ${historyRange.from} to ${historyRange.to}; retaining recent candles.`,
-                historyError
-            );
-            break;
-        }
-        const olderCandles = marketBarsToCandles(olderBars, sourceMinutes)
-            .filter(candle => candle[0] >= pageFromMs && candle[0] < oldestTime);
-        const knownTimes = new Set(sourceCandles.map(candle => candle[0]));
-        const newOlderCandles = olderCandles.filter(candle => !knownTimes.has(candle[0]));
-        pagesFetched++;
-
-        // Stop cleanly if the API ignores the requested range or has no older history.
-        if (!newOlderCandles.length) break;
-
-        sourceCandles = mergeMtfCandles(newOlderCandles, sourceCandles);
-        targetCandles = getMtfTargetCandles(sourceCandles, frame);
-        referenceCandles = getMtfReferenceCandles(targetCandles);
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+        throw new Error(
+            `Cloudflare MTF history request failed (${response.status}): ` +
+            `${payload?.message || payload?.error || "no error details"}`
+        );
     }
 
-    // Keep all retrieved source candles, including older pages, available for the next refresh.
-    mtfHistoryCache.set(
-        cacheKey,
-        mergeMtfCandles(mtfHistoryCache.get(cacheKey) || [], sourceCandles)
-    );
+    const bars = Array.isArray(payload?.bars) ? payload.bars : [];
+    if (!bars.length) {
+        throw new Error(
+            `Cloudflare returned no ${frame.interval} candles: ` +
+            `${payload?.message || payload?.error || "empty bars array"}`
+        );
+    }
 
+    const candles = marketBarsToCandles(bars, frame.minutes)
+        .sort((a, b) => a[0] - b[0]);
+    if (!candles.length) throw new Error("Historical response contained no valid OHLC candles");
+
+    const normalizedCandles = mergeMtfCandles([], candles);
     return {
-        candles: targetCandles,
-        referenceCandles,
-        sourceBars: sourceCandles.length,
-        pagesFetched
+        candles: normalizedCandles,
+        referenceCandles: getMtfReferenceCandles(normalizedCandles),
+        pagesFetched: 1,
+        sourceBars: bars.length,
+        source: payload?.source || "Cloudflare historical feed"
     };
-}
-
-function setMtfStatus(key, label, state) {
-    const el = document.getElementById(`mtfStatus${key}`);
-    if (!el) return;
-    el.textContent = label;
-    el.className = `mtf-status ${state}`;
 }
 
 async function refreshMultiTimeframePanel() {
@@ -2665,7 +2611,7 @@ async function refreshMultiTimeframePanel() {
 
         const updated = document.getElementById("mtfUpdatedAt");
         if (updated) {
-            updated.textContent = `Last checked: ${new Date().toLocaleTimeString()} • ${market.label}`;
+            updated.textContent = `Last checked: ${new Date().toLocaleTimeString()} • ${market.label} • MTF historical feed via Worker`;
         }
     } finally {
         mtfRefreshing = false;
