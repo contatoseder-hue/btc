@@ -1,3 +1,9 @@
+new code backup
+
+
+
+
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -462,16 +468,6 @@
     .mtf-overall-label { color: #8b98a5; font-size: 13px; }
     .mtf-overall-value { font-size: 16px; font-weight: 800; text-align: right; }
     .mtf-note { margin-top: 10px; font-size: 12px; color: #7f8b96; line-height: 1.45; }
-    .mtf-guidance { display: grid; gap: 10px; margin-top: 12px; }
-    .mtf-guidance p { margin: 0; }
-    .mtf-guidance-card { padding: 12px 14px; border-radius: 10px; border: 1px solid; }
-    .mtf-guidance-card strong { font-weight: 800; }
-    .mtf-guidance-card.timeframe { background: rgba(38, 110, 170, .12); border-color: rgba(96, 165, 250, .42); color: #c4ddf7; }
-    .mtf-guidance-card.caution { background: rgba(180, 120, 20, .13); border-color: rgba(250, 204, 21, .48); color: #f7df9a; }
-    .mtf-guidance-card.critical { background: rgba(180, 45, 45, .16); border-color: rgba(248, 113, 113, .72); color: #ffe0e0; box-shadow: inset 3px 0 0 #ef4444; }
-    .mtf-guidance-card.critical .warning-title { color: #ff8585; font-size: 13px; letter-spacing: .04em; }
-    .mtf-guidance-card.critical .limit-instruction { display: block; margin-top: 5px; color: #fff; font-size: 13px; }
-    .mtf-guidance-card.disclaimer { background: rgba(125, 139, 150, .07); border-color: #303b46; color: #a7b0b9; font-size: 11px; }
     @media (max-width: 600px) {
         .mtf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .mtf-overall { align-items: flex-start; flex-direction: column; gap: 6px; }
@@ -759,22 +755,11 @@
             <div id="mtfOverallStatus" class="mtf-overall-value neutral">Loading…</div>
         </div>
         <div id="mtfUpdatedAt" class="mtf-note">Waiting for market data…</div>
-        <div class="mtf-guidance">
-            <div class="mtf-guidance-card timeframe">
-                <p><strong>TIMEFRAME STATUS</strong></p>
-                <p>Each timeframe is analyzed using the latest candle's opening price to help identify current market conditions. Comparing trends across multiple timeframes provides a broader view of market direction.</p>
-            </div>
-            <div class="mtf-guidance-card caution">
-                <p><strong>⚠️ TRADING CAUTION</strong></p>
-                <p>If the overall market shows strong bearish conditions, be cautious with BUY signals. If the market shows strong bullish conditions, be cautious with SELL signals. Always confirm the broader trend before entering a trade.</p>
-            </div>
-            <div class="mtf-guidance-card critical">
-                <p class="warning-title"><strong>⚠️ READ BEFORE TRADE</strong></p>
-                <strong class="limit-instruction">Do NOT buy at Market order. Wait for the ECI entry level and use a LIMIT order.</strong>
-            </div>
-            <div class="mtf-guidance-card disclaimer">
-                <p><strong>DISCLAIMER:</strong> This dashboard is for informational and educational purposes only. Signals are not financial advice. Leveraged trading involves substantial risk including loss of your trading capital. Trade responsibly.</p>
-            </div>
+        <div class="mtf-note">
+            <p><strong>Timeframe status:</strong> Each timeframe is analyzed using the latest candle's opening price to help identify current market conditions. We compare trends across multiple timeframes provides a broader view of market direction.</p>
+            <p><strong>⚠️ Trading caution:</strong> If the overall market shows strong bearish conditions, be cautious with BUY signals. If the market shows strong bullish conditions, be cautious with SELL signals. Always confirm the broader trend before entering a trade.</p>
+            <p><strong>⚠️ Read before trade.</strong><br><strong>Do NOT buy at Market order. Wait for the ECI entry level and use a LIMIT order.</strong></p>
+            <p><strong>DISCLAIMER:</strong> This dashboard is for informational and educational purposes only. Signals are not financial advice. Leveraged trading involves substantial risk including loss of your trading capital. Trade responsibility.</p>
         </div>
     </div>
 
@@ -807,7 +792,7 @@
             <iframe
                 id="tvChart"
                 title="TradingView chart or embedded exchange website"
-                src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_chart_initial&tvwidgetsymbol=OANDA%3AXAUUSD&symbol=OANDA%3AXAUUSD&interval=15&hidesidetoolbar=0&symboledit=1&saveimage=1&toolbarbg=f1f3f6&theme=dark&style=1&timezone=Etc%2FUTC&withdateranges=1&hideideas=1"
+                src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_chart_initial&tvwidgetsymbol=OANDA%3AXAUUSD&symbol=OANDA%3AXAUUSD&interval=15&hidesidetoolbar=0&symboledit=1&saveimage=1&toolbarbg=f1f3f6&studies=Chande%20Kroll%20Stop&theme=dark&style=1&timezone=Etc%2FUTC&withdateranges=1&hideideas=1"
                 allow="fullscreen; clipboard-read; clipboard-write"
                 allowfullscreen
                 allowtransparency="true"
@@ -1095,7 +1080,7 @@ function calculateATR(data, period) {
 
 
 /* =========================================================
-   ECI CALCULATION
+   CHANDE KROLL STOP
 ========================================================= */
 
 function calculateECI(data) {
@@ -1393,15 +1378,20 @@ function getMarketConfig() {
     };
 }
 
-async function fetchMarketData(symbol, interval, limit = 300) {
+async function fetchMarketData(symbol, interval, limit = 300, historyRange = null) {
     /*
        PRIMARY DATA SOURCE: BiQuote.
-       It supports browser CORS and provides XAUUSD/BTCUSD OHLC candles
-       with an explicit isOpen flag. This keeps the 15m ECI feed stable.
+       Optional from/to bounds request historical candles when the default
+       response does not include enough history for long-period indicators.
     */
+    const params = new URLSearchParams({
+        interval: String(interval),
+        limit: String(Math.min(Math.max(limit, 50), 1000))
+    });
+    if (historyRange?.from) params.set("from", historyRange.from);
+    if (historyRange?.to) params.set("to", historyRange.to);
     const url =
-        `https://biquote.io/api/${encodeURIComponent(symbol)}/ohlc` +
-        `?interval=${encodeURIComponent(interval)}&limit=${Math.min(Math.max(limit, 50), 1000)}`;
+        `https://biquote.io/api/${encodeURIComponent(symbol)}/ohlc?${params.toString()}`;
 
     const response = await fetch(url, {
         cache: "no-store",
@@ -2364,6 +2354,7 @@ function switchMarket(value) {
             `&symboledit=1` +
             `&saveimage=1` +
             `&toolbarbg=f1f3f6` +
+            `&studies=Chande%20Kroll%20Stop` +
             `&theme=dark` +
             `&style=1` +
             `&timezone=Etc%2FUTC` +
@@ -2393,11 +2384,40 @@ const mtfFrames = [
     { key: "15m", interval: "15m", minutes: 15 },
     { key: "30m", interval: "30m", minutes: 30 },
     { key: "1h", interval: "1h", minutes: 60 },
-    { key: "2h", interval: "2h", minutes: 120 },
+    // BiQuote does not document a 2h interval; build it from 1h candles.
+    { key: "2h", interval: "1h", aggregateMinutes: 120, minutes: 120 },
     { key: "4h", interval: "4h", minutes: 240 },
     { key: "1d", interval: "1d", minutes: 1440 }
 ];
 let mtfRefreshing = false;
+
+function aggregateCandles(candles, targetMinutes) {
+    const bucketMs = targetMinutes * 60 * 1000;
+    const buckets = new Map();
+    for (const candle of candles.slice().sort((a, b) => a[0] - b[0])) {
+        const bucketTime = Math.floor(candle[0] / bucketMs) * bucketMs;
+        let bucket = buckets.get(bucketTime);
+        if (!bucket) {
+            bucket = [bucketTime, candle[1], candle[2], candle[3], candle[4], candle[5] || 0, false];
+            buckets.set(bucketTime, bucket);
+        } else {
+            bucket[2] = Math.max(bucket[2], candle[2]);
+            bucket[3] = Math.min(bucket[3], candle[3]);
+            bucket[4] = candle[4];
+            bucket[5] += candle[5] || 0;
+        }
+        if (candle[6] === true || bucketTime + bucketMs > Date.now()) bucket[6] = true;
+    }
+    return Array.from(buckets.values()).sort((a, b) => a[0] - b[0]);
+}
+
+function mtfHistoryRange() {
+    const to = new Date().toISOString();
+    // Five years allows the endpoint to return up to 1,000 recent bars
+    // even when its default history window is short.
+    const from = new Date(Date.now() - 5 * 365 * 24 * 60 * 60 * 1000).toISOString();
+    return { from, to };
+}
 
 function calculateWMA(values, period) {
     if (!Array.isArray(values) || values.length < period) return null;
@@ -2426,32 +2446,49 @@ async function refreshMultiTimeframePanel() {
     try {
         await Promise.all(mtfFrames.map(async frame => {
             try {
-                // Higher timeframes need a deeper candle history to calculate WMA 200.
-                // Keep the existing request size for 1m, 5m and 1d; request more data
-                // only for 15m, 30m, 1h, 2h and 4h.
-                const limit = ["15m", "30m", "1h", "2h", "4h"].includes(frame.key) ? 1000 : 300;
-                const bars = await fetchMarketData(market.dataSymbol, frame.interval, limit);
-                const candles = marketBarsToCandles(bars, frame.minutes);
-                if (!candles.length) throw new Error("No valid candles returned");
-
-                const latest = candles[candles.length - 1];
-                const completed = candles.filter(candle => candle[6] !== true);
-                // Compare the latest candle's opening price with WMA 200 calculated
-                // from the 200 completed candles immediately before it.
-                const priorCompleted = latest[6] === true
-                    ? completed
-                    : completed.slice(0, -1);
-                if (priorCompleted.length < 200) {
-                    throw new Error(`Insufficient completed candles for WMA 200 (${priorCompleted.length})`);
+                // Ask BiQuote for an explicit historical range so WMA 200 has
+                // enough bars. The 2h panel is aggregated from documented 1h bars.
+                const bars = await fetchMarketData(
+                    market.dataSymbol,
+                    frame.interval,
+                    1000,
+                    mtfHistoryRange()
+                );
+                let candles = marketBarsToCandles(bars, frame.minutes);
+                if (frame.aggregateMinutes) {
+                    candles = aggregateCandles(candles, frame.aggregateMinutes);
                 }
-                const wma200 = calculateWMA(priorCompleted.map(candle => candle[4]), 200);
-                if (!Number.isFinite(latest[1]) || !Number.isFinite(wma200)) {
-                    throw new Error("WMA 200 unavailable");
+                if (candles.length < 200) {
+                    throw new Error(`Only ${candles.length} candles returned for ${frame.key}; 200 are required`);
                 }
 
-                if (latest[1] < wma200) setMtfStatus(frame.key, "BEARISH", "bearish");
-                else if (latest[1] > wma200) setMtfStatus(frame.key, "BULLISH", "bullish");
-                else setMtfStatus(frame.key, "AT WMA 200", "neutral");
+                // Compare the CURRENT candle's opening price with WMA 200 calculated
+                // from the 200 most recent completed candle closes.
+                const latestCandle = candles[candles.length - 1];
+                const closedCandles = candles.filter(candle => candle[6] !== true);
+                const referenceCandles = latestCandle[6] === true
+                    ? closedCandles
+                    : closedCandles.slice(0, -1);
+                if (referenceCandles.length < 200) {
+                    throw new Error(`Only ${referenceCandles.length} completed candles available for WMA 200`);
+                }
+                const wma200 = calculateWMA(
+                    referenceCandles.slice(-200).map(candle => candle[4]),
+                    200
+                );
+                const candleOpen = latestCandle[1];
+
+                if (!Number.isFinite(candleOpen) || !Number.isFinite(wma200)) {
+                    throw new Error("WMA 200 or latest candle open unavailable");
+                }
+
+                if (candleOpen < wma200) {
+                    setMtfStatus(frame.key, "BEARISH", "bearish");
+                } else if (candleOpen > wma200) {
+                    setMtfStatus(frame.key, "BULLISH", "bullish");
+                } else {
+                    setMtfStatus(frame.key, "AT WMA 200", "neutral");
+                }
             } catch (error) {
                 console.warn(`Multi-timeframe ${frame.key} data unavailable:`, error);
                 setMtfStatus(frame.key, "UNAVAILABLE", "offline");
@@ -2460,7 +2497,7 @@ async function refreshMultiTimeframePanel() {
 
         // Overall status is based only on the 15-minute chart's WMA 100/200 relationship.
         try {
-            const bars15m = await fetchMarketData(market.dataSymbol, "15m", 300);
+            const bars15m = await fetchMarketData(market.dataSymbol, "15m", 1000, mtfHistoryRange());
             const candles15m = marketBarsToCandles(bars15m, 15)
                 .filter(candle => candle[6] !== true);
             const closes = candles15m.map(candle => candle[4]);
