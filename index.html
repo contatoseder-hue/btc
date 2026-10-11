@@ -1366,7 +1366,8 @@ function getMarketConfig() {
             name: "Gold",
             yahoo: GOLD_SYMBOL,
             dataSymbol: "XAUUSD",
-            tradingView: "OANDA:XAUUSD"
+            bingxSymbol: "GOLD(XAU)-USDT",
+            tradingView: "BINGX:GOLDXAUUSDT.P"
         };
     }
 
@@ -1376,7 +1377,8 @@ function getMarketConfig() {
             name: "Bitcoin",
             yahoo: BTC_SYMBOL,
             dataSymbol: "BTCUSD",
-            tradingView: "BINANCE:BTCUSDT"
+            bingxSymbol: "BTC-USDT",
+            tradingView: "BINGX:BTCUSDT.P"
         };
     }
 
@@ -1386,7 +1388,8 @@ function getMarketConfig() {
             name: "Silver",
             yahoo: null,
             dataSymbol: SILVER_SYMBOL,
-            tradingView: "OANDA:XAGUSD"
+            bingxSymbol: "SILVER(XAG)-USDT",
+            tradingView: "BINGX:SILVERXAGUSDT.P"
         };
     }
 
@@ -1395,53 +1398,33 @@ function getMarketConfig() {
         name: "Nasdaq",
         yahoo: null,
         dataSymbol: NASDAQ_SYMBOL,
-        tradingView: "CAPITALCOM:US100"
+        bingxSymbol: "NASDAQ100-USDT",
+        tradingView: "BINGX:NASDAQ100USDT.P"
     };
 }
 
 async function fetchMarketData(symbol, interval, limit = 300, historyRange = null) {
-    /*
-       PRIMARY DATA SOURCE: BiQuote.
-       The existing ECI calls continue using their original intervals/limits.
-       The multi-timeframe panel may pass an explicit historical range so the
-       API can return enough bars for a WMA 200 calculation.
-    */
+    // All dashboard candle history now comes from the same BingX contract feed
+    // used by the Cloudflare ECI engine and displayed current last price.
     const params = new URLSearchParams({
+        market: selectedMarket,
+        candles: "1",
         interval: String(interval),
-        limit: String(Math.min(Math.max(limit, 50), 1000))
+        limit: String(Math.min(Math.max(limit, 50), 1440)),
+        t: String(Date.now())
     });
-    if (historyRange && historyRange.from) params.set("from", historyRange.from);
-    if (historyRange && historyRange.to) params.set("to", historyRange.to);
-
-    const url =
-        `https://biquote.io/api/${encodeURIComponent(symbol)}/ohlc?${params.toString()}`;
-
-    const response = await fetch(url, {
+    const response = await fetch(`${CLOUDFLARE_API}?${params.toString()}`, {
         cache: "no-store",
         headers: { "Accept": "application/json" }
     });
-
+    const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-        throw new Error(`BiQuote market data request failed: ${response.status}`);
+        throw new Error(`BingX candle request failed: ${response.status}: ${payload?.message || payload?.error || "no details"}`);
     }
-
-    const json = await response.json();
-    const bars = Array.isArray(json?.bars)
-        ? json.bars
-        : Array.isArray(json?.data?.bars)
-            ? json.data.bars
-            : Array.isArray(json?.data)
-                ? json.data
-                : [];
-
-    if (!bars.length) {
-        // Keep the provider's response visible in the console. This distinguishes
-        // a valid empty date window from an API error/response-schema change.
-        const responseSummary = JSON.stringify(json).slice(0, 350);
-        throw new Error(`No BiQuote OHLC market data returned. Response: ${responseSummary}`);
+    if (!Array.isArray(payload?.bars) || !payload.bars.length) {
+        throw new Error(`BingX returned no ${interval} candles: ${payload?.message || payload?.error || "empty bars array"}`);
     }
-
-    return bars;
+    return payload.bars;
 }
 
 function marketBarsToCandles(bars, intervalMinutes = 15) {
@@ -1483,43 +1466,34 @@ function marketBarsToCandles(bars, intervalMinutes = 15) {
 
 async function fetchCurrentPrice() {
     try {
-        const market = getMarketConfig();
-        const url =
-            `https://biquote.io/api/${encodeURIComponent(market.dataSymbol)}`;
-
-        const response = await fetch(url, {
+        const params = new URLSearchParams({
+            market: selectedMarket,
+            price: "1",
+            t: String(Date.now())
+        });
+        const response = await fetch(`${CLOUDFLARE_API}?${params.toString()}`, {
             cache: "no-store",
             headers: { "Accept": "application/json" }
         });
-
-        if (!response.ok) {
-            throw new Error(`BiQuote live price request failed: ${response.status}`);
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload?.error) {
+            throw new Error(`BingX price request failed (${response.status}): ${payload?.message || payload?.error || "no details"}`);
         }
-
-        const quote = await response.json();
-        const price = Number(quote?.mid ?? quote?.last ?? quote?.price);
-
-        if (!Number.isFinite(price)) {
-            throw new Error("Invalid live price returned by BiQuote");
-        }
+        const price = Number(payload?.price);
+        if (!Number.isFinite(price) || price <= 0) throw new Error("Invalid BingX last price returned by Worker");
 
         currentPrice = price;
         document.getElementById("marketPrice").textContent = formatPrice(currentPrice);
-
-        // A market quote can remain live even when the ECI Worker is unavailable.
         const marketPriceLive = document.getElementById("marketPriceLive");
         if (marketPriceLive) {
-            marketPriceLive.innerHTML = '<span class="live-dot"></span><span>LIVE • PRICE FEED</span>';
+            marketPriceLive.innerHTML = '<span class="live-dot"></span><span>LIVE • BINGX</span>';
             marketPriceLive.style.color = "#22c55e";
         }
-
+        const market = getMarketConfig();
         const priceLine = document.getElementById("priceLine");
-        if (priceLine) {
-            priceLine.textContent = `${market.name} Price: ${formatPrice(currentPrice)}`;
-        }
-
+        if (priceLine) priceLine.textContent = `${market.name} BingX Last Price: ${formatPrice(currentPrice)}`;
     } catch (error) {
-        console.error("BiQuote price fallback error:", error);
+        console.error("BingX price fallback error:", error);
         currentPrice = null;
         document.getElementById("marketPrice").textContent = "Unavailable";
         const marketPriceLive = document.getElementById("marketPriceLive");
@@ -1539,8 +1513,7 @@ async function fetchIndicators() {
         const market = getMarketConfig();
 
         /*
-            DATA SOURCE CHANGE ONLY:
-            BiQuote 15m OHLC is used for both Gold and BTC.
+            The candle source is the same BingX contract feed used by the Worker.
             The ECI/RSI/MA200 calculations and signal rules are unchanged.
         */
         const eciBars = await fetchMarketData(
@@ -1565,7 +1538,7 @@ async function fetchIndicators() {
         updateRSIUI(rsi);
 
         /*
-            MA200 uses the same BiQuote 15m feed and a longer history.
+            MA200 uses the same BingX 15m feed and a longer history.
             This does not change the ECI calculation.
         */
         let ma200 = null;
@@ -2314,9 +2287,9 @@ function switchMarket(value) {
     if (priceLabel) {
         const priceLabelText = document.getElementById("marketPriceLabelText");
         if (priceLabelText) {
-            priceLabelText.textContent = `${market.name} Live Price`;
+            priceLabelText.textContent = `${market.name} Live Price (BingX)`;
         } else {
-            priceLabel.textContent = `${market.name} Live Price`;
+            priceLabel.textContent = `${market.name} Live Price (BingX)`;
         }
     }
 
@@ -2359,8 +2332,7 @@ function switchMarket(value) {
 
 /* =========================================================
    MULTI-TIMEFRAME WMA TREND PANEL
-   Independent add-on; does not feed or alter ECI logic.
-   Historical paging below is isolated from the ECI/Cloudflare logic.
+   Trend panel uses the same BingX contracts as the ECI/Cloudflare feed.
 ========================================================= */
 const mtfFrames = [
     { key: "1m", interval: "1m", minutes: 1 },
@@ -2442,8 +2414,8 @@ function getMtfTargetCandles(sourceCandles, frame) {
 }
 
 async function fetchMtfCandleHistory(marketCode, frame) {
-    // MTF history is served by the Cloudflare Worker from BiQuote OHLC candles,
-    // matching the instrument feed used by the dashboard. ECI logic is unchanged.
+    // MTF history is served by the Cloudflare Worker from the same BingX contract
+    // used for the live price and ECI candles.
     const params = new URLSearchParams({
         market: marketCode,
         candles: "1",
@@ -2494,7 +2466,7 @@ async function fetchMtfCandleHistory(marketCode, frame) {
         referenceCandles: getMtfReferenceCandles(normalizedCandles),
         sourceBars: usableBars.length,
         rejectedBars: bars.length - usableBars.length,
-        source: payload?.source || "BiQuote OHLC history"
+        source: payload?.source || "BingX Perpetual OHLC"
     };
 }
 
@@ -2512,7 +2484,7 @@ function setMtfStatus(key, label, state, details = "") {
     // The existing bullish/bearish/neutral CSS colors also color the arrow.
     el.textContent = formatMtfDirectionLabel(label, state);
     el.className = `mtf-status ${state}`;
-    // Hover over the status to see the exact feed/price/WMA or failure reason.
+    // Hover over a status to see the BingX feed, exact price/WMA or failure reason.
     el.title = details || "";
 }
 
@@ -2557,7 +2529,8 @@ async function refreshMultiTimeframePanel() {
         // candle-history requests simultaneously; this reduces provider burst throttling.
         for (let frameIndex = 0; frameIndex < mtfFrames.length; frameIndex++) {
             const frame = mtfFrames[frameIndex];
-            if (frameIndex > 0) await new Promise(resolve => setTimeout(resolve, 250));
+            // Small stagger to reduce burst requests to BingX across all eight intervals.
+            if (frameIndex > 0) await new Promise(resolve => setTimeout(resolve, 300));
             try {
                 const history = await fetchMtfCandleHistory(marketCode, frame);
                 if (selectedMarket !== marketCode) {
@@ -2631,7 +2604,7 @@ async function refreshMultiTimeframePanel() {
             return;
         }
 
-        // Top Overall Status requires all eight latest candle opens to agree relative to their own WMA200.
+        // Top Overall Status requires all eight BingX candle opens to agree relative to their own WMA200.
         updateOverallStatusFromMtfConsensus();
 
         // Overall WMA trend uses completed 15m closes only: WMA100 vs WMA200. It does not change ECI signals.
@@ -2778,8 +2751,10 @@ function updateDashboardFromCloudflare(data) {
 
     const marketPriceLive = document.getElementById("marketPriceLive");
     if (marketPriceLive) {
-        marketPriceLive.innerHTML = '<span class="live-dot"></span><span>LIVE</span>';
-        marketPriceLive.style.color = "#22c55e";
+        marketPriceLive.innerHTML = currentPrice !== null
+            ? '<span class="live-dot"></span><span>LIVE • BINGX LAST PRICE</span>'
+            : '<span class="live-dot" style="background:#ef4444;animation:none;"></span><span>PRICE UNAVAILABLE</span>';
+        marketPriceLive.style.color = currentPrice !== null ? "#22c55e" : "#ef4444";
     }
 
     document.getElementById("marketPrice").textContent =
@@ -2787,7 +2762,7 @@ function updateDashboardFromCloudflare(data) {
 
     const priceLabelText = document.getElementById("marketPriceLabelText");
     if (priceLabelText) {
-        priceLabelText.textContent = `${market.name} Live Price`;
+        priceLabelText.textContent = `${market.name} Live Price (BingX)`;
     }
 
     /* -----------------------------------------------
