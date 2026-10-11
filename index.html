@@ -2498,10 +2498,19 @@ async function fetchMtfCandleHistory(marketCode, frame) {
     };
 }
 
+function formatMtfDirectionLabel(label, state) {
+    const normalized = String(label || "").trim().toUpperCase();
+    if (normalized === "BULLISH" || state === "bullish") return "↑ BULLISH";
+    if (normalized === "BEARISH" || state === "bearish") return "↓ BEARISH";
+    if (normalized === "NEUTRAL" || state === "neutral") return "↔ NEUTRAL";
+    return label;
+}
+
 function setMtfStatus(key, label, state, details = "") {
     const el = document.getElementById(`mtfStatus${key}`);
     if (!el) return;
-    el.textContent = label;
+    // The existing bullish/bearish/neutral CSS colors also color the arrow.
+    el.textContent = formatMtfDirectionLabel(label, state);
     el.className = `mtf-status ${state}`;
     // Hover over the status to see the exact feed/price/WMA or failure reason.
     el.title = details || "";
@@ -2645,13 +2654,13 @@ async function refreshMultiTimeframePanel() {
                 throw new Error("Not enough completed 15-minute candles to calculate WMA 100/200");
             }
             if (wma100 < wma200) {
-                overall.textContent = "BEARISH";
+                overall.textContent = "↓ BEARISH";
                 overall.className = "mtf-overall-value bearish";
             } else if (wma100 > wma200) {
-                overall.textContent = "BULLISH";
+                overall.textContent = "↑ BULLISH";
                 overall.className = "mtf-overall-value bullish";
             } else {
-                overall.textContent = "NEUTRAL";
+                overall.textContent = "↔ NEUTRAL";
                 overall.className = "mtf-overall-value neutral";
             }
         } catch (error) {
