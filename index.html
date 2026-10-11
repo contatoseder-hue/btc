@@ -768,7 +768,7 @@ new code backup
         <div class="mtf-guidance">
             <div class="mtf-guidance-card timeframe">
                 <p><strong>TIMEFRAME STATUS</strong></p>
-                <p>Each timeframe is analyzed using the latest candle's opening price to help identify current market conditions. Comparing trends across multiple timeframes provides a broader view of market direction.</p>
+                <p>Each timeframe compares its latest candle OPEN with WMA 100 and WMA 200: above both = BULLISH, below both = BEARISH, and between the averages = NEUTRAL. The top Overall Status becomes BULLISH only when all eight timeframe opens are above their WMA 200, and BEARISH only when all eight are below. Otherwise it stays WAITING. The separate 15-minute Overall WMA Trend compares WMA 100 with WMA 200.</p>
             </div>
             <div class="mtf-guidance-card caution">
                 <p><strong>⚠️ TRADING CAUTION</strong></p>
@@ -1724,52 +1724,13 @@ function updateMAUI(
     ma200,
     lastClose
 ) {
-
-    const maElement =
-        document.getElementById(
-            "ma200Value"
-        );
-
-    const overallElement =
-        document.getElementById(
-            "overallStatus"
-        );
-
-
-    if (ma200 === null) {
-
-        maElement.textContent = "—";
-
-        overallElement.textContent =
-            "Overall Status: Waiting...";
-
-        overallElement.className =
-            "overall neutral";
-
-        return;
-    }
-
-
-    maElement.textContent =
-        formatPrice(ma200);
-
-
-    if (lastClose >= ma200) {
-
-        overallElement.textContent =
-            "Overall Status: Bullish (Above MA200)";
-
-        overallElement.className =
-            "overall bullish";
-
-    }
-    else {
-
-        overallElement.textContent =
-            "Overall Status: Bearish (Below MA200)";
-
-        overallElement.className =
-            "overall bearish";
+    // The MA200 field remains a display-only value.
+    // The top Overall Status is now controlled by the eight-timeframe WMA200 consensus.
+    const maElement = document.getElementById("ma200Value");
+    if (maElement) {
+        maElement.textContent = ma200 === null || !Number.isFinite(Number(ma200))
+            ? "—"
+            : formatPrice(Number(ma200));
     }
 }
 
@@ -1922,30 +1883,10 @@ function updateScalp(
 
 
     /*
-        Show current overall status.
-        MA200 does NOT override the ECI signal.
+        Overall Status is intentionally not set here.
+        It is controlled by the Multi-Timeframe WMA200 consensus below.
+        ECI signal generation remains unchanged and independent.
     */
-
-    if (ma200 !== null) {
-
-        const overallText =
-            lastClose >= ma200
-                ? "Overall Status: Bullish (Above MA200)"
-                : "Overall Status: Bearish (Below MA200)";
-
-        const overallElement =
-            document.getElementById(
-                "overallStatus"
-            );
-
-        overallElement.textContent =
-            overallText;
-
-        overallElement.className =
-            lastClose >= ma200
-                ? "overall bullish"
-                : "overall bearish";
-    }
 
 
     /*
@@ -2348,6 +2289,15 @@ function switchMarket(value) {
 
     document.getElementById("biasLine").textContent = `${market.label} - WAITING`;
     document.getElementById("biasLine").className = "bias-line waiting";
+    const topOverall = document.getElementById("overallStatus");
+    if (topOverall) {
+        topOverall.textContent = "Overall Status: Waiting for timeframe data...";
+        topOverall.className = "overall neutral";
+    }
+    mtfFrameMetrics.clear();
+    for (const frame of mtfFrames) setMtfStatus(frame.key, "Loading…", "offline", "Loading latest candle and WMA 100/200 for the selected market");
+    const mtfOverall = document.getElementById("mtfOverallStatus");
+    if (mtfOverall) { mtfOverall.textContent = "Loading…"; mtfOverall.className = "mtf-overall-value neutral"; }
     document.getElementById("pullbackStatus").textContent = "Waiting...";
     document.getElementById("pullbackStatus").className = "status-value neutral-text";
     document.getElementById("scalpEntry").textContent = "—";
@@ -2423,6 +2373,8 @@ const mtfFrames = [
     { key: "1d", interval: "1d", minutes: 1440 }
 ];
 let mtfRefreshing = false;
+let mtfRefreshPending = false;
+const mtfFrameMetrics = new Map();
 const MTF_WMA_PERIOD = 200;
 
 function aggregateCandles(candles, targetMinutes) {
@@ -2489,12 +2441,11 @@ function getMtfTargetCandles(sourceCandles, frame) {
         : sourceCandles;
 }
 
-async function fetchMtfCandleHistory(market, frame) {
-    // The MTF trend panel uses the Cloudflare Worker history endpoint. That endpoint
-    // uses a separate historical feed so the current ECI calculation and its BiQuote
-    // data source remain unchanged.
+async function fetchMtfCandleHistory(marketCode, frame) {
+    // MTF history is served by the Cloudflare Worker from BiQuote OHLC candles,
+    // matching the instrument feed used by the dashboard. ECI logic is unchanged.
     const params = new URLSearchParams({
-        market: selectedMarket,
+        market: marketCode,
         candles: "1",
         interval: frame.interval,
         t: String(Date.now())
@@ -2520,9 +2471,9 @@ async function fetchMtfCandleHistory(market, frame) {
         );
     }
 
-    // Defensive frontend validation: Yahoo may represent no-trade intervals with
-    // null OHLC values. Number(null) becomes zero, so reject zero/invalid-price
-    // rows before WMA calculations even if the Worker already filtered them.
+    // Defensive frontend validation: providers may return null/empty OHLC fields
+    // for intervals without usable prices. Number(null) becomes zero, so reject
+    // zero/invalid-price rows before WMA calculations even if the Worker filtered them.
     const usableBars = bars.filter(bar => {
         const raw = [bar?.open ?? bar?.o, bar?.high ?? bar?.h, bar?.low ?? bar?.l, bar?.close ?? bar?.c];
         if (raw.some(value => value === null || value === undefined || value === "")) return false;
@@ -2541,29 +2492,69 @@ async function fetchMtfCandleHistory(market, frame) {
     return {
         candles: normalizedCandles,
         referenceCandles: getMtfReferenceCandles(normalizedCandles),
-        pagesFetched: 1,
         sourceBars: usableBars.length,
         rejectedBars: bars.length - usableBars.length,
-        source: payload?.source || "Cloudflare historical feed"
+        source: payload?.source || "BiQuote OHLC history"
     };
 }
 
-function setMtfStatus(key, label, state) {
+function setMtfStatus(key, label, state, details = "") {
     const el = document.getElementById(`mtfStatus${key}`);
     if (!el) return;
     el.textContent = label;
     el.className = `mtf-status ${state}`;
+    // Hover over the status to see the exact feed/price/WMA or failure reason.
+    el.title = details || "";
+}
+
+function updateOverallStatusFromMtfConsensus() {
+    const overall = document.getElementById("overallStatus");
+    if (!overall) return;
+
+    const metrics = mtfFrames.map(frame => mtfFrameMetrics.get(frame.key));
+    if (metrics.some(metric => !metric || !metric.available)) {
+        overall.textContent = "Overall Status: Waiting (timeframe data unavailable)";
+        overall.className = "overall neutral";
+        return;
+    }
+
+    const allAboveWma200 = metrics.every(metric => metric.open > metric.wma200);
+    const allBelowWma200 = metrics.every(metric => metric.open < metric.wma200);
+
+    if (allAboveWma200) {
+        overall.textContent = "Overall Status: Bullish (all 8 timeframes above WMA 200)";
+        overall.className = "overall bullish";
+    } else if (allBelowWma200) {
+        overall.textContent = "Overall Status: Bearish (all 8 timeframes below WMA 200)";
+        overall.className = "overall bearish";
+    } else {
+        overall.textContent = "Overall Status: Waiting (timeframes not aligned)";
+        overall.className = "overall neutral";
+    }
 }
 
 async function refreshMultiTimeframePanel() {
-    if (mtfRefreshing) return;
+    if (mtfRefreshing) {
+        mtfRefreshPending = true;
+        return;
+    }
     mtfRefreshing = true;
+    const marketCode = selectedMarket;
     const market = getMarketConfig();
     const seriesByFrame = new Map();
+    mtfFrameMetrics.clear();
     try {
-        await Promise.all(mtfFrames.map(async frame => {
+        // Request each timeframe in sequence rather than launching eight upstream
+        // candle-history requests simultaneously; this reduces provider burst throttling.
+        for (let frameIndex = 0; frameIndex < mtfFrames.length; frameIndex++) {
+            const frame = mtfFrames[frameIndex];
+            if (frameIndex > 0) await new Promise(resolve => setTimeout(resolve, 250));
             try {
-                const history = await fetchMtfCandleHistory(market, frame);
+                const history = await fetchMtfCandleHistory(marketCode, frame);
+                if (selectedMarket !== marketCode) {
+                    mtfRefreshPending = true;
+                    break;
+                }
                 const candles = history.candles;
                 seriesByFrame.set(frame.key, candles);
                 if (!candles.length) throw new Error("No valid candles returned");
@@ -2571,35 +2562,75 @@ async function refreshMultiTimeframePanel() {
                 const latest = candles[candles.length - 1];
                 if (history.referenceCandles.length < MTF_WMA_PERIOD) {
                     throw new Error(
-                        `Insufficient historical candles for WMA 200: ` +
+                        `Insufficient historical candles for WMA 100/200: ` +
                         `${history.referenceCandles.length} prior completed candles; ` +
-                        `${history.sourceBars} source candles retrieved across ${history.pagesFetched} older-history page(s)`
+                        `${history.sourceBars} valid source candles retrieved from ${history.source}`
                     );
                 }
 
-                const wma200 = calculateWMA(
-                    history.referenceCandles.slice(-MTF_WMA_PERIOD).map(candle => candle[4]),
-                    MTF_WMA_PERIOD
-                );
-                if (!Number.isFinite(latest[1]) || !Number.isFinite(wma200)) {
-                    throw new Error("WMA 200 unavailable");
+                const referenceCloses = history.referenceCandles.map(candle => Number(candle[4]));
+                const wma100 = calculateWMA(referenceCloses, 100);
+                const wma200 = calculateWMA(referenceCloses, 200);
+                const open = Number(latest[1]);
+                if (!Number.isFinite(open) || !Number.isFinite(wma100) || !Number.isFinite(wma200)) {
+                    throw new Error("WMA 100/200 or latest candle OPEN unavailable");
                 }
 
-                if (latest[1] < wma200) setMtfStatus(frame.key, "BEARISH", "bearish");
-                else if (latest[1] > wma200) setMtfStatus(frame.key, "BULLISH", "bullish");
-                else setMtfStatus(frame.key, "AT WMA 200", "neutral");
-            } catch (error) {
-                console.warn(`Multi-timeframe ${frame.key} data unavailable:`, error);
-                setMtfStatus(frame.key, "UNAVAILABLE", "offline");
-            }
-        }));
+                // Neutral takes precedence whenever OPEN is between the two WMAs,
+                // regardless of which WMA is higher. Otherwise above both is bullish, below both bearish.
+                const lowerWma = Math.min(wma100, wma200);
+                const upperWma = Math.max(wma100, wma200);
+                let frameLabel;
+                let frameState;
+                if (open > upperWma) {
+                    frameLabel = "BULLISH";
+                    frameState = "bullish";
+                } else if (open < lowerWma) {
+                    frameLabel = "BEARISH";
+                    frameState = "bearish";
+                } else {
+                    frameLabel = "NEUTRAL";
+                    frameState = "neutral";
+                }
 
-        // Overall WMA trend uses completed 15m closes only. It does not change ECI signals.
+                mtfFrameMetrics.set(frame.key, {
+                    available: true,
+                    open,
+                    wma100,
+                    wma200,
+                    aboveWma200: open > wma200,
+                    belowWma200: open < wma200,
+                    status: frameLabel
+                });
+
+                const relationToWma200 = open > wma200 ? "above WMA 200" : (open < wma200 ? "below WMA 200" : "at WMA 200");
+                const detail = `${history.source} | latest candle OPEN: ${formatPrice(open)} | WMA 100: ${formatPrice(wma100)} | WMA 200: ${formatPrice(wma200)} | OPEN is ${relationToWma200} | valid candles: ${history.sourceBars}`;
+                setMtfStatus(frame.key, frameLabel, frameState, detail);
+            } catch (error) {
+                if (selectedMarket !== marketCode) {
+                    mtfRefreshPending = true;
+                    break;
+                }
+                console.warn(`Multi-timeframe ${frame.key} data unavailable:`, error);
+                mtfFrameMetrics.set(frame.key, { available: false, error: error?.message || String(error) });
+                setMtfStatus(frame.key, "UNAVAILABLE", "offline", error?.message || String(error));
+            }
+        }
+
+        if (selectedMarket !== marketCode) {
+            mtfRefreshPending = true;
+            return;
+        }
+
+        // Top Overall Status requires all eight latest candle opens to agree relative to their own WMA200.
+        updateOverallStatusFromMtfConsensus();
+
+        // Overall WMA trend uses completed 15m closes only: WMA100 vs WMA200. It does not change ECI signals.
         try {
             let candles15m = seriesByFrame.get("15m");
             if (!candles15m || !candles15m.length) {
                 const history15m = await fetchMtfCandleHistory(
-                    market,
+                    marketCode,
                     mtfFrames.find(frame => frame.key === "15m")
                 );
                 candles15m = history15m.candles;
@@ -2634,10 +2665,14 @@ async function refreshMultiTimeframePanel() {
 
         const updated = document.getElementById("mtfUpdatedAt");
         if (updated) {
-            updated.textContent = `Last checked: ${new Date().toLocaleTimeString()} • ${market.label} • MTF historical feed via Worker`;
+            updated.textContent = `Last checked: ${new Date().toLocaleTimeString()} • ${market.label} • BiQuote OHLC history via Worker`;
         }
     } finally {
         mtfRefreshing = false;
+        if (mtfRefreshPending) {
+            mtfRefreshPending = false;
+            refreshMultiTimeframePanel();
+        }
     }
 }
 
@@ -2816,14 +2851,16 @@ function updateDashboardFromCloudflare(data) {
        ECI stops / previous levels
     ----------------------------------------------- */
 
+    // ECI internal names refer to the indicator bands, not the protective-stop labels:
+    // the lower band (stopShort) is the long-trade stop; the upper band (stopLong) is the short-trade stop.
     document.getElementById("stopLongValue").textContent =
-        data.stopLong !== null && data.stopLong !== undefined
-            ? formatPrice(Number(data.stopLong))
+        data.stopShort !== null && data.stopShort !== undefined
+            ? formatPrice(Number(data.stopShort))
             : "—";
 
     document.getElementById("stopShortValue").textContent =
-        data.stopShort !== null && data.stopShort !== undefined
-            ? formatPrice(Number(data.stopShort))
+        data.stopLong !== null && data.stopLong !== undefined
+            ? formatPrice(Number(data.stopLong))
             : "—";
 
     document.getElementById("previousHighValue").textContent =
