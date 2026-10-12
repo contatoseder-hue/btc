@@ -1,9 +1,3 @@
-new code backup
-
-
-
-
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -1480,20 +1474,20 @@ async function fetchCurrentPrice() {
             throw new Error(`BingX price request failed (${response.status}): ${payload?.message || payload?.error || "no details"}`);
         }
         const price = Number(payload?.price);
-        if (!Number.isFinite(price) || price <= 0) throw new Error("Invalid BingX last price returned by Worker");
+        if (!Number.isFinite(price) || price <= 0) throw new Error("Invalid Oanda last price returned by Worker");
 
         currentPrice = price;
         document.getElementById("marketPrice").textContent = formatPrice(currentPrice);
         const marketPriceLive = document.getElementById("marketPriceLive");
         if (marketPriceLive) {
-            marketPriceLive.innerHTML = '<span class="live-dot"></span><span>LIVE • BINGX</span>';
+            marketPriceLive.innerHTML = '<span class="live-dot"></span><span>LIVE • OANDA</span>';
             marketPriceLive.style.color = "#22c55e";
         }
         const market = getMarketConfig();
         const priceLine = document.getElementById("priceLine");
-        if (priceLine) priceLine.textContent = `${market.name} BingX Last Price: ${formatPrice(currentPrice)}`;
+        if (priceLine) priceLine.textContent = `${market.name} OANDA Last Price: ${formatPrice(currentPrice)}`;
     } catch (error) {
-        console.error("BingX price fallback error:", error);
+        console.error("OANDA price fallback error:", error);
         currentPrice = null;
         document.getElementById("marketPrice").textContent = "Unavailable";
         const marketPriceLive = document.getElementById("marketPriceLive");
@@ -1513,7 +1507,7 @@ async function fetchIndicators() {
         const market = getMarketConfig();
 
         /*
-            The candle source is the same BingX contract feed used by the Worker.
+            The candle source is the same Oanda contract feed used by the Worker.
             The ECI/RSI/MA200 calculations and signal rules are unchanged.
         */
         const eciBars = await fetchMarketData(
@@ -1538,7 +1532,7 @@ async function fetchIndicators() {
         updateRSIUI(rsi);
 
         /*
-            MA200 uses the same BingX 15m feed and a longer history.
+            MA200 uses the same Oanda 15m feed and a longer history.
             This does not change the ECI calculation.
         */
         let ma200 = null;
@@ -2509,7 +2503,7 @@ function updateOverallStatusFromMtfConsensus() {
         overall.textContent = "Overall Status: Bearish (all 8 timeframes below WMA 200)";
         overall.className = "overall bearish";
     } else {
-        overall.textContent = "Overall Status: Waiting (timeframes not aligned)";
+        overall.textContent = "Overall Status: Waiting...";
         overall.className = "overall neutral";
     }
 }
