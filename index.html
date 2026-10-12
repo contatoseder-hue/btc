@@ -792,7 +792,7 @@
                     <option value="CHART" selected>TradingView Chart (default)</option>
                     <option value="OANDA">OANDA Website</option>
                     <option value="BINANCE">Binance Website</option>
-                    <option value="BINGX">BingX Website</option>
+                    <option value="BINGX">Bingx Website</option>
                 </select>
             </div>
             <button type="button" id="exchangeFullscreenButton" onclick="toggleExchangeFullscreen()" style="width:auto; min-width:150px; margin-top:0;">
@@ -2281,9 +2281,9 @@ function switchMarket(value) {
     if (priceLabel) {
         const priceLabelText = document.getElementById("marketPriceLabelText");
         if (priceLabelText) {
-            priceLabelText.textContent = `${market.name} Live Price (BingX)`;
+            priceLabelText.textContent = `${market.name} Live Price(OANDA)`;
         } else {
-            priceLabel.textContent = `${market.name} Live Price (BingX)`;
+            priceLabel.textContent = `${market.name} Live Price(OANDA)`;
         }
     }
 
@@ -2746,7 +2746,7 @@ function updateDashboardFromCloudflare(data) {
     const marketPriceLive = document.getElementById("marketPriceLive");
     if (marketPriceLive) {
         marketPriceLive.innerHTML = currentPrice !== null
-            ? '<span class="live-dot"></span><span>LIVE • BINGX LAST PRICE</span>'
+            ? '<span class="live-dot"></span><span>LIVE • OANDA LAST PRICE</span>'
             : '<span class="live-dot" style="background:#ef4444;animation:none;"></span><span>PRICE UNAVAILABLE</span>';
         marketPriceLive.style.color = currentPrice !== null ? "#22c55e" : "#ef4444";
     }
@@ -2756,7 +2756,7 @@ function updateDashboardFromCloudflare(data) {
 
     const priceLabelText = document.getElementById("marketPriceLabelText");
     if (priceLabelText) {
-        priceLabelText.textContent = `${market.name} Live Price (BingX)`;
+        priceLabelText.textContent = `${market.name} Live Price(OANDA)`;
     }
 
     /* -----------------------------------------------
