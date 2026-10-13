@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -551,6 +550,19 @@
                 <option value="4h">4 Hours — broader trend</option>
             </select>
             <div class="btc-timeframe-note">BTC only: this changes the ECI signal, entry, stop, and signal history timeframe. Other markets remain on 15-minute ECI.</div>
+            <div class="label" style="margin-top:12px;">Trade Direction</div>
+            <select id="btcTradeDirection" onchange="changeBtcTradeDirection(this.value)" aria-label="Bitcoin trade direction">
+                <option value="short">Sell Short — find resistance above price</option>
+                <option value="long">Buy Long — find support below price</option>
+            </select>
+            <div class="btc-timeframe-note">Direction analysis is separate from the original ECI signal. It identifies the nearest confirmed swing level on the selected timeframe.</div>
+        </div>
+
+        <div class="card" id="btcDirectionAnalysisCard" style="display:none;margin-bottom:16px;">
+            <div class="section-title">BTC Direction-Based Structure</div>
+            <div id="btcDirectionAnalysisTitle" style="font-weight:700;margin-bottom:8px;">Waiting for BTC data…</div>
+            <div id="btcDirectionAnalysisLevel" style="font-size:24px;font-weight:800;margin-bottom:8px;">—</div>
+            <div id="btcDirectionAnalysisReason" class="btc-timeframe-note">Select a timeframe and direction to calculate the nearest swing level.</div>
         </div>
 
         <div id="biasLine" class="bias-line waiting">
@@ -958,6 +970,8 @@ const BTC_SIGNAL_INTERVAL_OPTIONS = [
 ];
 const DEFAULT_BTC_SIGNAL_INTERVAL = "15m";
 let selectedBtcSignalInterval = DEFAULT_BTC_SIGNAL_INTERVAL;
+let selectedBtcTradeDirection = "short";
+let btcDirectionAnalysisRequest = 0;
 try {
     const savedBtcInterval = localStorage.getItem("goldEciBtcSignalInterval");
     if (BTC_SIGNAL_INTERVAL_OPTIONS.some(option => option.value === savedBtcInterval)) {
@@ -985,7 +999,11 @@ function updateBtcTimeframeControl() {
     const select = document.getElementById("btcSignalTimeframe");
     const option = getSignalIntervalOption();
     if (control) control.style.display = selectedMarket === "BTC" ? "block" : "none";
+    const directionSelect = document.getElementById("btcTradeDirection");
+    const directionCard = document.getElementById("btcDirectionAnalysisCard");
     if (select) select.value = selectedBtcSignalInterval;
+    if (directionSelect) directionSelect.value = selectedBtcTradeDirection;
+    if (directionCard) directionCard.style.display = selectedMarket === "BTC" ? "block" : "none";
     const sectionTitle = document.getElementById("eciSectionTitle");
     if (sectionTitle) sectionTitle.textContent = `ECI — ${option.label}`;
     const timeframeValue = document.getElementById("eciTimeframeValue");
@@ -1576,6 +1594,69 @@ function marketBarsToCandles(bars, intervalMinutes = 15) {
         .sort((a, b) => a[0] - b[0]);
 }
 
+function changeBtcTradeDirection(value) {
+    if (selectedMarket !== "BTC") return;
+    selectedBtcTradeDirection = value === "long" ? "long" : "short";
+    try { localStorage.setItem("goldEciBtcTradeDirection", selectedBtcTradeDirection); } catch (_) {}
+    updateBtcDirectionAnalysis();
+}
+
+try {
+    const savedDirection = localStorage.getItem("goldEciBtcTradeDirection");
+    if (savedDirection === "long" || savedDirection === "short") selectedBtcTradeDirection = savedDirection;
+} catch (_) {}
+
+async function updateBtcDirectionAnalysis() {
+    const card = document.getElementById("btcDirectionAnalysisCard");
+    const title = document.getElementById("btcDirectionAnalysisTitle");
+    const levelElement = document.getElementById("btcDirectionAnalysisLevel");
+    const reason = document.getElementById("btcDirectionAnalysisReason");
+    if (!card || selectedMarket !== "BTC") return;
+    card.style.display = "block";
+    const requestId = ++btcDirectionAnalysisRequest;
+    const direction = selectedBtcTradeDirection;
+    const interval = selectedBtcSignalInterval;
+    const label = getSignalIntervalLabel(interval);
+    if (title) title.textContent = `${label} ${direction === "short" ? "SHORT" : "LONG"} structure`;
+    if (levelElement) levelElement.textContent = "Calculating…";
+    if (reason) reason.textContent = "Searching closed candles for the nearest confirmed swing level…";
+    try {
+        const bars = await fetchMarketData(getMarketConfig().dataSymbol, interval, 300);
+        if (requestId !== btcDirectionAnalysisRequest || selectedMarket !== "BTC" || interval !== selectedBtcSignalInterval || direction !== selectedBtcTradeDirection) return;
+        const candles = marketBarsToCandles(bars, getSignalIntervalOption(interval).minutes)
+            .filter(c => !c[6] && Number.isFinite(c[2]) && Number.isFinite(c[3]));
+        const price = Number.isFinite(currentPrice) && currentPrice > 0 ? currentPrice : (candles.length ? candles[candles.length - 1][4] : NaN);
+        if (candles.length < 7 || !Number.isFinite(price)) throw new Error("Not enough valid closed candles or current price is unavailable.");
+        const strength = 2;
+        const levels = [];
+        for (let i = strength; i < candles.length - strength; i++) {
+            const c = candles[i];
+            let swingHigh = true, swingLow = true;
+            for (let j = 1; j <= strength; j++) {
+                if (c[2] <= candles[i-j][2] || c[2] <= candles[i+j][2]) swingHigh = false;
+                if (c[3] >= candles[i-j][3] || c[3] >= candles[i+j][3]) swingLow = false;
+            }
+            if (direction === "short" && swingHigh && c[2] > price) levels.push({price:c[2], time:c[0], type:"Resistance"});
+            if (direction === "long" && swingLow && c[3] < price) levels.push({price:c[3], time:c[0], type:"Support"});
+        }
+        levels.sort((a,b) => direction === "short" ? a.price-b.price : b.price-a.price);
+        const unique = levels.filter((level,index,array) => array.findIndex(other => Math.abs(other.price-level.price)/Math.max(Math.abs(level.price),1) < 0.0005) === index);
+        if (!unique.length) {
+            if (levelElement) levelElement.textContent = "No confirmed level found";
+            if (reason) reason.textContent = `No confirmed ${direction === "short" ? "resistance above" : "support below"} the current price was found in the available closed ${label} candles. No level was invented.`;
+            return;
+        }
+        const nearest = unique[0];
+        if (levelElement) levelElement.textContent = formatPrice(nearest.price);
+        if (reason) reason.textContent = `Nearest ${nearest.type.toLowerCase()} from a confirmed ${label} swing, above/below current price ${formatPrice(price)}. This is a potential structure level, not a guaranteed reversal or an automatic entry signal.`;
+    } catch (error) {
+        if (requestId !== btcDirectionAnalysisRequest) return;
+        if (levelElement) levelElement.textContent = "Unavailable";
+        if (reason) reason.textContent = error?.message || "Unable to calculate the selected timeframe structure.";
+        console.error("BTC direction structure error:", error);
+    }
+}
+
 async function fetchCurrentPrice() {
     try {
         const params = new URLSearchParams({
@@ -1604,6 +1685,7 @@ async function fetchCurrentPrice() {
         const market = getMarketConfig();
         const priceLine = document.getElementById("priceLine");
         if (priceLine) priceLine.textContent = `${market.name} ${getMarketPriceSourceName()} Last Price: ${formatPrice(currentPrice)}`;
+        if (selectedMarket === "BTC") updateBtcDirectionAnalysis();
     } catch (error) {
         console.error(`${getMarketPriceSourceName()} price fallback error:`, error);
         currentPrice = null;
@@ -2354,6 +2436,7 @@ document.addEventListener("fullscreenchange", () => {
 function switchMarket(value) {
     selectedMarket = ["GOLD", "BTC", "SILVER", "NASDAQ"].includes(value) ? value : "GOLD";
     updateBtcTimeframeControl();
+    if (selectedMarket === "BTC") updateBtcDirectionAnalysis();
 
     currentPrice = null;
     lastProcessedCandleTime = null;
@@ -2494,6 +2577,7 @@ function changeBtcSignalTimeframe(value) {
         if (title) title.textContent = `TradingView — ${market.label} ${timeframeLabel}`;
     }
 
+    if (selectedMarket === "BTC") updateBtcDirectionAnalysis();
     fetchCloudflareData();
 }
 
@@ -2730,8 +2814,8 @@ async function refreshMultiTimeframePanel() {
         // candle-history requests simultaneously; this reduces provider burst throttling.
         for (let frameIndex = 0; frameIndex < mtfFrames.length; frameIndex++) {
             const frame = mtfFrames[frameIndex];
-            // Wait longer than BingX's current per-IP candlestick request limit to reduce upstream throttling.
-            if (frameIndex > 0) await new Promise(resolve => setTimeout(resolve, 1200));
+            // Small stagger to reduce burst requests across all eight intervals.
+            if (frameIndex > 0) await new Promise(resolve => setTimeout(resolve, 300));
             try {
                 const history = await fetchMtfCandleHistory(marketCode, frame);
                 if (selectedMarket !== marketCode) {
@@ -2845,7 +2929,7 @@ async function refreshMultiTimeframePanel() {
 
         const updated = document.getElementById("mtfUpdatedAt");
         if (updated) {
-            updated.textContent = `Last checked: ${new Date().toLocaleTimeString()} • ${market.label} • Selected market OHLC history via Worker`;
+            updated.textContent = `Last checked: ${new Date().toLocaleTimeString()} • ${market.label} • BiQuote OHLC history via Worker`;
         }
     } finally {
         mtfRefreshing = false;
