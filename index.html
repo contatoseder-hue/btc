@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2728,8 +2730,8 @@ async function refreshMultiTimeframePanel() {
         // candle-history requests simultaneously; this reduces provider burst throttling.
         for (let frameIndex = 0; frameIndex < mtfFrames.length; frameIndex++) {
             const frame = mtfFrames[frameIndex];
-            // Small stagger to reduce burst requests across all eight intervals.
-            if (frameIndex > 0) await new Promise(resolve => setTimeout(resolve, 300));
+            // Wait longer than BingX's current per-IP candlestick request limit to reduce upstream throttling.
+            if (frameIndex > 0) await new Promise(resolve => setTimeout(resolve, 1200));
             try {
                 const history = await fetchMtfCandleHistory(marketCode, frame);
                 if (selectedMarket !== marketCode) {
@@ -2843,7 +2845,7 @@ async function refreshMultiTimeframePanel() {
 
         const updated = document.getElementById("mtfUpdatedAt");
         if (updated) {
-            updated.textContent = `Last checked: ${new Date().toLocaleTimeString()} • ${market.label} • BiQuote OHLC history via Worker`;
+            updated.textContent = `Last checked: ${new Date().toLocaleTimeString()} • ${market.label} • Selected market OHLC history via Worker`;
         }
     } finally {
         mtfRefreshing = false;
