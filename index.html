@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -439,6 +438,10 @@
         margin-bottom: 7px;
     }
     .mtf-status {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
         font-size: 13px;
         line-height: 1.25;
         font-weight: 800;
@@ -448,6 +451,40 @@
     .mtf-status.bearish { color: #ef4444; }
     .mtf-status.neutral { color: #facc15; }
     .mtf-status.offline { color: #8b98a5; }
+    .trend-arrow-icon {
+        display: inline-block;
+        flex: 0 0 22px;
+        width: 22px;
+        height: 22px;
+        overflow: visible;
+        color: currentColor;
+        vertical-align: -5px;
+        filter: drop-shadow(0 0 1px rgba(255,255,255,.05));
+    }
+    .trend-arrow-icon path {
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 4.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+    .mtf-status-label { white-space: nowrap; }
+    .mtf-overall-value {
+        font-size: 16px;
+        font-weight: 800;
+        text-align: right;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 7px;
+    }
+    .mtf-icon-credit {
+        margin-top: 5px;
+        color: #718091;
+        font-size: 10px;
+        line-height: 1.35;
+    }
+    .mtf-icon-credit a { color: #94a3b8; text-decoration: underline; text-underline-offset: 2px; }
     .mtf-overall {
         display: flex;
         align-items: center;
@@ -567,7 +604,7 @@
 
             <div class="stat">
                 <div id="marketPriceLabel" class="label">
-                    <span id="marketPriceLabelText">Gold Live Price</span>
+                    <span id="marketPriceLabelText">Gold Live Price (Binance Spot PAXG/USDT)</span>
                     <span id="marketPriceLive" class="live-indicator" style="margin-left:8px;">
                         <span class="live-dot"></span>
                         <span>LIVE</span>
@@ -759,6 +796,7 @@
             <div id="mtfOverallStatus" class="mtf-overall-value neutral">Loading…</div>
         </div>
         <div id="mtfUpdatedAt" class="mtf-note">Waiting for market data…</div>
+        <div class="mtf-icon-credit">Custom trend-arrow styling inspired by <a href="https://www.flaticon.com/free-icon/trend_10762997" target="_blank" rel="noopener noreferrer">the Trend icon by UIUX Mall on Flaticon</a>; the Pro asset itself is not used.</div>
         <div class="mtf-guidance">
             <div class="mtf-guidance-card timeframe">
                 <p><strong>TIMEFRAME STATUS</strong></p>
@@ -1359,10 +1397,10 @@ function getMarketConfig() {
             label: "XAU/USD",
             name: "Gold",
             yahoo: GOLD_SYMBOL,
-            dataSymbol: "XAUUSD",
+            dataSymbol: "PAXGUSDT",
             bingxSymbol: "GOLD(XAU)-USDT",
-            binanceSymbol: "XAUUSDT",
-            tradingView: "BINANCE:XAUUSDT.P"
+            binanceSymbol: "PAXGUSDT",
+            tradingView: "BINANCE:PAXGUSDT"
         };
     }
 
@@ -1400,11 +1438,13 @@ function getMarketConfig() {
 }
 
 function getMarketPriceSourceName(marketCode = selectedMarket) {
-    return ["GOLD", "BTC"].includes(marketCode) ? "Binance Futures" : "BingX";
+    if (marketCode === "GOLD") return "Binance Spot PAXG/USDT";
+    if (marketCode === "BTC") return "Binance Futures";
+    return "BingX";
 }
 
 function getMarketPriceSourceBadge(marketCode = selectedMarket) {
-    if (marketCode === "GOLD") return "BINANCE TRADFI LAST PRICE";
+    if (marketCode === "GOLD") return "BINANCE SPOT PAXG/USDT LAST PRICE";
     if (marketCode === "BTC") return "BINANCE FUTURES LAST PRICE";
     return "BINGX LAST PRICE";
 }
@@ -2421,7 +2461,8 @@ function getMtfTargetCandles(sourceCandles, frame) {
 
 async function fetchMtfCandleHistory(marketCode, frame) {
     // MTF history is served by the Worker from the same source used for live price
-    // and ECI candles (Binance for Gold/BTC; existing BingX feed for Silver/NASDAQ).
+    // and ECI candles (Binance Spot PAXG/USDT for Gold; Binance Futures BTCUSDT for BTC;
+    // existing BingX feed paths for Silver/NASDAQ in this Worker version).
     const params = new URLSearchParams({
         market: marketCode,
         candles: "1",
@@ -2476,22 +2517,54 @@ async function fetchMtfCandleHistory(marketCode, frame) {
     };
 }
 
-function formatMtfDirectionLabel(label, state) {
-    const normalized = String(label || "").trim().toUpperCase();
-    if (normalized === "BULLISH" || state === "bullish") return "↑ BULLISH";
-    if (normalized === "BEARISH" || state === "bearish") return "↓ BEARISH";
-    if (normalized === "NEUTRAL" || state === "neutral") return "↔ NEUTRAL";
-    return label;
+function trendArrowSvg(state) {
+    // Custom thick, rounded zig-zag arrow inspired by the linked trend-icon style.
+    // This is an original inline SVG adaptation, not the downloaded Flaticon asset.
+    const rising = '<path d="M3.5 27 L11.2 17.8 L17.2 23 L28.5 5.5 M19.5 5.5 H28.5 V14.5" />';
+    const falling = '<g transform="translate(0 32) scale(1 -1)"><path d="M3.5 27 L11.2 17.8 L17.2 23 L28.5 5.5 M19.5 5.5 H28.5 V14.5" /></g>';
+    const neutral = '<path d="M3.5 17.5 L9.5 12.5 L15 18.5 L22 13.5 L28.5 13.5 M21.5 7 L28.5 13.5 L21.5 20" />';
+    let shape = '';
+    if (state === 'bullish') shape = rising;
+    else if (state === 'bearish') shape = falling;
+    else if (state === 'neutral') shape = neutral;
+    if (!shape) return null;
+    return `<svg class="trend-arrow-icon" viewBox="0 0 32 32" aria-hidden="true" focusable="false">${shape}</svg>`;
+}
+
+function renderTrendStatus(el, label, state) {
+    if (!el) return;
+    const normalized = String(label || '').trim().toUpperCase();
+    const status = ['BULLISH', 'BEARISH', 'NEUTRAL'].includes(normalized)
+        ? normalized.toLowerCase()
+        : (['bullish', 'bearish', 'neutral'].includes(state) && normalized === '' ? state : null);
+
+    if (!status) {
+        el.textContent = String(label || '');
+        return;
+    }
+
+    el.replaceChildren();
+    const iconMarkup = trendArrowSvg(status);
+    if (iconMarkup) el.insertAdjacentHTML('beforeend', iconMarkup);
+    const text = document.createElement('span');
+    text.className = 'mtf-status-label';
+    text.textContent = status.toUpperCase();
+    el.appendChild(text);
 }
 
 function setMtfStatus(key, label, state, details = "") {
     const el = document.getElementById(`mtfStatus${key}`);
     if (!el) return;
-    // The existing bullish/bearish/neutral CSS colors also color the arrow.
-    el.textContent = formatMtfDirectionLabel(label, state);
+    renderTrendStatus(el, label, state);
     el.className = `mtf-status ${state}`;
     // Hover over a status to see the selected-market feed, exact price/WMA or failure reason.
     el.title = details || "";
+}
+
+function setMtfOverallTrend(el, label, state) {
+    if (!el) return;
+    renderTrendStatus(el, label, state);
+    el.className = `mtf-overall-value ${state}`;
 }
 
 function updateOverallStatusFromMtfConsensus() {
@@ -2535,7 +2608,7 @@ async function refreshMultiTimeframePanel() {
         // candle-history requests simultaneously; this reduces provider burst throttling.
         for (let frameIndex = 0; frameIndex < mtfFrames.length; frameIndex++) {
             const frame = mtfFrames[frameIndex];
-            // Small stagger to reduce burst requests to BingX across all eight intervals.
+            // Small stagger to reduce burst requests across all eight intervals.
             if (frameIndex > 0) await new Promise(resolve => setTimeout(resolve, 300));
             try {
                 const history = await fetchMtfCandleHistory(marketCode, frame);
@@ -2633,14 +2706,11 @@ async function refreshMultiTimeframePanel() {
                 throw new Error("Not enough completed 15-minute candles to calculate WMA 100/200");
             }
             if (wma100 < wma200) {
-                overall.textContent = "↓ BEARISH";
-                overall.className = "mtf-overall-value bearish";
+                setMtfOverallTrend(overall, "BEARISH", "bearish");
             } else if (wma100 > wma200) {
-                overall.textContent = "↑ BULLISH";
-                overall.className = "mtf-overall-value bullish";
+                setMtfOverallTrend(overall, "BULLISH", "bullish");
             } else {
-                overall.textContent = "↔ NEUTRAL";
-                overall.className = "mtf-overall-value neutral";
+                setMtfOverallTrend(overall, "NEUTRAL", "neutral");
             }
         } catch (error) {
             console.warn("Multi-timeframe overall WMA status unavailable:", error);
