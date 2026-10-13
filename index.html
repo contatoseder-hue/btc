@@ -792,7 +792,7 @@
                     <option value="CHART" selected>TradingView Chart (default)</option>
                     <option value="OANDA">OANDA Website</option>
                     <option value="BINANCE">Binance Website</option>
-                    <option value="BINGX">Bingx Website</option>
+                    <option value="BINGX">BingX Website</option>
                 </select>
             </div>
             <button type="button" id="exchangeFullscreenButton" onclick="toggleExchangeFullscreen()" style="width:auto; min-width:150px; margin-top:0;">
@@ -1361,7 +1361,8 @@ function getMarketConfig() {
             yahoo: GOLD_SYMBOL,
             dataSymbol: "XAUUSD",
             bingxSymbol: "GOLD(XAU)-USDT",
-            tradingView: "BINGX:GOLDXAUUSDT.P"
+            binanceSymbol: "XAUUSDT",
+            tradingView: "BINANCE:XAUUSDT.P"
         };
     }
 
@@ -1372,7 +1373,8 @@ function getMarketConfig() {
             yahoo: BTC_SYMBOL,
             dataSymbol: "BTCUSD",
             bingxSymbol: "BTC-USDT",
-            tradingView: "BINGX:BTCUSDT.P"
+            binanceSymbol: "BTCUSDT",
+            tradingView: "BINANCE:BTCUSDT.P"
         };
     }
 
@@ -1397,8 +1399,18 @@ function getMarketConfig() {
     };
 }
 
+function getMarketPriceSourceName(marketCode = selectedMarket) {
+    return ["GOLD", "BTC"].includes(marketCode) ? "Binance Futures" : "BingX";
+}
+
+function getMarketPriceSourceBadge(marketCode = selectedMarket) {
+    if (marketCode === "GOLD") return "BINANCE TRADFI LAST PRICE";
+    if (marketCode === "BTC") return "BINANCE FUTURES LAST PRICE";
+    return "BINGX LAST PRICE";
+}
+
 async function fetchMarketData(symbol, interval, limit = 300, historyRange = null) {
-    // All dashboard candle history now comes from the same BingX contract feed
+    // All dashboard candle history now comes from the same active exchange feed
     // used by the Cloudflare ECI engine and displayed current last price.
     const params = new URLSearchParams({
         market: selectedMarket,
@@ -1413,10 +1425,10 @@ async function fetchMarketData(symbol, interval, limit = 300, historyRange = nul
     });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-        throw new Error(`BingX candle request failed: ${response.status}: ${payload?.message || payload?.error || "no details"}`);
+        throw new Error(`Market candle request failed (${getMarketPriceSourceName()}): ${response.status}: ${payload?.message || payload?.error || "no details"}`);
     }
     if (!Array.isArray(payload?.bars) || !payload.bars.length) {
-        throw new Error(`BingX returned no ${interval} candles: ${payload?.message || payload?.error || "empty bars array"}`);
+        throw new Error(`No ${interval} candles returned by ${getMarketPriceSourceName()}: ${payload?.message || payload?.error || "empty bars array"}`);
     }
     return payload.bars;
 }
@@ -1471,23 +1483,23 @@ async function fetchCurrentPrice() {
         });
         const payload = await response.json().catch(() => ({}));
         if (!response.ok || payload?.error) {
-            throw new Error(`BingX price request failed (${response.status}): ${payload?.message || payload?.error || "no details"}`);
+            throw new Error(`${getMarketPriceSourceName()} price request failed (${response.status}): ${payload?.message || payload?.error || "no details"}`);
         }
         const price = Number(payload?.price);
-        if (!Number.isFinite(price) || price <= 0) throw new Error("Invalid Oanda last price returned by Worker");
+        if (!Number.isFinite(price) || price <= 0) throw new Error("Invalid market last price returned by Worker");
 
         currentPrice = price;
         document.getElementById("marketPrice").textContent = formatPrice(currentPrice);
         const marketPriceLive = document.getElementById("marketPriceLive");
         if (marketPriceLive) {
-            marketPriceLive.innerHTML = '<span class="live-dot"></span><span>LIVE • OANDA</span>';
+            marketPriceLive.innerHTML = `<span class="live-dot"></span><span>LIVE • ${getMarketPriceSourceBadge()}</span>`;
             marketPriceLive.style.color = "#22c55e";
         }
         const market = getMarketConfig();
         const priceLine = document.getElementById("priceLine");
-        if (priceLine) priceLine.textContent = `${market.name} OANDA Last Price: ${formatPrice(currentPrice)}`;
+        if (priceLine) priceLine.textContent = `${market.name} ${getMarketPriceSourceName()} Last Price: ${formatPrice(currentPrice)}`;
     } catch (error) {
-        console.error("OANDA price fallback error:", error);
+        console.error(`${getMarketPriceSourceName()} price fallback error:`, error);
         currentPrice = null;
         document.getElementById("marketPrice").textContent = "Unavailable";
         const marketPriceLive = document.getElementById("marketPriceLive");
@@ -1507,7 +1519,7 @@ async function fetchIndicators() {
         const market = getMarketConfig();
 
         /*
-            The candle source is the same Oanda contract feed used by the Worker.
+            The candle source is the same active exchange feed used by the Worker.
             The ECI/RSI/MA200 calculations and signal rules are unchanged.
         */
         const eciBars = await fetchMarketData(
@@ -1532,7 +1544,7 @@ async function fetchIndicators() {
         updateRSIUI(rsi);
 
         /*
-            MA200 uses the same Oanda 15m feed and a longer history.
+            MA200 uses the same selected market 15m feed and a longer history.
             This does not change the ECI calculation.
         */
         let ma200 = null;
@@ -2281,9 +2293,9 @@ function switchMarket(value) {
     if (priceLabel) {
         const priceLabelText = document.getElementById("marketPriceLabelText");
         if (priceLabelText) {
-            priceLabelText.textContent = `${market.name} Live Price(OANDA)`;
+            priceLabelText.textContent = `${market.name} Live Price (${getMarketPriceSourceName()})`;
         } else {
-            priceLabel.textContent = `${market.name} Live Price(OANDA)`;
+            priceLabel.textContent = `${market.name} Live Price (${getMarketPriceSourceName()})`;
         }
     }
 
@@ -2326,7 +2338,7 @@ function switchMarket(value) {
 
 /* =========================================================
    MULTI-TIMEFRAME WMA TREND PANEL
-   Trend panel uses the same BingX contracts as the ECI/Cloudflare feed.
+   Trend panel uses the same selected market contracts as the ECI/Cloudflare feed.
 ========================================================= */
 const mtfFrames = [
     { key: "1m", interval: "1m", minutes: 1 },
@@ -2408,8 +2420,8 @@ function getMtfTargetCandles(sourceCandles, frame) {
 }
 
 async function fetchMtfCandleHistory(marketCode, frame) {
-    // MTF history is served by the Cloudflare Worker from the same BingX contract
-    // used for the live price and ECI candles.
+    // MTF history is served by the Worker from the same source used for live price
+    // and ECI candles (Binance for Gold/BTC; existing BingX feed for Silver/NASDAQ).
     const params = new URLSearchParams({
         market: marketCode,
         candles: "1",
@@ -2460,7 +2472,7 @@ async function fetchMtfCandleHistory(marketCode, frame) {
         referenceCandles: getMtfReferenceCandles(normalizedCandles),
         sourceBars: usableBars.length,
         rejectedBars: bars.length - usableBars.length,
-        source: payload?.source || "BingX Perpetual OHLC"
+        source: payload?.source || `${getMarketPriceSourceName()} OHLC`
     };
 }
 
@@ -2478,7 +2490,7 @@ function setMtfStatus(key, label, state, details = "") {
     // The existing bullish/bearish/neutral CSS colors also color the arrow.
     el.textContent = formatMtfDirectionLabel(label, state);
     el.className = `mtf-status ${state}`;
-    // Hover over a status to see the BingX feed, exact price/WMA or failure reason.
+    // Hover over a status to see the selected-market feed, exact price/WMA or failure reason.
     el.title = details || "";
 }
 
@@ -2503,7 +2515,7 @@ function updateOverallStatusFromMtfConsensus() {
         overall.textContent = "Overall Status: Bearish (all 8 timeframes below WMA 200)";
         overall.className = "overall bearish";
     } else {
-        overall.textContent = "Overall Status: Waiting...";
+        overall.textContent = "Overall Status: Waiting (timeframes not aligned)";
         overall.className = "overall neutral";
     }
 }
@@ -2598,7 +2610,7 @@ async function refreshMultiTimeframePanel() {
             return;
         }
 
-        // Top Overall Status requires all eight BingX candle opens to agree relative to their own WMA200.
+        // Top Overall Status requires all eight selected-market candle opens to agree relative to their own WMA200.
         updateOverallStatusFromMtfConsensus();
 
         // Overall WMA trend uses completed 15m closes only: WMA100 vs WMA200. It does not change ECI signals.
@@ -2746,7 +2758,7 @@ function updateDashboardFromCloudflare(data) {
     const marketPriceLive = document.getElementById("marketPriceLive");
     if (marketPriceLive) {
         marketPriceLive.innerHTML = currentPrice !== null
-            ? '<span class="live-dot"></span><span>LIVE • OANDA LAST PRICE</span>'
+            ? `<span class="live-dot"></span><span>LIVE • ${data.priceSource ? String(data.priceSource).toUpperCase() : getMarketPriceSourceBadge()}</span>`
             : '<span class="live-dot" style="background:#ef4444;animation:none;"></span><span>PRICE UNAVAILABLE</span>';
         marketPriceLive.style.color = currentPrice !== null ? "#22c55e" : "#ef4444";
     }
@@ -2756,7 +2768,7 @@ function updateDashboardFromCloudflare(data) {
 
     const priceLabelText = document.getElementById("marketPriceLabelText");
     if (priceLabelText) {
-        priceLabelText.textContent = `${market.name} Live Price(OANDA)`;
+        priceLabelText.textContent = `${market.name} Live Price (${getMarketPriceSourceName()})`;
     }
 
     /* -----------------------------------------------
