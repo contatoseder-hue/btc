@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -509,6 +510,10 @@
     .mtf-guidance-card.critical .warning-title { color: #ff8585; font-size: 13px; letter-spacing: .04em; }
     .mtf-guidance-card.critical .limit-instruction { display: block; margin-top: 5px; color: #fff; font-size: 13px; }
     .mtf-guidance-card.disclaimer { background: rgba(125, 139, 150, .07); border-color: #303b46; color: #a7b0b9; font-size: 11px; }
+    .btc-timeframe-control { max-width: 420px; margin: -4px auto 16px; padding: 12px 14px; border: 1px solid rgba(96, 165, 250, .42); border-radius: 10px; background: rgba(38, 110, 170, .10); }
+    .btc-timeframe-control .label { margin-bottom: 7px; }
+    .btc-timeframe-note { margin-top: 7px; color: #91a0ae; font-size: 11px; line-height: 1.4; }
+    .btc-timeframe-control select { width: 100%; }
     @media (max-width: 600px) {
         .mtf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .mtf-overall { align-items: flex-start; flex-direction: column; gap: 6px; }
@@ -532,6 +537,19 @@
                 <option value="SILVER">Silver / USD (XAG/USD)</option>
                 <option value="NASDAQ">NASDAQ / US Tech 100</option>
             </select>
+        </div>
+
+        <div id="btcTimeframeControl" class="btc-timeframe-control" style="display:none;">
+            <div class="label">BTC Signal Timeframe</div>
+            <select id="btcSignalTimeframe" onchange="changeBtcSignalTimeframe(this.value)" aria-label="Bitcoin ECI signal timeframe">
+                <option value="5m">5 Minutes — faster, more noise</option>
+                <option value="15m" selected>15 Minutes — default</option>
+                <option value="30m">30 Minutes</option>
+                <option value="1h">1 Hour — slower confirmation</option>
+                <option value="2h">2 Hours</option>
+                <option value="4h">4 Hours — broader trend</option>
+            </select>
+            <div class="btc-timeframe-note">BTC only: this changes the ECI signal, entry, stop, and signal history timeframe. Other markets remain on 15-minute ECI.</div>
         </div>
 
         <div id="biasLine" class="bias-line waiting">
@@ -667,7 +685,7 @@
                     ECI Timeframe
                 </div>
 
-                <div class="value">
+                <div class="value" id="eciTimeframeValue">
                     15 Minutes
                 </div>
             </div>
@@ -724,7 +742,7 @@
     <!-- ECI DETAILS -->
     <div class="card">
 
-        <div class="section-title">
+        <div class="section-title" id="eciSectionTitle">
             ECI — 15m
         </div>
 
@@ -772,7 +790,7 @@
 
         </div>
 
-        <div class="small">
+        <div class="small" id="eciSignalHelp">
             Signal is calculated only from closed 15-minute candles.
         </div>
 
@@ -928,10 +946,56 @@ const SILVER_SYMBOL = "XAGUSD";
 const NASDAQ_SYMBOL = "USTEC";
 let selectedMarket = "GOLD";
 
-/*
-    ECI is ALWAYS calculated from CLOSED 15-minute candles.
-*/
-const eciInterval = "15m";
+// BTC alone supports a selectable signal timeframe; all other markets stay at 15m.
+const BTC_SIGNAL_INTERVAL_OPTIONS = [
+    { value: "5m", label: "5 Minutes", minutes: 5, tvInterval: "5" },
+    { value: "15m", label: "15 Minutes", minutes: 15, tvInterval: "15" },
+    { value: "30m", label: "30 Minutes", minutes: 30, tvInterval: "30" },
+    { value: "1h", label: "1 Hour", minutes: 60, tvInterval: "60" },
+    { value: "2h", label: "2 Hours", minutes: 120, tvInterval: "120" },
+    { value: "4h", label: "4 Hours", minutes: 240, tvInterval: "240" }
+];
+const DEFAULT_BTC_SIGNAL_INTERVAL = "15m";
+let selectedBtcSignalInterval = DEFAULT_BTC_SIGNAL_INTERVAL;
+try {
+    const savedBtcInterval = localStorage.getItem("goldEciBtcSignalInterval");
+    if (BTC_SIGNAL_INTERVAL_OPTIONS.some(option => option.value === savedBtcInterval)) {
+        selectedBtcSignalInterval = savedBtcInterval;
+    }
+} catch (_) {
+    // Storage can be unavailable in some browser privacy modes; use the 15m default.
+}
+
+function getActiveSignalInterval() {
+    return selectedMarket === "BTC" ? selectedBtcSignalInterval : "15m";
+}
+
+function getSignalIntervalOption(interval = getActiveSignalInterval()) {
+    return BTC_SIGNAL_INTERVAL_OPTIONS.find(option => option.value === interval) ||
+        { value: "15m", label: "15 Minutes", minutes: 15, tvInterval: "15" };
+}
+
+function getSignalIntervalLabel(interval = getActiveSignalInterval()) {
+    return getSignalIntervalOption(interval).label;
+}
+
+function updateBtcTimeframeControl() {
+    const control = document.getElementById("btcTimeframeControl");
+    const select = document.getElementById("btcSignalTimeframe");
+    const option = getSignalIntervalOption();
+    if (control) control.style.display = selectedMarket === "BTC" ? "block" : "none";
+    if (select) select.value = selectedBtcSignalInterval;
+    const sectionTitle = document.getElementById("eciSectionTitle");
+    if (sectionTitle) sectionTitle.textContent = `ECI — ${option.label}`;
+    const timeframeValue = document.getElementById("eciTimeframeValue");
+    if (timeframeValue) timeframeValue.textContent = option.label;
+    const helper = document.getElementById("eciSignalHelp");
+    if (helper) helper.textContent = `Signal is calculated only from closed ${option.label.toLowerCase()} candles. The BTC setting does not change Gold, Silver, or NASDAQ.`;
+    const signalTime = document.getElementById("signalTime");
+    if (signalTime && /Waiting for .* ECI signal/.test(signalTime.textContent)) {
+        signalTime.textContent = `Waiting for ${option.label.toLowerCase()} ECI signal...`;
+    }
+}
 
 const rsiPeriod = 14;
 
@@ -956,6 +1020,7 @@ const refreshMilliseconds = 15000;
 ========================================================= */
 
 let currentPrice = null;
+let cloudflareRequestSequence = 0;
 
 let lastProcessedCandleTime = null;
 
@@ -1562,17 +1627,19 @@ async function fetchIndicators() {
             The candle source is the same active exchange feed used by the Worker.
             The ECI/RSI/MA200 calculations and signal rules are unchanged.
         */
+        const activeInterval = getActiveSignalInterval();
+        const activeIntervalMinutes = getSignalIntervalOption(activeInterval).minutes;
         const eciBars = await fetchMarketData(
             market.dataSymbol,
-            "15m",
+            activeInterval,
             500
         );
 
-        const closedData = marketBarsToCandles(eciBars, 15)
+        const closedData = marketBarsToCandles(eciBars, activeIntervalMinutes)
             .filter(candle => candle[6] !== true);
 
         if (!Array.isArray(closedData) || closedData.length < 50) {
-            throw new Error("Not enough CLOSED 15m market data returned");
+            throw new Error(`Not enough CLOSED ${activeInterval} market data returned`);
         }
 
         const closes = closedData.map(candle => parseFloat(candle[4]));
@@ -1592,11 +1659,11 @@ async function fetchIndicators() {
         try {
             const maBars = await fetchMarketData(
                 market.dataSymbol,
-                "15m",
+                activeInterval,
                 1000
             );
 
-            const maData = marketBarsToCandles(maBars, 15)
+            const maData = marketBarsToCandles(maBars, activeIntervalMinutes)
                 .filter(candle => candle[6] !== true);
 
             const maCloses = maData.map(candle => parseFloat(candle[4]));
@@ -1845,7 +1912,7 @@ function updateScalp(
 
 
     /*
-        This is the newest CLOSED 15-minute candle.
+        This is the newest CLOSED candle for the active signal timeframe.
     */
 
     const latestClosedCandle =
@@ -1861,11 +1928,8 @@ function updateScalp(
     /*
         CRITICAL FIX:
 
-        Do not process the same 15m candle every
-        15 seconds.
-
-        Only process when a NEW closed 15m candle
-        appears.
+        Do not process the same signal-timeframe candle every
+        15 seconds. Process a new signal only after a candle closes.
     */
 
     if (
@@ -1886,9 +1950,7 @@ function updateScalp(
         If there is no NEW crossover, retain the currently active
         ECI direction instead of leaving Entry/Stop Loss blank.
 
-        This uses the SAME ECI and the SAME 15m
-        closed-candle data. No additional indicator or timeframe
-        is introduced.
+        This uses the active ECI and its closed-candle data.
     */
 
     const crossoverSignal =
@@ -1913,11 +1975,8 @@ function updateScalp(
         Otherwise determine the current ECI direction from the
         latest CLOSED 15m candle.
 
-        Buy Long  = close is above the ECI short stop.
-        Sell Short = close is below the ECI long stop.
-
-        This prevents the dashboard from showing "Waiting" when
-        the current 15m ECI state is already directional.
+        Buy Long = close above the ECI short stop.
+        Sell Short = close below the ECI long stop.
     */
 
     let signal = crossoverSignal;
@@ -1991,7 +2050,7 @@ function updateScalp(
         Otherwise use the signal candle close.
     */
 
-    // ENTRY is the latest CLOSED 15m signal candle close.
+    // Entry is the latest closed candle close for the active signal timeframe.
     const entry = lastClose;
 
 
@@ -2087,7 +2146,7 @@ function updateScalp(
     document.getElementById(
         "signalTime"
     ).textContent =
-        "15m ECI signal confirmed at " +
+        `${getSignalIntervalLabel()} ECI signal confirmed at ` +
         new Date(
             latestClosedTime
         ).toLocaleString();
@@ -2234,9 +2293,11 @@ function openExchangeWebsite() {
     if (choice === "CHART") {
         exchangeWebsiteMode = false;
         const market = getMarketConfig();
-        frame.src = `https://s.tradingview.com/widgetembed/?frameElementId=tradingview_chart_${Date.now()}&tvwidgetsymbol=${encodeURIComponent(market.tradingView)}&symbol=${encodeURIComponent(market.tradingView)}&interval=15&hidesidetoolbar=0&symboledit=1&saveimage=1&toolbarbg=f1f3f6&theme=dark&style=1&timezone=Etc%2FUTC&withdateranges=1&hideideas=1`;
-        title.textContent = `TradingView — ${market.label} 15m`;
-        notice.textContent = "TradingView chart mode. ECI calculations and data sources are unchanged.";
+        const chartInterval = getSignalIntervalOption().tvInterval;
+        const chartIntervalLabel = getSignalIntervalLabel();
+        frame.src = `https://s.tradingview.com/widgetembed/?frameElementId=tradingview_chart_${Date.now()}&tvwidgetsymbol=${encodeURIComponent(market.tradingView)}&symbol=${encodeURIComponent(market.tradingView)}&interval=${chartInterval}&hidesidetoolbar=0&symboledit=1&saveimage=1&toolbarbg=f1f3f6&theme=dark&style=1&timezone=Etc%2FUTC&withdateranges=1&hideideas=1`;
+        title.textContent = `TradingView — ${market.label} ${chartIntervalLabel}`;
+        notice.textContent = "TradingView chart mode. For BTC, the chart interval follows the selected ECI signal timeframe.";
         return;
     }
 
@@ -2291,6 +2352,7 @@ document.addEventListener("fullscreenchange", () => {
 
 function switchMarket(value) {
     selectedMarket = ["GOLD", "BTC", "SILVER", "NASDAQ"].includes(value) ? value : "GOLD";
+    updateBtcTimeframeControl();
 
     currentPrice = null;
     lastProcessedCandleTime = null;
@@ -2304,7 +2366,7 @@ function switchMarket(value) {
     if (tp2Element) tp2Element.textContent = "—";
 
     const market = getMarketConfig();
-    document.title = `${market.label} 15m Scalp Dashboard`;
+    document.title = `${market.label} ${getSignalIntervalLabel()} Scalp Dashboard`;
 
     document.getElementById("biasLine").textContent = `${market.label} - WAITING`;
     document.getElementById("biasLine").className = "bias-line waiting";
@@ -2326,7 +2388,7 @@ function switchMarket(value) {
         entryDistanceElement.textContent = "—";
         entryDistanceElement.className = "entry-distance-value entry-distance-waiting";
     }
-    document.getElementById("signalTime").textContent = "Waiting for 15m ECI signal...";
+    document.getElementById("signalTime").textContent = `Waiting for ${getSignalIntervalLabel().toLowerCase()} ECI signal...`;
     document.getElementById("marketPrice").textContent = "—";
 
     const priceLabel = document.getElementById("marketPriceLabel");
@@ -2352,7 +2414,7 @@ function switchMarket(value) {
             `?frameElementId=tradingview_chart_${cacheBust}` +
             `&tvwidgetsymbol=${encodeURIComponent(market.tradingView)}` +
             `&symbol=${encodeURIComponent(market.tradingView)}` +
-            `&interval=15` +
+            `&interval=${encodeURIComponent(getSignalIntervalOption().tvInterval)}` +
             `&hidesidetoolbar=0` +
             `&symboledit=1` +
             `&saveimage=1` +
@@ -2369,10 +2431,69 @@ function switchMarket(value) {
 
     const chartTitle = document.getElementById("chartTitle");
     if (chartTitle && !exchangeWebsiteMode) {
-        chartTitle.textContent = `TradingView — ${market.label} 15m`;
+        chartTitle.textContent = `TradingView — ${market.label} ${getSignalIntervalLabel()}`;
     }
 
     initialize();
+}
+
+function changeBtcSignalTimeframe(value) {
+    if (selectedMarket !== "BTC") return;
+    const valid = BTC_SIGNAL_INTERVAL_OPTIONS.some(option => option.value === value);
+    selectedBtcSignalInterval = valid ? value : DEFAULT_BTC_SIGNAL_INTERVAL;
+    try {
+        localStorage.setItem("goldEciBtcSignalInterval", selectedBtcSignalInterval);
+    } catch (_) {
+        // The current-page selection still works when local storage is blocked.
+    }
+
+    // Clear timeframe-sensitive values so a previous 15m signal isn't mistaken for a 1h signal.
+    lastProcessedCandleTime = null;
+    lastScalpSignal = null;
+    scalpEntry = null;
+    scalpStop = null;
+    const timeframeLabel = getSignalIntervalLabel();
+    const signalTime = document.getElementById("signalTime");
+    if (signalTime) signalTime.textContent = `Waiting for ${timeframeLabel.toLowerCase()} ECI signal...`;
+    const status = document.getElementById("pullbackStatus");
+    if (status) { status.textContent = "Loading..."; status.className = "status-value neutral-text"; }
+    const bias = document.getElementById("biasLine");
+    if (bias) { bias.textContent = `${getMarketConfig().label} - LOADING`; bias.className = "bias-line waiting"; }
+    ["scalpEntry", "scalpStop", "stopLongValue", "stopShortValue", "previousHighValue", "previousLowValue", "tp1Value", "tp2Value", "ma200Value"].forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.textContent = "—";
+    });
+    const accuracyPercent = document.getElementById("accuracyPercent");
+    if (accuracyPercent) accuracyPercent.textContent = "—";
+    const accuracyCollecting = document.getElementById("accuracyCollecting");
+    if (accuracyCollecting) accuracyCollecting.textContent = `Loading ${timeframeLabel.toLowerCase()} signal history...`;
+    ["accuracyWins", "accuracyLosses", "accuracyEvaluated"].forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.textContent = "0";
+    });
+    const entryDistance = document.getElementById("entryDistanceValue");
+    if (entryDistance) { entryDistance.textContent = "—"; entryDistance.className = "entry-distance-value entry-distance-waiting"; }
+    const tp1Status = document.getElementById("tp1Status");
+    const tp2Status = document.getElementById("tp2Status");
+    if (tp1Status) tp1Status.textContent = "";
+    if (tp2Status) tp2Status.textContent = "";
+
+    updateBtcTimeframeControl();
+    document.title = `${getMarketConfig().label} ${timeframeLabel} Scalp Dashboard`;
+
+    // Keep the TradingView chart interval aligned with the selected BTC ECI timeframe.
+    if (!exchangeWebsiteMode) {
+        const frame = document.getElementById("tvChart");
+        const title = document.getElementById("chartTitle");
+        const market = getMarketConfig();
+        if (frame) {
+            const cacheBust = Date.now();
+            frame.src = `https://s.tradingview.com/widgetembed/?frameElementId=tradingview_chart_${cacheBust}&tvwidgetsymbol=${encodeURIComponent(market.tradingView)}&symbol=${encodeURIComponent(market.tradingView)}&interval=${encodeURIComponent(getSignalIntervalOption().tvInterval)}&hidesidetoolbar=0&symboledit=1&saveimage=1&toolbarbg=f1f3f6&theme=dark&style=1&timezone=Etc%2FUTC&withdateranges=1&hideideas=1&cache=${cacheBust}`;
+        }
+        if (title) title.textContent = `TradingView — ${market.label} ${timeframeLabel}`;
+    }
+
+    fetchCloudflareData();
 }
 
 
@@ -2744,9 +2865,19 @@ const CLOUDFLARE_API =
     "https://gold-eci-api.contatoseder.workers.dev";
 
 async function fetchCloudflareData() {
+    const requestMarket = selectedMarket;
+    const requestSignalInterval = requestMarket === "BTC" ? selectedBtcSignalInterval : "15m";
+    const requestId = ++cloudflareRequestSequence;
+
     try {
-        const url =
-            `${CLOUDFLARE_API}?market=${encodeURIComponent(selectedMarket)}&t=${Date.now()}`;
+        const params = new URLSearchParams({
+            market: requestMarket,
+            t: String(Date.now())
+        });
+        if (requestMarket === "BTC") {
+            params.set("signalInterval", requestSignalInterval);
+        }
+        const url = `${CLOUDFLARE_API}?${params.toString()}`;
 
         const response = await fetch(url, {
             cache: "no-store",
@@ -2765,9 +2896,18 @@ async function fetchCloudflareData() {
             throw new Error(data.message || data.error);
         }
 
+        // Ignore a slower response from the previous market/timeframe selection.
+        if (requestId !== cloudflareRequestSequence || requestMarket !== selectedMarket ||
+            (requestMarket === "BTC" && requestSignalInterval !== selectedBtcSignalInterval)) {
+            return;
+        }
         updateDashboardFromCloudflare(data);
 
     } catch (error) {
+        if (requestId !== cloudflareRequestSequence || requestMarket !== selectedMarket ||
+            (requestMarket === "BTC" && requestSignalInterval !== selectedBtcSignalInterval)) {
+            return;
+        }
         console.error("Cloudflare API error:", error);
         setCloudflareOffline(error);
         // Keep the live price available through the independent quote endpoint
@@ -2820,6 +2960,16 @@ function updateDashboardFromCloudflare(data) {
 
     const market = getMarketConfig();
     const signal = data.signal || "Neutral";
+    const signalInterval = selectedMarket === "BTC"
+        ? (data.signalInterval || selectedBtcSignalInterval)
+        : "15m";
+    const signalIntervalLabel = getSignalIntervalLabel(signalInterval);
+    updateBtcTimeframeControl();
+    const actualSectionTitle = document.getElementById("eciSectionTitle");
+    if (actualSectionTitle) actualSectionTitle.textContent = `ECI — ${signalIntervalLabel}`;
+    const actualSignalHelp = document.getElementById("eciSignalHelp");
+    if (actualSignalHelp) actualSignalHelp.textContent = `Signal is calculated only from closed ${signalIntervalLabel.toLowerCase()} candles. Other markets remain on 15-minute ECI.`;
+    document.title = `${market.label} ${signalIntervalLabel} Scalp Dashboard`;
 
     currentPrice = Number.isFinite(Number(data.price))
         ? Number(data.price)
@@ -2903,8 +3053,8 @@ function updateDashboardFromCloudflare(data) {
         const parsed = new Date(data.signalTime);
         document.getElementById("signalTime").textContent =
             Number.isNaN(parsed.getTime())
-                ? `15m ECI signal: ${data.signalTime}`
-                : `15m ECI signal confirmed at ${parsed.toLocaleString()}`;
+                ? `${signalIntervalLabel} ECI signal: ${data.signalTime}`
+                : `${signalIntervalLabel} ECI signal confirmed at ${parsed.toLocaleString()}`;
     }
 
     /* -----------------------------------------------
