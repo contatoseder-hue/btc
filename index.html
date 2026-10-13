@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2886,11 +2885,20 @@ async function fetchCloudflareData() {
             }
         });
 
-        if (!response.ok) {
-            throw new Error(`Cloudflare API request failed: ${response.status}`);
+        // Read the body as text first so both JSON and plain-text backend errors remain visible.
+        // Previously the HTML threw on status 500 before inspecting the Worker error payload.
+        const responseText = await response.text();
+        let data = {};
+        try {
+            data = responseText ? JSON.parse(responseText) : {};
+        } catch (_) {
+            data = { error: "Non-JSON Cloudflare response", message: responseText || "No response body" };
         }
 
-        const data = await response.json();
+        if (!response.ok) {
+            const detail = data?.message || data?.error || "No error details returned";
+            throw new Error(`Cloudflare API request failed: ${response.status} — ${detail}`);
+        }
 
         if (data?.error) {
             throw new Error(data.message || data.error);
