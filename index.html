@@ -2791,10 +2791,10 @@ function updateOverallStatusFromMtfConsensus() {
         overall.textContent = "Overall Status: Bullish (all 8 timeframes above WMA 200)";
         overall.className = "overall bullish";
     } else if (allBelowWma200) {
-        overall.textContent = "Overall Status: Bearish (all 8 timeframes below WMA 200)";
+        overall.textContent = "Overall Status: Bearish (Strong Bearish)";
         overall.className = "overall bearish";
     } else {
-        overall.textContent = "Overall Status: Waiting (timeframes not aligned)";
+        overall.textContent = "Overall Status: Waiting (Strong Bullish)";
         overall.className = "overall neutral";
     }
 }
