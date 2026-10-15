@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -685,7 +684,7 @@
 
             <div class="stat">
                 <div class="label">
-                    MA200
+                    WMA100 Trend
                 </div>
 
                 <div id="ma200Value" class="value">
@@ -958,6 +957,7 @@ const BTC_SYMBOL = "BTC-USD";
 const SILVER_SYMBOL = "XAGUSD";
 const NASDAQ_SYMBOL = "USTEC";
 let selectedMarket = "GOLD";
+let currentWmaTrendStatus = "—";
 
 // BTC alone supports a selectable signal timeframe; all other markets stay at 15m.
 const BTC_SIGNAL_INTERVAL_OPTIONS = [
@@ -1893,13 +1893,15 @@ function updateMAUI(
     ma200,
     lastClose
 ) {
-    // The MA200 field remains a display-only value.
-    // The top Overall Status is now controlled by the eight-timeframe WMA200 consensus.
+    // This field now reports trend direction from completed 15m WMA100/WMA200 values.
+    // ECI, entry, stop-loss, targets, and signal calculations remain unchanged.
     const maElement = document.getElementById("ma200Value");
     if (maElement) {
-        maElement.textContent = ma200 === null || !Number.isFinite(Number(ma200))
-            ? "—"
-            : formatPrice(Number(ma200));
+        maElement.textContent = currentWmaTrendStatus;
+        maElement.className = "value";
+        if (currentWmaTrendStatus === "↓ BEARISH") maElement.classList.add("bearish");
+        else if (currentWmaTrendStatus === "↑ BULLISH") maElement.classList.add("bullish");
+        else if (currentWmaTrendStatus === "↔ NEUTRAL") maElement.classList.add("neutral");
     }
 }
 
@@ -2543,6 +2545,7 @@ function changeBtcSignalTimeframe(value) {
     if (status) { status.textContent = "Loading..."; status.className = "status-value neutral-text"; }
     const bias = document.getElementById("biasLine");
     if (bias) { bias.textContent = `${getMarketConfig().label} - LOADING`; bias.className = "bias-line waiting"; }
+    currentWmaTrendStatus = "—";
     ["scalpEntry", "scalpStop", "stopLongValue", "stopShortValue", "previousHighValue", "previousLowValue", "tp1Value", "tp2Value", "ma200Value"].forEach(id => {
         const element = document.getElementById(id);
         if (element) element.textContent = "—";
@@ -2791,10 +2794,10 @@ function updateOverallStatusFromMtfConsensus() {
         overall.textContent = "Overall Status: Bullish (all 8 timeframes above WMA 200)";
         overall.className = "overall bullish";
     } else if (allBelowWma200) {
-        overall.textContent = "Overall Status: Bearish (Strong Bearish)";
+        overall.textContent = "Overall Status: Bearish (all 8 timeframes below WMA 200)";
         overall.className = "overall bearish";
     } else {
-        overall.textContent = "Overall Status: Waiting (Strong Bullish)";
+        overall.textContent = "Overall Status: Waiting (timeframes not aligned)";
         overall.className = "overall neutral";
     }
 }
@@ -2911,12 +2914,23 @@ async function refreshMultiTimeframePanel() {
             if (!overall || !Number.isFinite(wma100) || !Number.isFinite(wma200)) {
                 throw new Error("Not enough completed 15-minute candles to calculate WMA 100/200");
             }
+            const maTrendElement = document.getElementById("ma200Value");
             if (wma100 < wma200) {
+                currentWmaTrendStatus = "↓ BEARISH";
                 setMtfOverallTrend(overall, "BEARISH", "bearish");
             } else if (wma100 > wma200) {
+                currentWmaTrendStatus = "↑ BULLISH";
                 setMtfOverallTrend(overall, "BULLISH", "bullish");
             } else {
+                currentWmaTrendStatus = "↔ NEUTRAL";
                 setMtfOverallTrend(overall, "NEUTRAL", "neutral");
+            }
+            if (maTrendElement) {
+                maTrendElement.textContent = currentWmaTrendStatus;
+                maTrendElement.className = "value";
+                if (currentWmaTrendStatus === "↓ BEARISH") maTrendElement.classList.add("bearish");
+                else if (currentWmaTrendStatus === "↑ BULLISH") maTrendElement.classList.add("bullish");
+                else maTrendElement.classList.add("neutral");
             }
         } catch (error) {
             console.warn("Multi-timeframe overall WMA status unavailable:", error);
