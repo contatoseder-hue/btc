@@ -2905,24 +2905,24 @@ async function refreshMultiTimeframePanel() {
         // Top Overall Status requires all eight selected-market candle opens to agree relative to their own WMA200.
         updateOverallStatusFromMtfConsensus();
 
-        // Overall WMA trend uses completed 15m closes only: WMA100 vs WMA200. It does not change ECI signals.
+        // Overall WMA trend uses completed 1m closes only: WMA100 vs WMA200. It does not change ECI signals.
         try {
-            let candles15m = seriesByFrame.get("15m");
-            if (!candles15m || !candles15m.length) {
-                const history15m = await fetchMtfCandleHistory(
+            let candles1m = seriesByFrame.get("1m");
+            if (!candles1m || !candles1m.length) {
+                const history1m = await fetchMtfCandleHistory(
                     marketCode,
-                    mtfFrames.find(frame => frame.key === "15m")
+                    mtfFrames.find(frame => frame.key === "1m")
                 );
-                candles15m = history15m.candles;
+                candles1m = history1m.candles;
             }
-            const closes = candles15m
+            const closes = candles1m
                 .filter(candle => candle[6] !== true)
                 .map(candle => candle[4]);
             const wma100 = calculateWMA(closes, 100);
             const wma200 = calculateWMA(closes, 200);
             const overall = document.getElementById("mtfOverallStatus");
             if (!overall || !Number.isFinite(wma100) || !Number.isFinite(wma200)) {
-                throw new Error("Not enough completed 15-minute candles to calculate WMA 100/200");
+                throw new Error("Not enough completed 1-minute candles to calculate WMA 100/200");
             }
             const maTrendElement = document.getElementById("ma200Value");
             if (wma100 < wma200) {
