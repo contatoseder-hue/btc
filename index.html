@@ -1,3 +1,9 @@
+new code backup
+
+
+
+
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -3398,7 +3404,24 @@ setInterval(refreshMultiTimeframePanel, 60000);
         return data;
     }
 
+    function syncMarketDropdown(assets) {
+        const marketSelect = document.getElementById('marketSelect');
+        if (!marketSelect) return;
+        // Remove previously injected custom-asset options before refreshing the registry.
+        marketSelect.querySelectorAll('option[data-custom-asset="true"]').forEach(option => option.remove());
+        for (const asset of (assets || [])) {
+            const option = document.createElement('option');
+            option.value = `CUSTOM:${asset.id}`;
+            option.dataset.customAsset = 'true';
+            option.textContent = `${asset.name} (registered — signals not integrated)`;
+            option.disabled = true; // Prevent unsupported custom assets from falling back to GOLD.
+            option.title = 'Registered successfully, but live trading calculations are not integrated yet.';
+            marketSelect.appendChild(option);
+        }
+    }
+
     function renderAssets(assets) {
+        syncMarketDropdown(assets);
         if (!assetsBox) return;
         assetsBox.replaceChildren();
         if (!assets || !assets.length) {
