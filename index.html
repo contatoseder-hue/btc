@@ -1,5 +1,4 @@
-
-
+1
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -851,7 +850,16 @@
     <!-- ADMIN ASSET REGISTRATION PANEL: UI added; secure Worker endpoint still required -->
     <div class="card" id="assetAdminPanel">
         <div class="section-title">Add Asset</div>
-        <p class="small" style="margin-top:0;">Register a market by entering its data URL and display name. Only an authenticated administrator should be allowed to save assets.</p>
+        <p class="small" style="margin-top:0;">Enter your private access code to manage the custom-asset registry. The code is verified by the Cloudflare Worker and is not included in this public HTML file.</p>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; align-items:end; margin-bottom:12px;">
+            <div>
+                <label for="assetAdminCode" class="label">Private access code</label>
+                <input id="assetAdminCode" type="password" placeholder="Enter private access code" autocomplete="current-password" style="width:100%; box-sizing:border-box;">
+            </div>
+            <div>
+                <button type="button" id="assetAdminUnlock" style="width:100%; margin:0;">Verify Access Code</button>
+            </div>
+        </div>
         <form id="addAssetForm" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; align-items:end;">
             <div>
                 <label for="newAssetUrl" class="label">Market data URL</label>
@@ -865,9 +873,8 @@
                 <button type="submit" id="addAssetButton" style="width:100%; margin:0;">Add Asset</button>
             </div>
         </form>
-        <div id="addAssetStatus" class="small" role="status" aria-live="polite" style="margin-top:12px;">
-            Setup pending: this form is a visual addition only. Asset saving is not enabled until an authenticated Cloudflare Worker endpoint is implemented. Existing markets are unchanged.
-        </div>
+        <div id="registeredAssets" class="small" style="margin-top:12px;"></div>
+        <div id="addAssetStatus" class="small" role="status" aria-live="polite" style="margin-top:12px;">Administration is locked. Enter your private access code to continue.</div>
     </div>
 
     <!-- TRADINGVIEW / EXCHANGE WEBSITE PANEL (added option only) -->
@@ -3362,30 +3369,111 @@ setInterval(refreshMultiTimeframePanel, 60000);
 
 
 <script>
-// Add Asset panel: UI validation only until authenticated Worker integration is deployed.
+// Authenticated custom-asset registry. The Worker must have ASSET_ADMIN_CODE
+// secret and ASSET_REGISTRY KV binding configured before this feature can save.
 (function () {
     const form = document.getElementById('addAssetForm');
-    if (!form) return;
-    form.addEventListener('submit', function (event) {
+    const codeField = document.getElementById('assetAdminCode');
+    const unlockButton = document.getElementById('assetAdminUnlock');
+    const status = document.getElementById('addAssetStatus');
+    const assetsBox = document.getElementById('registeredAssets');
+    const codeKey = 'assetAdminCode';
+    if (!form || !codeField || !unlockButton || !status) return;
+
+    let adminCode = '';
+    try { adminCode = sessionStorage.getItem(codeKey) || ''; } catch (_) {}
+    codeField.value = adminCode;
+
+    async function adminRequest(method, body, id) {
+        const params = new URLSearchParams({ admin: 'assets' });
+        if (id) params.set('id', id);
+        const response = await fetch(`${CLOUDFLARE_API}?${params.toString()}`, {
+            method,
+            headers: { 'Content-Type': 'application/json', 'X-Asset-Admin-Code': adminCode },
+            body: body ? JSON.stringify(body) : undefined
+        });
+        let data = {};
+        try { data = await response.json(); } catch (_) {}
+        if (!response.ok) throw new Error(data.error || `Request failed (${response.status})`);
+        return data;
+    }
+
+    function renderAssets(assets) {
+        if (!assetsBox) return;
+        assetsBox.replaceChildren();
+        if (!assets || !assets.length) {
+            assetsBox.textContent = 'No custom assets registered yet.';
+            return;
+        }
+        const heading = document.createElement('strong');
+        heading.textContent = 'Registered assets';
+        assetsBox.appendChild(heading);
+        const list = document.createElement('ul');
+        list.style.paddingLeft = '20px';
+        for (const asset of assets) {
+            const item = document.createElement('li');
+            item.style.marginTop = '6px';
+            const label = document.createElement('span');
+            label.textContent = `${asset.name} — ${asset.url} `;
+            item.appendChild(label);
+            const remove = document.createElement('button');
+            remove.type = 'button';
+            remove.textContent = 'Remove';
+            remove.style.marginLeft = '8px';
+            remove.addEventListener('click', async () => {
+                if (!confirm(`Remove ${asset.name} from the custom-asset registry?`)) return;
+                try {
+                    const data = await adminRequest('DELETE', null, asset.id);
+                    renderAssets(data.assets || []);
+                    status.textContent = `Removed ${asset.name} from the registry.`;
+                } catch (error) { status.textContent = error.message; }
+            });
+            item.appendChild(remove);
+            list.appendChild(item);
+        }
+        assetsBox.appendChild(list);
+    }
+
+    async function verifyAndLoad() {
+        adminCode = codeField.value.trim();
+        if (!adminCode) { status.textContent = 'Enter your private access code.'; return; }
+        try {
+            const data = await adminRequest('GET');
+            try { sessionStorage.setItem(codeKey, adminCode); } catch (_) {}
+            renderAssets(data.assets || []);
+            status.textContent = 'Access verified. Asset registry loaded.';
+        } catch (error) {
+            adminCode = '';
+            try { sessionStorage.removeItem(codeKey); } catch (_) {}
+            if (assetsBox) assetsBox.replaceChildren();
+            status.textContent = error.message;
+        }
+    }
+
+    unlockButton.addEventListener('click', verifyAndLoad);
+    codeField.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); verifyAndLoad(); } });
+    if (adminCode) verifyAndLoad();
+
+    form.addEventListener('submit', async event => {
         event.preventDefault();
         const urlField = document.getElementById('newAssetUrl');
         const nameField = document.getElementById('newAssetName');
-        const status = document.getElementById('addAssetStatus');
         let parsed;
         try { parsed = new URL(urlField.value.trim()); }
-        catch (_) {
-            status.textContent = 'Enter a valid market data URL.';
-            return;
-        }
-        if (parsed.protocol !== 'https:') {
-            status.textContent = 'For security, the market data URL must use HTTPS.';
-            return;
-        }
-        if (!nameField.value.trim()) {
-            status.textContent = 'Enter an asset name.';
-            return;
-        }
-        status.textContent = 'Inputs look valid, but the asset has NOT been saved. The authenticated Cloudflare Worker endpoint and persistent storage must be configured first.';
+        catch (_) { status.textContent = 'Enter a valid market data URL.'; return; }
+        if (parsed.protocol !== 'https:') { status.textContent = 'Market data URL must use HTTPS.'; return; }
+        const name = nameField.value.trim();
+        if (!name) { status.textContent = 'Enter an asset name.'; return; }
+        if (!adminCode) { status.textContent = 'Verify your private access code before adding assets.'; return; }
+        const button = document.getElementById('addAssetButton');
+        if (button) button.disabled = true;
+        try {
+            const data = await adminRequest('POST', { name, url: parsed.href });
+            renderAssets(data.assets || []);
+            status.textContent = `Registered ${data.asset.name} in Cloudflare KV. Note: registration does not yet add the asset to live trading calculations; the provider candle format must be integrated separately.`;
+            form.reset();
+        } catch (error) { status.textContent = error.message; }
+        finally { if (button) button.disabled = false; }
     });
 })();
 </script>
