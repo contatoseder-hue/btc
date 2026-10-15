@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -685,7 +686,7 @@
 
             <div class="stat">
                 <div class="label">
-                    WMA100 Trend
+                    MA200
                 </div>
 
                 <div id="ma200Value" class="value">
@@ -847,6 +848,28 @@
         </div>
     </div>
 
+    <!-- ADMIN ASSET REGISTRATION PANEL: UI added; secure Worker endpoint still required -->
+    <div class="card" id="assetAdminPanel">
+        <div class="section-title">Add Asset</div>
+        <p class="small" style="margin-top:0;">Register a market by entering its data URL and display name. Only an authenticated administrator should be allowed to save assets.</p>
+        <form id="addAssetForm" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; align-items:end;">
+            <div>
+                <label for="newAssetUrl" class="label">Market data URL</label>
+                <input id="newAssetUrl" name="assetUrl" type="url" placeholder="https://provider.example/api/market" required autocomplete="url" style="width:100%; box-sizing:border-box;">
+            </div>
+            <div>
+                <label for="newAssetName" class="label">Asset name</label>
+                <input id="newAssetName" name="assetName" type="text" placeholder="e.g. EUR/USD" required maxlength="60" style="width:100%; box-sizing:border-box;">
+            </div>
+            <div>
+                <button type="submit" id="addAssetButton" style="width:100%; margin:0;">Add Asset</button>
+            </div>
+        </form>
+        <div id="addAssetStatus" class="small" role="status" aria-live="polite" style="margin-top:12px;">
+            Setup pending: this form is a visual addition only. Asset saving is not enabled until an authenticated Cloudflare Worker endpoint is implemented. Existing markets are unchanged.
+        </div>
+    </div>
+
     <!-- TRADINGVIEW / EXCHANGE WEBSITE PANEL (added option only) -->
     <div class="card">
 
@@ -958,7 +981,6 @@ const BTC_SYMBOL = "BTC-USD";
 const SILVER_SYMBOL = "XAGUSD";
 const NASDAQ_SYMBOL = "USTEC";
 let selectedMarket = "GOLD";
-let currentWmaTrendStatus = "—";
 
 // BTC alone supports a selectable signal timeframe; all other markets stay at 15m.
 const BTC_SIGNAL_INTERVAL_OPTIONS = [
@@ -1894,24 +1916,13 @@ function updateMAUI(
     ma200,
     lastClose
 ) {
-    // This field now reports trend direction from completed 15m WMA100/WMA200 values.
-    // ECI, entry, stop-loss, targets, and signal calculations remain unchanged.
+    // The MA200 field remains a display-only value.
+    // The top Overall Status is now controlled by the eight-timeframe WMA200 consensus.
     const maElement = document.getElementById("ma200Value");
     if (maElement) {
-        const trend = String(currentWmaTrendStatus || "").toUpperCase();
-        if (trend.includes("BEARISH")) {
-            renderTrendStatus(maElement, "BEARISH", "bearish");
-            maElement.className = "value bearish mtf-status";
-        } else if (trend.includes("BULLISH")) {
-            renderTrendStatus(maElement, "BULLISH", "bullish");
-            maElement.className = "value bullish mtf-status";
-        } else if (trend.includes("NEUTRAL")) {
-            renderTrendStatus(maElement, "NEUTRAL", "neutral");
-            maElement.className = "value neutral mtf-status";
-        } else {
-            maElement.textContent = "UNAVAILABLE";
-            maElement.className = "value neutral";
-        }
+        maElement.textContent = ma200 === null || !Number.isFinite(Number(ma200))
+            ? "—"
+            : formatPrice(Number(ma200));
     }
 }
 
@@ -2555,7 +2566,6 @@ function changeBtcSignalTimeframe(value) {
     if (status) { status.textContent = "Loading..."; status.className = "status-value neutral-text"; }
     const bias = document.getElementById("biasLine");
     if (bias) { bias.textContent = `${getMarketConfig().label} - LOADING`; bias.className = "bias-line waiting"; }
-    currentWmaTrendStatus = "—";
     ["scalpEntry", "scalpStop", "stopLongValue", "stopShortValue", "previousHighValue", "previousLowValue", "tp1Value", "tp2Value", "ma200Value"].forEach(id => {
         const element = document.getElementById(id);
         if (element) element.textContent = "—";
@@ -2905,48 +2915,31 @@ async function refreshMultiTimeframePanel() {
         // Top Overall Status requires all eight selected-market candle opens to agree relative to their own WMA200.
         updateOverallStatusFromMtfConsensus();
 
-        // Overall WMA trend uses completed 1m closes only: WMA100 vs WMA200. It does not change ECI signals.
+        // Overall WMA trend uses completed 15m closes only: WMA100 vs WMA200. It does not change ECI signals.
         try {
-            let candles1m = seriesByFrame.get("1m");
-            if (!candles1m || !candles1m.length) {
-                const history1m = await fetchMtfCandleHistory(
+            let candles15m = seriesByFrame.get("15m");
+            if (!candles15m || !candles15m.length) {
+                const history15m = await fetchMtfCandleHistory(
                     marketCode,
-                    mtfFrames.find(frame => frame.key === "1m")
+                    mtfFrames.find(frame => frame.key === "15m")
                 );
-                candles1m = history1m.candles;
+                candles15m = history15m.candles;
             }
-            const closes = candles1m
+            const closes = candles15m
                 .filter(candle => candle[6] !== true)
                 .map(candle => candle[4]);
             const wma100 = calculateWMA(closes, 100);
             const wma200 = calculateWMA(closes, 200);
             const overall = document.getElementById("mtfOverallStatus");
             if (!overall || !Number.isFinite(wma100) || !Number.isFinite(wma200)) {
-                throw new Error("Not enough completed 1-minute candles to calculate WMA 100/200");
+                throw new Error("Not enough completed 15-minute candles to calculate WMA 100/200");
             }
-            const maTrendElement = document.getElementById("ma200Value");
             if (wma100 < wma200) {
-                currentWmaTrendStatus = "↓ BEARISH";
                 setMtfOverallTrend(overall, "BEARISH", "bearish");
             } else if (wma100 > wma200) {
-                currentWmaTrendStatus = "↑ BULLISH";
                 setMtfOverallTrend(overall, "BULLISH", "bullish");
             } else {
-                currentWmaTrendStatus = "↔ NEUTRAL";
                 setMtfOverallTrend(overall, "NEUTRAL", "neutral");
-            }
-            if (maTrendElement) {
-                // Reuse the dashboard's existing custom trend-arrow SVG and matching status colors.
-                if (wma100 < wma200) {
-                    renderTrendStatus(maTrendElement, "BEARISH", "bearish");
-                    maTrendElement.className = "value mtf-status bearish";
-                } else if (wma100 > wma200) {
-                    renderTrendStatus(maTrendElement, "BULLISH", "bullish");
-                    maTrendElement.className = "value mtf-status bullish";
-                } else {
-                    renderTrendStatus(maTrendElement, "NEUTRAL", "neutral");
-                    maTrendElement.className = "value mtf-status neutral";
-                }
             }
         } catch (error) {
             console.warn("Multi-timeframe overall WMA status unavailable:", error);
@@ -3365,6 +3358,36 @@ setInterval(
 // Independent trend-panel refresh; does not modify the ECI refresh cadence.
 setInterval(refreshMultiTimeframePanel, 60000);
 
+</script>
+
+
+<script>
+// Add Asset panel: UI validation only until authenticated Worker integration is deployed.
+(function () {
+    const form = document.getElementById('addAssetForm');
+    if (!form) return;
+    form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        const urlField = document.getElementById('newAssetUrl');
+        const nameField = document.getElementById('newAssetName');
+        const status = document.getElementById('addAssetStatus');
+        let parsed;
+        try { parsed = new URL(urlField.value.trim()); }
+        catch (_) {
+            status.textContent = 'Enter a valid market data URL.';
+            return;
+        }
+        if (parsed.protocol !== 'https:') {
+            status.textContent = 'For security, the market data URL must use HTTPS.';
+            return;
+        }
+        if (!nameField.value.trim()) {
+            status.textContent = 'Enter an asset name.';
+            return;
+        }
+        status.textContent = 'Inputs look valid, but the asset has NOT been saved. The authenticated Cloudflare Worker endpoint and persistent storage must be configured first.';
+    });
+})();
 </script>
 
 </body>
