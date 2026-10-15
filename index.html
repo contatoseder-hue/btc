@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1897,11 +1898,20 @@ function updateMAUI(
     // ECI, entry, stop-loss, targets, and signal calculations remain unchanged.
     const maElement = document.getElementById("ma200Value");
     if (maElement) {
-        maElement.textContent = currentWmaTrendStatus;
-        maElement.className = "value";
-        if (currentWmaTrendStatus === "↓ BEARISH") maElement.classList.add("bearish");
-        else if (currentWmaTrendStatus === "↑ BULLISH") maElement.classList.add("bullish");
-        else if (currentWmaTrendStatus === "↔ NEUTRAL") maElement.classList.add("neutral");
+        const trend = String(currentWmaTrendStatus || "").toUpperCase();
+        if (trend.includes("BEARISH")) {
+            renderTrendStatus(maElement, "BEARISH", "bearish");
+            maElement.className = "value bearish mtf-status";
+        } else if (trend.includes("BULLISH")) {
+            renderTrendStatus(maElement, "BULLISH", "bullish");
+            maElement.className = "value bullish mtf-status";
+        } else if (trend.includes("NEUTRAL")) {
+            renderTrendStatus(maElement, "NEUTRAL", "neutral");
+            maElement.className = "value neutral mtf-status";
+        } else {
+            maElement.textContent = "UNAVAILABLE";
+            maElement.className = "value neutral";
+        }
     }
 }
 
@@ -2926,11 +2936,17 @@ async function refreshMultiTimeframePanel() {
                 setMtfOverallTrend(overall, "NEUTRAL", "neutral");
             }
             if (maTrendElement) {
-                maTrendElement.textContent = currentWmaTrendStatus;
-                maTrendElement.className = "value";
-                if (currentWmaTrendStatus === "↓ BEARISH") maTrendElement.classList.add("bearish");
-                else if (currentWmaTrendStatus === "↑ BULLISH") maTrendElement.classList.add("bullish");
-                else maTrendElement.classList.add("neutral");
+                // Reuse the dashboard's existing custom trend-arrow SVG and matching status colors.
+                if (wma100 < wma200) {
+                    renderTrendStatus(maTrendElement, "BEARISH", "bearish");
+                    maTrendElement.className = "value mtf-status bearish";
+                } else if (wma100 > wma200) {
+                    renderTrendStatus(maTrendElement, "BULLISH", "bullish");
+                    maTrendElement.className = "value mtf-status bullish";
+                } else {
+                    renderTrendStatus(maTrendElement, "NEUTRAL", "neutral");
+                    maTrendElement.className = "value mtf-status neutral";
+                }
             }
         } catch (error) {
             console.warn("Multi-timeframe overall WMA status unavailable:", error);
