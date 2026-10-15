@@ -1,7 +1,4 @@
-new code backup
-
-
-
+2
 
 
 
@@ -994,6 +991,11 @@ const BTC_SYMBOL = "BTC-USD";
 const SILVER_SYMBOL = "XAGUSD";
 const NASDAQ_SYMBOL = "USTEC";
 let selectedMarket = "GOLD";
+window.customAssetRegistry = window.customAssetRegistry || [];
+function getSelectedCustomAsset() {
+    const id = String(selectedMarket || "").startsWith("CUSTOM:") ? selectedMarket.slice(7).toLowerCase() : "";
+    return (window.customAssetRegistry || []).find(asset => String(asset.id).toLowerCase() === id) || null;
+}
 
 // BTC alone supports a selectable signal timeframe; all other markets stay at 15m.
 const BTC_SIGNAL_INTERVAL_OPTIONS = [
@@ -1512,6 +1514,12 @@ function getECISignal(eci) {
 ========================================================= */
 
 function getMarketConfig() {
+    const customAsset = getSelectedCustomAsset();
+    if (customAsset) {
+        let symbol = null;
+        try { symbol = new URL(customAsset.url).searchParams.get("symbol"); } catch (_) {}
+        return { label: customAsset.name, name: customAsset.name, yahoo: null, dataSymbol: symbol, bingxSymbol: null, binanceSymbol: symbol, tradingView: symbol ? `BINANCE:${symbol}` : null, custom: true };
+    }
     if (selectedMarket === "GOLD") {
         return {
             label: "XAU/USD",
@@ -1558,12 +1566,14 @@ function getMarketConfig() {
 }
 
 function getMarketPriceSourceName(marketCode = selectedMarket) {
+    if (String(marketCode).startsWith("CUSTOM:")) return "Binance Spot";
     if (marketCode === "GOLD") return "Binance Spot PAXG/USDT";
     if (marketCode === "BTC") return "Binance Futures";
     return "BingX";
 }
 
 function getMarketPriceSourceBadge(marketCode = selectedMarket) {
+    if (String(marketCode).startsWith("CUSTOM:")) return "BINANCE SPOT LAST PRICE";
     if (marketCode === "GOLD") return "BINANCE SPOT PAXG/USDT LAST PRICE";
     if (marketCode === "BTC") return "BINANCE FUTURES LAST PRICE";
     return "BINGX LAST PRICE";
@@ -2470,7 +2480,7 @@ document.addEventListener("fullscreenchange", () => {
 });
 
 function switchMarket(value) {
-    selectedMarket = ["GOLD", "BTC", "SILVER", "NASDAQ"].includes(value) ? value : "GOLD";
+    selectedMarket = (["GOLD", "BTC", "SILVER", "NASDAQ"].includes(value) || String(value).startsWith("CUSTOM:")) ? value : "GOLD";
     updateBtcTimeframeControl();
     if (selectedMarket === "BTC") updateBtcDirectionAnalysis();
 
@@ -2522,7 +2532,7 @@ function switchMarket(value) {
     }
 
     const oldTv = document.getElementById("tvChart");
-    if (oldTv && !exchangeWebsiteMode) {
+    if (oldTv && !exchangeWebsiteMode && market.tradingView) {
         const cacheBust = Date.now();
         const tv = document.createElement("iframe");
 
@@ -2534,7 +2544,7 @@ function switchMarket(value) {
             `?frameElementId=tradingview_chart_${cacheBust}` +
             `&tvwidgetsymbol=${encodeURIComponent(market.tradingView)}` +
             `&symbol=${encodeURIComponent(market.tradingView)}` +
-            `&interval=${encodeURIComponent(getSignalIntervalOption().tvInterval)}` +
+            `&interval=${encodeURIComponent(selectedMarket === "BTC" ? getSignalIntervalOption().tvInterval : "15")}` +
             `&hidesidetoolbar=0` +
             `&symboledit=1` +
             `&saveimage=1` +
@@ -3406,17 +3416,23 @@ setInterval(refreshMultiTimeframePanel, 60000);
 
     function syncMarketDropdown(assets) {
         const marketSelect = document.getElementById('marketSelect');
+        window.customAssetRegistry = Array.isArray(assets) ? assets : [];
         if (!marketSelect) return;
-        // Remove previously injected custom-asset options before refreshing the registry.
+        // Replace only custom entries; the four native market options are untouched.
         marketSelect.querySelectorAll('option[data-custom-asset="true"]').forEach(option => option.remove());
-        for (const asset of (assets || [])) {
-            const option = document.createElement('option');
-            option.value = `CUSTOM:${asset.id}`;
-            option.dataset.customAsset = 'true';
-            option.textContent = `${asset.name} (registered — signals not integrated)`;
-            option.disabled = true; // Prevent unsupported custom assets from falling back to GOLD.
-            option.title = 'Registered successfully, but live trading calculations are not integrated yet.';
-            marketSelect.appendChild(option);
+        if (window.customAssetRegistry.length) {
+            let group = marketSelect.querySelector('optgroup[data-custom-assets="true"]');
+            if (!group) { group = document.createElement('optgroup'); group.label = 'Custom assets'; group.dataset.customAssets = 'true'; marketSelect.appendChild(group); }
+            for (const asset of window.customAssetRegistry) {
+                const option = document.createElement('option');
+                option.value = `CUSTOM:${asset.id}`;
+                option.dataset.customAsset = 'true';
+                option.textContent = `${asset.name} (custom ECI · 15m)`;
+                option.title = 'Signal uses Binance Spot candles on the 15-minute timeframe; registered URL must be a Binance Spot Kline endpoint.';
+                group.appendChild(option);
+            }
+        } else {
+            marketSelect.querySelector('optgroup[data-custom-assets="true"]')?.remove();
         }
     }
 
