@@ -1,5 +1,3 @@
-2
-
 
 
 <!DOCTYPE html>
@@ -1093,15 +1091,22 @@ let scalpStop = null;
 
 function formatPrice(value) {
 
-    if (value === null || value === undefined || isNaN(value)) {
+    if (value === null || value === undefined || !Number.isFinite(Number(value))) {
         return "—";
     }
+
+    // Custom crypto assets such as XRP trade at much finer price increments
+    // than GOLD/SILVER/NASDAQ. Preserve the existing 2-decimal display for
+    // built-in markets, but show 5 decimals for custom assets so Entry, SL,
+    // TP1 and TP2 do not appear identical merely because of rounding.
+    const isCustomAsset = String(selectedMarket || "").startsWith("CUSTOM:");
+    const decimals = isCustomAsset ? 5 : 2;
 
     return "$" + Number(value).toLocaleString(
         "en-US",
         {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
+            minimumFractionDigits: decimals,
+            maximumFractionDigits: decimals
         }
     );
 }
@@ -1516,9 +1521,10 @@ function getECISignal(eci) {
 function getMarketConfig() {
     const customAsset = getSelectedCustomAsset();
     if (customAsset) {
+        const isOil = /(^|[^a-z])(oil|wti|brent|crude)([^a-z]|$)/i.test(String(customAsset.name || ""));
         let symbol = null;
-        try { symbol = new URL(customAsset.url).searchParams.get("symbol"); } catch (_) {}
-        return { label: customAsset.name, name: customAsset.name, yahoo: null, dataSymbol: symbol, bingxSymbol: null, binanceSymbol: symbol, tradingView: symbol ? `BINANCE:${symbol}` : null, custom: true };
+        try { symbol = isOil ? (String(customAsset.name).toLowerCase().includes("brent") ? "BZ=F" : "CL=F") : new URL(customAsset.url).searchParams.get("symbol"); } catch (_) {}
+        return { label: customAsset.name, name: customAsset.name, yahoo: isOil ? symbol : null, dataSymbol: symbol, bingxSymbol: null, binanceSymbol: isOil ? null : symbol, tradingView: isOil ? "NYMEX:CL1!" : (symbol ? `BINANCE:${symbol}` : null), custom: true, oil: isOil };
     }
     if (selectedMarket === "GOLD") {
         return {
@@ -1566,14 +1572,22 @@ function getMarketConfig() {
 }
 
 function getMarketPriceSourceName(marketCode = selectedMarket) {
-    if (String(marketCode).startsWith("CUSTOM:")) return "Binance Spot";
+    if (String(marketCode).startsWith("CUSTOM:")) {
+        const asset = (window.customAssetRegistry || []).find(item => `CUSTOM:${item.id}` === marketCode);
+        if (asset && /(^|[^a-z])(oil|wti|brent|crude)([^a-z]|$)/i.test(String(asset.name || ""))) return "Yahoo Finance WTI Futures (CL=F)";
+        return "Binance Spot";
+    }
     if (marketCode === "GOLD") return "Binance Spot PAXG/USDT";
     if (marketCode === "BTC") return "Binance Futures";
     return "BingX";
 }
 
 function getMarketPriceSourceBadge(marketCode = selectedMarket) {
-    if (String(marketCode).startsWith("CUSTOM:")) return "BINANCE SPOT LAST PRICE";
+    if (String(marketCode).startsWith("CUSTOM:")) {
+        const asset = (window.customAssetRegistry || []).find(item => `CUSTOM:${item.id}` === marketCode);
+        if (asset && /(^|[^a-z])(oil|wti|brent|crude)([^a-z]|$)/i.test(String(asset.name || ""))) return "YAHOO FINANCE WTI FUTURES LAST PRICE";
+        return "BINANCE SPOT LAST PRICE";
+    }
     if (marketCode === "GOLD") return "BINANCE SPOT PAXG/USDT LAST PRICE";
     if (marketCode === "BTC") return "BINANCE FUTURES LAST PRICE";
     return "BINGX LAST PRICE";
@@ -3428,7 +3442,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 option.value = `CUSTOM:${asset.id}`;
                 option.dataset.customAsset = 'true';
                 option.textContent = `${asset.name} (custom ECI · 15m)`;
-                option.title = 'Signal uses Binance Spot candles on the 15-minute timeframe; registered URL must be a Binance Spot Kline endpoint.';
+                option.title = /(^|[^a-z])(oil|wti|brent|crude)([^a-z]|$)/i.test(String(asset.name || '')) ? 'WTI / Brent custom oil uses Yahoo Finance futures data; ECI is calculated from 15-minute candles.' : 'Custom signal uses Binance Spot candles on the 15-minute timeframe.';
                 group.appendChild(option);
             }
         } else {
