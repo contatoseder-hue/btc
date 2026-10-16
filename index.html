@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -129,24 +128,55 @@
 
     .status-row {
         display: flex;
-        align-items: flex-end;
-        justify-content: space-between;
-        gap: 24px;
-    }
-
-    .status-main {
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+        gap: 16px;
+        width: 100%;
         min-width: 0;
     }
 
+    .status-main,
     .entry-distance-box {
-        text-align: right;
-        min-width: 180px;
+        width: 100%;
+        min-width: 0;
+        text-align: left;
     }
 
     .entry-distance-value {
-        font-size: 22px;
+        display: block;
+        font-size: 25px;
+        line-height: 1.25;
         font-weight: 800;
-        white-space: nowrap;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    .entry-distance-percent,
+    .entry-distance-proximity {
+        display: block;
+        font-size: 25px;
+        line-height: 1.25;
+        font-weight: 800;
+        overflow-wrap: anywhere;
+    }
+
+    .entry-distance-proximity {
+        margin-top: 3px;
+    }
+
+    .waiting-clock {
+        display: inline-block;
+        font-size: 14px;
+        line-height: 1;
+        vertical-align: 2px;
+        transform-origin: 50% 50%;
+        animation: waiting-clock-spin 1.4s linear infinite;
+    }
+
+    @keyframes waiting-clock-spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
     }
 
     .entry-distance-near {
@@ -391,15 +421,18 @@
 
     @media(max-width: 700px) {
         .status-row {
-            gap: 12px;
+            gap: 14px;
         }
 
-        .entry-distance-box {
-            min-width: 0;
+        .status-box {
+            padding: 14px;
         }
 
-        .entry-distance-value {
-            font-size: 18px;
+        .status-value,
+        .entry-distance-value,
+        .entry-distance-percent,
+        .entry-distance-proximity {
+            font-size: 25px;
         }
 
         .grid,
@@ -571,7 +604,7 @@
         </div>
 
         <div id="overallStatus" class="overall neutral">
-            Overall Status: Waiting...
+            OVERALL STATUS: WAITING <span class="waiting-clock" aria-label="waiting">⏱</span>
         </div>
 
         <div id="signalTime" class="signal-time">
@@ -604,8 +637,9 @@
                         Entry Distance
                     </div>
 
-                    <div id="entryDistanceValue" class="entry-distance-value entry-distance-waiting">
-                        —
+                    <div id="entryDistanceValue" class="entry-distance-value entry-distance-waiting" aria-live="polite">
+                        <span id="entryDistancePercent" class="entry-distance-percent">—</span>
+                        <span id="entryDistanceProximity" class="entry-distance-proximity">Waiting</span>
                     </div>
                 </div>
 
@@ -686,11 +720,11 @@
 
             <div class="stat">
                 <div class="label">
-                    MA200
+                    Trend Status
                 </div>
 
-                <div id="ma200Value" class="value">
-                    —
+                <div id="trendStatusValue" class="mtf-status neutral" aria-live="polite" title="1-minute WMA 100 compared with WMA 200 using closed candles">
+                    Loading…
                 </div>
             </div>
 
@@ -832,7 +866,7 @@
         <div class="mtf-guidance">
             <div class="mtf-guidance-card timeframe">
                 <p><strong>TIMEFRAME STATUS</strong></p>
-                <p>Each timeframe compares its latest candle OPEN with WMA 100 and WMA 200: above both = BULLISH, below both = BEARISH, and between the averages = NEUTRAL. The top Overall Status becomes BULLISH only when all eight timeframe opens are above their WMA 200, and BEARISH only when all eight are below. Otherwise it stays WAITING. The separate 15-minute Overall WMA Trend compares WMA 100 with WMA 200.</p>
+                <p>Each timeframe uses its latest CLOSED candle: close above WMA 100 and WMA 200 = BULLISH, below both = BEARISH, and between the averages = NEUTRAL. OVERALL STATUS becomes BULLISH or BEARISH only when all eight timeframe confirmations agree; otherwise it stays WAITING. Trend Status compares 1-minute WMA 100 with WMA 200 using closed candles.</p>
             </div>
             <div class="mtf-guidance-card caution">
                 <p><strong>⚠️ TRADING CAUTION</strong></p>
@@ -2516,7 +2550,7 @@ function switchMarket(value) {
     document.getElementById("biasLine").className = "bias-line waiting";
     const topOverall = document.getElementById("overallStatus");
     if (topOverall) {
-        topOverall.textContent = "Overall Status: Waiting for timeframe data...";
+        topOverall.innerHTML = 'OVERALL STATUS: WAITING <span class="waiting-clock" aria-label="waiting">⏱</span>';
         topOverall.className = "overall neutral";
     }
     mtfFrameMetrics.clear();
@@ -2529,7 +2563,10 @@ function switchMarket(value) {
     document.getElementById("scalpStop").textContent = "—";
     const entryDistanceElement = document.getElementById("entryDistanceValue");
     if (entryDistanceElement) {
-        entryDistanceElement.textContent = "—";
+        const percent = document.getElementById("entryDistancePercent");
+        const proximity = document.getElementById("entryDistanceProximity");
+        if (percent) { percent.textContent = "—"; percent.className = "entry-distance-percent"; }
+        if (proximity) { proximity.textContent = "Waiting"; proximity.className = "entry-distance-proximity"; }
         entryDistanceElement.className = "entry-distance-value entry-distance-waiting";
     }
     document.getElementById("signalTime").textContent = `Waiting for ${getSignalIntervalLabel().toLowerCase()} ECI signal...`;
@@ -2616,7 +2653,13 @@ function changeBtcSignalTimeframe(value) {
         if (element) element.textContent = "0";
     });
     const entryDistance = document.getElementById("entryDistanceValue");
-    if (entryDistance) { entryDistance.textContent = "—"; entryDistance.className = "entry-distance-value entry-distance-waiting"; }
+    if (entryDistance) {
+        const percent = document.getElementById("entryDistancePercent");
+        const proximity = document.getElementById("entryDistanceProximity");
+        if (percent) { percent.textContent = "—"; percent.className = "entry-distance-percent"; }
+        if (proximity) { proximity.textContent = "Waiting"; proximity.className = "entry-distance-proximity"; }
+        entryDistance.className = "entry-distance-value entry-distance-waiting";
+    }
     const tp1Status = document.getElementById("tp1Status");
     const tp2Status = document.getElementById("tp2Status");
     if (tp1Status) tp1Status.textContent = "";
@@ -2839,22 +2882,22 @@ function updateOverallStatusFromMtfConsensus() {
 
     const metrics = mtfFrames.map(frame => mtfFrameMetrics.get(frame.key));
     if (metrics.some(metric => !metric || !metric.available)) {
-        overall.textContent = "Overall Status: Waiting (timeframe data unavailable)";
+        overall.innerHTML = 'OVERALL STATUS: WAITING <span class="waiting-clock" aria-label="waiting">⏱</span>';
         overall.className = "overall neutral";
         return;
     }
 
-    const allAboveWma200 = metrics.every(metric => metric.open > metric.wma200);
-    const allBelowWma200 = metrics.every(metric => metric.open < metric.wma200);
+    const allBullish = metrics.every(metric => metric.status === "BULLISH");
+    const allBearish = metrics.every(metric => metric.status === "BEARISH");
 
-    if (allAboveWma200) {
-        overall.textContent = "Overall Status: Bullish (all 8 timeframes above WMA 200)";
+    if (allBullish) {
+        overall.textContent = "OVERALL STATUS: BULLISH";
         overall.className = "overall bullish";
-    } else if (allBelowWma200) {
-        overall.textContent = "Overall Status: Bearish (all 8 timeframes below WMA 200)";
+    } else if (allBearish) {
+        overall.textContent = "OVERALL STATUS: BEARISH";
         overall.className = "overall bearish";
     } else {
-        overall.textContent = "Overall Status: Waiting (timeframes not aligned)";
+        overall.innerHTML = 'OVERALL STATUS: WAITING <span class="waiting-clock" aria-label="waiting">⏱</span>';
         overall.className = "overall neutral";
     }
 }
@@ -2886,33 +2929,34 @@ async function refreshMultiTimeframePanel() {
                 seriesByFrame.set(frame.key, candles);
                 if (!candles.length) throw new Error("No valid candles returned");
 
-                const latest = candles[candles.length - 1];
-                if (history.referenceCandles.length < MTF_WMA_PERIOD) {
+                // Confirmation uses CLOSED candles only; ignore any still-forming bar.
+                const completedCandles = candles.filter(candle => candle[6] !== true);
+                if (completedCandles.length < MTF_WMA_PERIOD) {
                     throw new Error(
-                        `Insufficient historical candles for WMA 100/200: ` +
-                        `${history.referenceCandles.length} prior completed candles; ` +
+                        `Insufficient closed candles for WMA 100/200: ` +
+                        `${completedCandles.length} completed candles; ` +
                         `${history.sourceBars} valid source candles retrieved from ${history.source}`
                     );
                 }
 
-                const referenceCloses = history.referenceCandles.map(candle => Number(candle[4]));
-                const wma100 = calculateWMA(referenceCloses, 100);
-                const wma200 = calculateWMA(referenceCloses, 200);
-                const open = Number(latest[1]);
-                if (!Number.isFinite(open) || !Number.isFinite(wma100) || !Number.isFinite(wma200)) {
-                    throw new Error("WMA 100/200 or latest candle OPEN unavailable");
+                const latestClosed = completedCandles[completedCandles.length - 1];
+                const close = Number(latestClosed[4]);
+                const completedCloses = completedCandles.map(candle => Number(candle[4]));
+                const wma100 = calculateWMA(completedCloses, 100);
+                const wma200 = calculateWMA(completedCloses, 200);
+                if (!Number.isFinite(close) || !Number.isFinite(wma100) || !Number.isFinite(wma200)) {
+                    throw new Error("WMA 100/200 or latest CLOSED candle close unavailable");
                 }
 
-                // Neutral takes precedence whenever OPEN is between the two WMAs,
-                // regardless of which WMA is higher. Otherwise above both is bullish, below both bearish.
+                // Closed candle above both WMAs = bullish; below both = bearish; between = neutral.
                 const lowerWma = Math.min(wma100, wma200);
                 const upperWma = Math.max(wma100, wma200);
                 let frameLabel;
                 let frameState;
-                if (open > upperWma) {
+                if (close > upperWma) {
                     frameLabel = "BULLISH";
                     frameState = "bullish";
-                } else if (open < lowerWma) {
+                } else if (close < lowerWma) {
                     frameLabel = "BEARISH";
                     frameState = "bearish";
                 } else {
@@ -2922,17 +2966,37 @@ async function refreshMultiTimeframePanel() {
 
                 mtfFrameMetrics.set(frame.key, {
                     available: true,
-                    open,
+                    close,
                     wma100,
                     wma200,
-                    aboveWma200: open > wma200,
-                    belowWma200: open < wma200,
+                    aboveWma200: close > wma200,
+                    belowWma200: close < wma200,
                     status: frameLabel
                 });
 
-                const relationToWma200 = open > wma200 ? "above WMA 200" : (open < wma200 ? "below WMA 200" : "at WMA 200");
-                const detail = `${history.source} | latest candle OPEN: ${formatPrice(open)} | WMA 100: ${formatPrice(wma100)} | WMA 200: ${formatPrice(wma200)} | OPEN is ${relationToWma200} | valid candles: ${history.sourceBars}`;
+                const relationToWma200 = close > wma200 ? "above WMA 200" : (close < wma200 ? "below WMA 200" : "at WMA 200");
+                const detail = `${history.source} | latest CLOSED candle close: ${formatPrice(close)} | WMA 100: ${formatPrice(wma100)} | WMA 200: ${formatPrice(wma200)} | close is ${relationToWma200} | closed candles: ${completedCandles.length}`;
                 setMtfStatus(frame.key, frameLabel, frameState, detail);
+
+                // Trend Status card: 1-minute WMA 100 versus WMA 200, confirmed on closed candles.
+                if (frame.key === "1m") {
+                    const trendElement = document.getElementById("trendStatusValue");
+                    if (trendElement) {
+                        if (wma100 < wma200) {
+                            renderTrendStatus(trendElement, "BEARISH", "bearish");
+                            trendElement.className = "mtf-status bearish";
+                            trendElement.title = `1m closed candles | WMA 100 ${formatPrice(wma100)} below WMA 200 ${formatPrice(wma200)}`;
+                        } else if (wma100 > wma200) {
+                            renderTrendStatus(trendElement, "BULLISH", "bullish");
+                            trendElement.className = "mtf-status bullish";
+                            trendElement.title = `1m closed candles | WMA 100 ${formatPrice(wma100)} above WMA 200 ${formatPrice(wma200)}`;
+                        } else {
+                            renderTrendStatus(trendElement, "NEUTRAL", "neutral");
+                            trendElement.className = "mtf-status neutral";
+                            trendElement.title = `1m closed candles | WMA 100 equals WMA 200 (${formatPrice(wma100)})`;
+                        }
+                    }
+                }
             } catch (error) {
                 if (selectedMarket !== marketCode) {
                     mtfRefreshPending = true;
@@ -2941,6 +3005,14 @@ async function refreshMultiTimeframePanel() {
                 console.warn(`Multi-timeframe ${frame.key} data unavailable:`, error);
                 mtfFrameMetrics.set(frame.key, { available: false, error: error?.message || String(error) });
                 setMtfStatus(frame.key, "UNAVAILABLE", "offline", error?.message || String(error));
+                if (frame.key === "1m") {
+                    const trendElement = document.getElementById("trendStatusValue");
+                    if (trendElement) {
+                        trendElement.textContent = "UNAVAILABLE";
+                        trendElement.className = "mtf-status offline";
+                        trendElement.title = error?.message || "1-minute WMA data unavailable";
+                    }
+                }
             }
         }
 
@@ -2949,10 +3021,10 @@ async function refreshMultiTimeframePanel() {
             return;
         }
 
-        // Top Overall Status requires all eight selected-market candle opens to agree relative to their own WMA200.
+        // Top Overall Status requires all eight selected-market CLOSED candle confirmations to agree.
         updateOverallStatusFromMtfConsensus();
 
-        // Overall WMA trend uses completed 15m closes only: WMA100 vs WMA200. It does not change ECI signals.
+        // The Trend Status card is updated from the 1-minute WMA100/WMA200 comparison above.
         try {
             let candles15m = seriesByFrame.get("15m");
             if (!candles15m || !candles15m.length) {
@@ -3071,9 +3143,10 @@ async function fetchCloudflareData() {
 }
 
 function updateEntryDistanceUI() {
-
     const element = document.getElementById("entryDistanceValue");
-    if (!element) return;
+    const percentElement = document.getElementById("entryDistancePercent");
+    const proximityElement = document.getElementById("entryDistanceProximity");
+    if (!element || !percentElement || !proximityElement) return;
 
     if (
         currentPrice === null ||
@@ -3083,8 +3156,11 @@ function updateEntryDistanceUI() {
         scalpEntry === 0 ||
         !lastScalpSignal
     ) {
-        element.textContent = "—";
+        percentElement.textContent = "—";
+        proximityElement.textContent = "Waiting";
         element.className = "entry-distance-value entry-distance-waiting";
+        percentElement.className = "entry-distance-percent";
+        proximityElement.className = "entry-distance-proximity";
         return;
     }
 
@@ -3093,7 +3169,6 @@ function updateEntryDistanceUI() {
 
     let status;
     let statusClass;
-
     if (distancePct <= 0.25) {
         status = "Near Entry";
         statusClass = "entry-distance-near";
@@ -3105,8 +3180,11 @@ function updateEntryDistanceUI() {
         statusClass = "entry-distance-missed";
     }
 
-    element.textContent = `${distancePct.toFixed(3)}% • ${status}`;
+    percentElement.textContent = `${distancePct.toFixed(3)}%`;
+    proximityElement.textContent = status;
     element.className = `entry-distance-value ${statusClass}`;
+    percentElement.className = `entry-distance-percent ${statusClass}`;
+    proximityElement.className = `entry-distance-proximity ${statusClass}`;
 }
 
 
