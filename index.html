@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -3488,21 +3489,32 @@ setInterval(refreshMultiTimeframePanel, 60000);
     const codeKey = 'assetAdminCode';
     if (!form || !codeField || !unlockButton || !status) return;
 
+    function setStatus(message, kind = 'neutral') {
+        const prefixes = { success: '✅ GRANTED — ', error: '❌ DENIED — ', neutral: '' };
+        status.textContent = `${prefixes[kind] || ''}${message}`;
+        status.style.color = kind === 'success' ? '#16a34a' : kind === 'error' ? '#dc2626' : '';
+    }
+
     let adminCode = '';
     try { adminCode = sessionStorage.getItem(codeKey) || ''; } catch (_) {}
     codeField.value = adminCode;
 
     async function adminRequest(method, body, id) {
         const params = new URLSearchParams({ admin: 'assets' });
+        if (method === 'GET' && body === '__VERIFY_ADMIN__') params.set('verify', '1');
         if (id) params.set('id', id);
         const response = await fetch(`${CLOUDFLARE_API}?${params.toString()}`, {
             method,
             headers: { 'Content-Type': 'application/json', 'X-Asset-Admin-Code': adminCode },
-            body: body ? JSON.stringify(body) : undefined
+            body: method !== 'GET' && body ? JSON.stringify(body) : undefined
         });
         let data = {};
         try { data = await response.json(); } catch (_) {}
-        if (!response.ok) throw new Error(data.error || `Request failed (${response.status})`);
+        if (!response.ok) {
+            const error = new Error(data.error || `Request failed (${response.status})`);
+            error.status = response.status;
+            throw error;
+        }
         return data;
     }
 
@@ -3528,7 +3540,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
         }
     }
 
-    function renderAssets(assets) {
+    function renderAssets(assets, canManage = false) {
         syncMarketDropdown(assets);
         if (!assetsBox) return;
         assetsBox.replaceChildren();
@@ -3547,19 +3559,21 @@ setInterval(refreshMultiTimeframePanel, 60000);
             const label = document.createElement('span');
             label.textContent = `${asset.name} — ${asset.url} `;
             item.appendChild(label);
-            const remove = document.createElement('button');
-            remove.type = 'button';
-            remove.textContent = 'Remove';
-            remove.style.marginLeft = '8px';
-            remove.addEventListener('click', async () => {
+            if (canManage) {
+                const remove = document.createElement('button');
+                remove.type = 'button';
+                remove.textContent = 'Remove';
+                remove.style.marginLeft = '8px';
+                remove.addEventListener('click', async () => {
                 if (!confirm(`Remove ${asset.name} from the custom-asset registry?`)) return;
                 try {
                     const data = await adminRequest('DELETE', null, asset.id);
-                    renderAssets(data.assets || []);
-                    status.textContent = `Removed ${asset.name} from the registry.`;
-                } catch (error) { status.textContent = error.message; }
-            });
-            item.appendChild(remove);
+                    renderAssets(data.assets || [], true);
+                    setStatus(`Removed ${asset.name} from the registry.`, 'success');
+                    } catch (error) { setStatus(error.message, error.status === 401 ? 'error' : 'neutral'); }
+                });
+                item.appendChild(remove);
+            }
             list.appendChild(item);
         }
         assetsBox.appendChild(list);
@@ -3567,23 +3581,45 @@ setInterval(refreshMultiTimeframePanel, 60000);
 
     async function verifyAndLoad() {
         adminCode = codeField.value.trim();
-        if (!adminCode) { status.textContent = 'Enter your private access code.'; return; }
+        if (!adminCode) { setStatus('Enter your private access code.'); return; }
         try {
-            const data = await adminRequest('GET');
+            const data = await adminRequest('GET', '__VERIFY_ADMIN__');
             try { sessionStorage.setItem(codeKey, adminCode); } catch (_) {}
-            renderAssets(data.assets || []);
-            status.textContent = 'Access verified. Asset registry loaded.';
+            renderAssets(data.assets || [], true);
+            setStatus('Private access code verified. Asset registry loaded.', 'success');
         } catch (error) {
             adminCode = '';
             try { sessionStorage.removeItem(codeKey); } catch (_) {}
-            if (assetsBox) assetsBox.replaceChildren();
-            status.textContent = error.message;
+            setStatus(error.message, error.status === 401 ? 'error' : 'neutral');
+            loadPublicAssets();
+        }
+    }
+
+    async function loadPublicAssets() {
+        try {
+            const params = new URLSearchParams({ admin: 'assets' });
+            const response = await fetch(`${CLOUDFLARE_API}?${params.toString()}`, {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' }
+            });
+            let data = {};
+            try { data = await response.json(); } catch (_) {}
+            if (!response.ok) {
+            const error = new Error(data.error || `Request failed (${response.status})`);
+            error.status = response.status;
+            throw error;
+        }
+            renderAssets(data.assets || [], false);
+        } catch (error) {
+            // Keep native market options available if the shared list cannot load.
+            if (assetsBox) assetsBox.textContent = `Could not load shared custom assets: ${error.message}`;
         }
     }
 
     unlockButton.addEventListener('click', verifyAndLoad);
     codeField.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); verifyAndLoad(); } });
     if (adminCode) verifyAndLoad();
+    else loadPublicAssets();
 
     form.addEventListener('submit', async event => {
         event.preventDefault();
@@ -3591,19 +3627,19 @@ setInterval(refreshMultiTimeframePanel, 60000);
         const nameField = document.getElementById('newAssetName');
         let parsed;
         try { parsed = new URL(urlField.value.trim()); }
-        catch (_) { status.textContent = 'Enter a valid market data URL.'; return; }
-        if (parsed.protocol !== 'https:') { status.textContent = 'Market data URL must use HTTPS.'; return; }
+        catch (_) { setStatus('Enter a valid market data URL.'); return; }
+        if (parsed.protocol !== 'https:') { setStatus('Market data URL must use HTTPS.'); return; }
         const name = nameField.value.trim();
-        if (!name) { status.textContent = 'Enter an asset name.'; return; }
-        if (!adminCode) { status.textContent = 'Verify your private access code before adding assets.'; return; }
+        if (!name) { setStatus('Enter an asset name.'); return; }
+        if (!adminCode) { setStatus('Verify your private access code before adding assets.'); return; }
         const button = document.getElementById('addAssetButton');
         if (button) button.disabled = true;
         try {
             const data = await adminRequest('POST', { name, url: parsed.href });
-            renderAssets(data.assets || []);
-            status.textContent = `Registered ${data.asset.name} in Cloudflare KV. Note: registration does not yet add the asset to live trading calculations; the provider candle format must be integrated separately.`;
+            renderAssets(data.assets || [], true);
+            setStatus(`Registered ${data.asset.name} in Cloudflare KV. Note: registration does not yet add the asset to live trading calculations; the provider candle format must be integrated separately.`, 'success');
             form.reset();
-        } catch (error) { status.textContent = error.message; }
+        } catch (error) { setStatus(error.message, error.status === 401 ? 'error' : 'neutral'); }
         finally { if (button) button.disabled = false; }
     });
 })();
