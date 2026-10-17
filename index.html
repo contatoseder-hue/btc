@@ -1958,22 +1958,36 @@ function updateTradeTargets() {
     tp1Element.textContent = formatPrice(tp1);
     tp2Element.textContent = formatPrice(tp2);
 
-    // Current live price is used only to report whether a target has been reached.
+    // Live outcome display only. This does not change the ECI signal or trade levels.
     if (currentPrice !== null && Number.isFinite(currentPrice)) {
-        const tp1Reached = lastScalpSignal === "Buy Long"
-            ? currentPrice >= tp1
-            : currentPrice <= tp1;
-        const tp2Reached = lastScalpSignal === "Buy Long"
-            ? currentPrice >= tp2
-            : currentPrice <= tp2;
+        const isLong = lastScalpSignal === "Buy Long";
+        const stopHit = isLong
+            ? currentPrice <= scalpStop
+            : currentPrice >= scalpStop;
+        const tp1Reached = isLong ? currentPrice >= tp1 : currentPrice <= tp1;
+        const tp2Reached = isLong ? currentPrice >= tp2 : currentPrice <= tp2;
 
         if (tp1Status) {
-            tp1Status.textContent = tp1Reached ? "🟢 TP1 reached" : "";
+            tp1Status.textContent = tp1Reached ? "🎯 TP1 Hit ✅" : "";
             tp1Status.style.color = tp1Reached ? "#22c55e" : "";
         }
         if (tp2Status) {
-            tp2Status.textContent = tp2Reached ? "🟢 TP2 reached" : "";
+            tp2Status.textContent = tp2Reached ? "🏆 TP2 Hit ✅" : "";
             tp2Status.style.color = tp2Reached ? "#22c55e" : "";
+        }
+
+        // Reuse the Scalp Status line to show a stop-out clearly when the live price crosses SL.
+        const scalpStatus = document.getElementById("pullbackStatus");
+        if (scalpStatus && stopHit) {
+            scalpStatus.textContent = isLong
+                ? "🛑 Stop Loss Hit — LONG ❌"
+                : "🛑 Stop Loss Hit — SHORT ❌";
+            scalpStatus.className = "status-value";
+            scalpStatus.style.color = "#ef4444";
+        } else if (scalpStatus && !stopHit) {
+            scalpStatus.textContent = isLong ? "Buy Long" : "Sell Short";
+            scalpStatus.className = isLong ? "status-value buy" : "status-value sell";
+            scalpStatus.style.color = "";
         }
     }
 }
