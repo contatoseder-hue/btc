@@ -883,8 +883,14 @@
         </div>
     </div>
 
-    <!-- ADMIN ASSET REGISTRATION PANEL: UI added; secure Worker endpoint still required -->
-    <div class="card" id="assetAdminPanel">
+    <!-- CUSTOM ASSET CONTROLS: panel stays collapsed until requested -->
+    <div style="display:flex; justify-content:flex-start; margin:0 0 12px;">
+        <button type="button" id="toggleAssetAdminPanel" aria-controls="assetAdminPanel" aria-expanded="false" style="margin:0;">＋ Add Asset</button>
+    </div>
+    <div class="card" id="assetAdminPanel" hidden>
+        <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+            <button type="button" id="closeAssetAdminPanel" class="secondary" style="margin:0;">Hide</button>
+        </div>
         <div class="section-title">Add Asset</div>
         <p class="small" style="margin-top:0;">Enter your private access code to manage the custom-asset registry. The code is verified by the Cloudflare Worker and is not included in this public HTML file.</p>
         <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; align-items:end; margin-bottom:12px;">
@@ -906,12 +912,43 @@
                 <input id="newAssetName" name="assetName" type="text" placeholder="e.g. EUR/USD" required maxlength="60" style="width:100%; box-sizing:border-box;">
             </div>
             <div>
-                <button type="submit" id="addAssetButton" style="width:100%; margin:0;">Add Asset</button>
+                <button type="submit" id="addAssetButton" style="width:100%; margin:0;">Register Asset</button>
             </div>
         </form>
         <div id="registeredAssets" class="small" style="margin-top:12px;"></div>
         <div id="addAssetStatus" class="small" role="status" aria-live="polite" style="margin-top:12px;">Administration is locked. Enter your private access code to continue.</div>
     </div>
+    <script>
+    (function () {
+        const panel = document.getElementById('assetAdminPanel');
+        const toggle = document.getElementById('toggleAssetAdminPanel');
+        const close = document.getElementById('closeAssetAdminPanel');
+        if (!panel || !toggle || !close) return;
+        function setAssetPanelOpen(open) {
+            panel.hidden = !open;
+            toggle.setAttribute('aria-expanded', String(open));
+            toggle.textContent = open ? '＋ Add Asset (Open)' : '＋ Add Asset';
+            if (open) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        toggle.addEventListener('click', function () {
+            if (!panel.hidden) {
+                setAssetPanelOpen(false);
+                return;
+            }
+            const enteredCode = window.prompt('Please, enter your access code');
+            if (enteredCode === null) return;
+            const codeField = document.getElementById('assetAdminCode');
+            const unlockButton = document.getElementById('assetAdminUnlock');
+            if (!enteredCode.trim()) return;
+            if (codeField) codeField.value = enteredCode.trim();
+            setAssetPanelOpen(true);
+            if (unlockButton) unlockButton.click();
+        });
+        close.addEventListener('click', function () {
+            setAssetPanelOpen(false);
+        });
+    })();
+    </script>
 
     <!-- TRADINGVIEW / EXCHANGE WEBSITE PANEL (added option only) -->
     <div class="card">
@@ -1958,36 +1995,22 @@ function updateTradeTargets() {
     tp1Element.textContent = formatPrice(tp1);
     tp2Element.textContent = formatPrice(tp2);
 
-    // Live outcome display only. This does not change the ECI signal or trade levels.
+    // Current live price is used only to report whether a target has been reached.
     if (currentPrice !== null && Number.isFinite(currentPrice)) {
-        const isLong = lastScalpSignal === "Buy Long";
-        const stopHit = isLong
-            ? currentPrice <= scalpStop
-            : currentPrice >= scalpStop;
-        const tp1Reached = isLong ? currentPrice >= tp1 : currentPrice <= tp1;
-        const tp2Reached = isLong ? currentPrice >= tp2 : currentPrice <= tp2;
+        const tp1Reached = lastScalpSignal === "Buy Long"
+            ? currentPrice >= tp1
+            : currentPrice <= tp1;
+        const tp2Reached = lastScalpSignal === "Buy Long"
+            ? currentPrice >= tp2
+            : currentPrice <= tp2;
 
         if (tp1Status) {
-            tp1Status.textContent = tp1Reached ? "🎯 TP1 Hit ✅" : "";
+            tp1Status.textContent = tp1Reached ? "🟢 TP1 reached" : "";
             tp1Status.style.color = tp1Reached ? "#22c55e" : "";
         }
         if (tp2Status) {
-            tp2Status.textContent = tp2Reached ? "🏆 TP2 Hit ✅" : "";
+            tp2Status.textContent = tp2Reached ? "🟢 TP2 reached" : "";
             tp2Status.style.color = tp2Reached ? "#22c55e" : "";
-        }
-
-        // Reuse the Scalp Status line to show a stop-out clearly when the live price crosses SL.
-        const scalpStatus = document.getElementById("pullbackStatus");
-        if (scalpStatus && stopHit) {
-            scalpStatus.textContent = isLong
-                ? "🛑 Stop Loss Hit — LONG ❌"
-                : "🛑 Stop Loss Hit — SHORT ❌";
-            scalpStatus.className = "status-value";
-            scalpStatus.style.color = "#ef4444";
-        } else if (scalpStatus && !stopHit) {
-            scalpStatus.textContent = isLong ? "Buy Long" : "Sell Short";
-            scalpStatus.className = isLong ? "status-value buy" : "status-value sell";
-            scalpStatus.style.color = "";
         }
     }
 }
