@@ -3421,10 +3421,10 @@ function updateDashboardFromCloudflare(data) {
         tp2Element.textContent = "—";
     }
 
-    tp1Status.textContent = data.tp1Reached ? "🟢 TP1 reached" : "";
-    tp2Status.textContent = data.tp2Reached ? "🟢 TP2 reached" : "";
-    tp1Status.style.color = data.tp1Reached ? "#22c55e" : "";
-    tp2Status.style.color = data.tp2Reached ? "#22c55e" : "";
+    // Re-evaluate outcomes against the current live price after every API render.
+    // The server-rendered signal/status above must not overwrite a latched stop-loss result.
+    // This also applies the requested TP1/TP2 labels consistently on every refresh.
+    updateTradeTargets();
 
     /* -----------------------------------------------
        LIVE SIGNAL ACCURACY
