@@ -885,14 +885,14 @@
 
     <!-- CUSTOM ASSET CONTROLS: panel stays collapsed until requested -->
     <div style="display:flex; justify-content:flex-start; margin:0 0 12px;">
-        <button type="button" id="toggleAssetAdminPanel" aria-controls="assetAdminPanel" aria-expanded="false" style="margin:0;">＋ Add Asset</button>
+        <button type="text" id="toggleAssetAdminPanel" aria-controls="assetAdminPanel" aria-expanded="false" style="margin:0;">＋ Add Asset</button>
     </div>
     <div class="card" id="assetAdminPanel" hidden>
         <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
             <button type="button" id="closeAssetAdminPanel" class="secondary" style="margin:0;">Hide</button>
         </div>
         <div class="section-title">Add Asset</div>
-        <p class="small" style="margin-top:0;">Enter your private access code to manage the custom-asset registry. The code is verified by the Cloudflare Worker and is not included in this public HTML file.</p>
+        <p class="small" style="margin-top:0;">Enter your private access code to manage custom-asset</p>
         <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; align-items:end; margin-bottom:12px;">
             <div>
                 <label for="assetAdminCode" class="label">Private access code</label>
