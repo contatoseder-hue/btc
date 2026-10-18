@@ -885,14 +885,14 @@
 
     <!-- CUSTOM ASSET CONTROLS: panel stays collapsed until requested -->
     <div style="display:flex; justify-content:flex-start; margin:0 0 12px;">
-        <button type="text" id="toggleAssetAdminPanel" aria-controls="assetAdminPanel" aria-expanded="false" style="margin:0;">＋ Add Asset</button>
+        <button type="button" id="toggleAssetAdminPanel" aria-controls="assetAdminPanel" aria-expanded="false" style="margin:0;">＋ Add Asset</button>
     </div>
     <div class="card" id="assetAdminPanel" hidden>
         <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
             <button type="button" id="closeAssetAdminPanel" class="secondary" style="margin:0;">Hide</button>
         </div>
         <div class="section-title">Add Asset</div>
-        <p class="small" style="margin-top:0;">Enter your private access code to manage custom-asset</p>
+        <p class="small" style="margin-top:0;">Enter your private access code to manage the custom-asset registry. The code is verified by the Cloudflare Worker and is not included in this public HTML file.</p>
         <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; align-items:end; margin-bottom:12px;">
             <div>
                 <label for="assetAdminCode" class="label">Private access code</label>
@@ -1155,6 +1155,8 @@ let lastScalpSignal = null;
 
 let scalpEntry = null;
 let scalpStop = null;
+let lastTradeOutcomeKey = null;
+let latchedStopLossHit = false;
 
 
 /* =========================================================
@@ -1967,49 +1969,65 @@ function updateTradeTargets() {
     const tp2Element = document.getElementById("tp2Value");
     const tp1Status = document.getElementById("tp1Status");
     const tp2Status = document.getElementById("tp2Status");
+    const scalpStatus = document.getElementById("pullbackStatus");
+    const biasElement = document.getElementById("biasLine");
 
     if (!tp1Element || !tp2Element) return;
 
-    if (scalpEntry === null || scalpStop === null || !lastScalpSignal) {
+    if (scalpEntry === null || scalpStop === null || !lastScalpSignal ||
+        !Number.isFinite(scalpEntry) || !Number.isFinite(scalpStop)) {
         tp1Element.textContent = "—";
         tp2Element.textContent = "—";
-        if (tp1Status) tp1Status.innerHTML = "&nbsp;";
-        if (tp2Status) tp2Status.innerHTML = "&nbsp;";
+        if (tp1Status) { tp1Status.textContent = ""; tp1Status.style.color = ""; }
+        if (tp2Status) { tp2Status.textContent = ""; tp2Status.style.color = ""; }
+        lastTradeOutcomeKey = null;
+        latchedStopLossHit = false;
         return;
+    }
+
+    const outcomeKey = `${selectedMarket}|${lastScalpSignal}|${scalpEntry}|${scalpStop}`;
+    if (outcomeKey !== lastTradeOutcomeKey) {
+        lastTradeOutcomeKey = outcomeKey;
+        latchedStopLossHit = false;
     }
 
     const risk = Math.abs(scalpEntry - scalpStop);
     if (!Number.isFinite(risk) || risk <= 0) return;
 
-    let tp1;
-    let tp2;
-
-    if (lastScalpSignal === "Buy Long") {
-        tp1 = scalpEntry + (risk * 2);
-        tp2 = scalpEntry + (risk * 3);
-    } else {
-        tp1 = scalpEntry - (risk * 2);
-        tp2 = scalpEntry - (risk * 3);
-    }
+    const isLong = lastScalpSignal === "Buy Long";
+    const tp1 = isLong ? scalpEntry + (risk * 2) : scalpEntry - (risk * 2);
+    const tp2 = isLong ? scalpEntry + (risk * 3) : scalpEntry - (risk * 3);
 
     tp1Element.textContent = formatPrice(tp1);
     tp2Element.textContent = formatPrice(tp2);
 
-    // Current live price is used only to report whether a target has been reached.
     if (currentPrice !== null && Number.isFinite(currentPrice)) {
-        const tp1Reached = lastScalpSignal === "Buy Long"
-            ? currentPrice >= tp1
-            : currentPrice <= tp1;
-        const tp2Reached = lastScalpSignal === "Buy Long"
-            ? currentPrice >= tp2
-            : currentPrice <= tp2;
+        const stopHit = isLong ? currentPrice <= scalpStop : currentPrice >= scalpStop;
+        const tp1Reached = isLong ? currentPrice >= tp1 : currentPrice <= tp1;
+        const tp2Reached = isLong ? currentPrice >= tp2 : currentPrice <= tp2;
+
+        // Keep the stop-loss result latched for this signal so a later price bounce
+        // does not erase the fact that the stop was hit.
+        if (stopHit) latchedStopLossHit = true;
+
+        if (latchedStopLossHit) {
+            const direction = isLong ? "LONG" : "SHORT";
+            if (scalpStatus) {
+                scalpStatus.textContent = `🛑 Stop Loss Hit — ${direction} ❌`;
+                scalpStatus.className = "status-value sell";
+            }
+            if (biasElement) {
+                biasElement.textContent = `${getMarketConfig().label} - STOP LOSS HIT — ${direction} ❌`;
+                biasElement.className = "bias-line sell";
+            }
+        }
 
         if (tp1Status) {
-            tp1Status.textContent = tp1Reached ? "🟢 TP1 reached" : "";
+            tp1Status.textContent = tp1Reached ? "🎯 TP1 Hit ✅" : "";
             tp1Status.style.color = tp1Reached ? "#22c55e" : "";
         }
         if (tp2Status) {
-            tp2Status.textContent = tp2Reached ? "🟢 TP2 reached" : "";
+            tp2Status.textContent = tp2Reached ? "🏆 TP2 Hit ✅" : "";
             tp2Status.style.color = tp2Reached ? "#22c55e" : "";
         }
     }
