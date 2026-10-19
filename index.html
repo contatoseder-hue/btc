@@ -1,4 +1,4 @@
-2
+4
 
 <!DOCTYPE html>
 <html lang="en">
@@ -2962,62 +2962,112 @@ function getMtfTargetCandles(sourceCandles, frame) {
         : sourceCandles;
 }
 
+// Share identical candle requests between the dashboard's MTF panel and demo robot.
+// A brief cache reduces duplicate calls without making the chart meaningfully stale.
+const mtfHistoryInFlight = new Map();
+const mtfHistoryCache = new Map();
+const MTF_HISTORY_CACHE_MS = 5000;
+
 async function fetchMtfCandleHistory(marketCode, frame) {
-    // MTF history is served by the Worker from the same source used for live price
-    // and ECI candles (Binance Spot PAXG/USDT for Gold; Binance Futures BTCUSDT for BTC;
-    // existing BingX feed paths for Silver/NASDAQ in this Worker version).
-    const params = new URLSearchParams({
-        market: marketCode,
-        candles: "1",
-        interval: frame.interval,
-        t: String(Date.now())
-    });
-    const response = await fetch(`${CLOUDFLARE_API}?${params.toString()}`, {
-        cache: "no-store",
-        headers: { "Accept": "application/json" }
-    });
-
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok) {
-        throw new Error(
-            `Cloudflare MTF history request failed (${response.status}): ` +
-            `${payload?.message || payload?.error || "no error details"}`
-        );
+    const cacheKey = `${marketCode}|${frame.interval}`;
+    const now = Date.now();
+    const cached = mtfHistoryCache.get(cacheKey);
+    if (cached && now - cached.savedAt < MTF_HISTORY_CACHE_MS) {
+        return cached.value;
     }
+    const pending = mtfHistoryInFlight.get(cacheKey);
+    if (pending) return pending;
 
-    const bars = Array.isArray(payload?.bars) ? payload.bars : [];
-    if (!bars.length) {
-        throw new Error(
-            `Cloudflare returned no ${frame.interval} candles: ` +
-            `${payload?.message || payload?.error || "empty bars array"}`
-        );
+    const request = (async () => {
+        // MTF history is served by the Worker from the same source used for live price
+        // and ECI candles (Binance Spot PAXG/USDT for Gold; Binance Futures BTCUSDT for BTC;
+        // existing BingX feed paths for Silver/NASDAQ in this Worker version).
+        const params = new URLSearchParams({
+            market: marketCode,
+            candles: "1",
+            interval: frame.interval,
+            t: String(Date.now())
+        });
+        const url = `${CLOUDFLARE_API}?${params.toString()}`;
+        let response;
+        try {
+            response = await fetch(url, {
+                cache: "no-store",
+                headers: { "Accept": "application/json" }
+            });
+        } catch (error) {
+            const pageOrigin = window.location && window.location.origin ? window.location.origin : "unknown";
+            console.error("[Dashboard candle feed] Browser fetch failed", {
+                pageOrigin,
+                url,
+                market: marketCode,
+                interval: frame.interval,
+                error: error?.message || String(error)
+            });
+            throw new Error(
+                `Browser could not reach the Cloudflare candle feed for ${marketCode} ${frame.interval}. ` +
+                `Page origin: ${pageOrigin}. If the origin is "null", open this HTML from your hosted HTTPS page. ` +
+                `Otherwise check the browser Console for a CORS block or verify that the Worker is responding. ` +
+                `(${error?.message || String(error)})`
+            );
+        }
+
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(
+                `Cloudflare MTF history request failed (${response.status}): ` +
+                `${payload?.message || payload?.error || "no error details"}`
+            );
+        }
+
+        const bars = Array.isArray(payload?.bars) ? payload.bars : [];
+        if (!bars.length) {
+            throw new Error(
+                `Cloudflare returned no ${frame.interval} candles: ` +
+                `${payload?.message || payload?.error || "empty bars array"}`
+            );
+        }
+
+        // Defensive frontend validation: providers may return null/empty OHLC fields
+        // for intervals without usable prices. Number(null) becomes zero, so reject
+        // zero/invalid-price rows before WMA calculations even if the Worker filtered them.
+        const usableBars = bars.filter(bar => {
+            const raw = [bar?.open ?? bar?.o, bar?.high ?? bar?.h, bar?.low ?? bar?.l, bar?.close ?? bar?.c];
+            if (raw.some(value => value === null || value === undefined || value === "")) return false;
+            const values = raw.map(Number);
+            return values.every(value => Number.isFinite(value) && value > 0) && values[1] >= values[2];
+        });
+        if (!usableBars.length) {
+            throw new Error(`Historical response had ${bars.length} rows but none had valid positive OHLC prices`);
+        }
+
+        const candles = marketBarsToCandles(usableBars, frame.minutes)
+            .sort((a, b) => a[0] - b[0]);
+        if (!candles.length) throw new Error("Historical response contained no valid OHLC candles");
+
+        const normalizedCandles = mergeMtfCandles([], candles);
+        return {
+            candles: normalizedCandles,
+            referenceCandles: getMtfReferenceCandles(normalizedCandles),
+            sourceBars: usableBars.length,
+            rejectedBars: bars.length - usableBars.length,
+            source: payload?.source || `${getMarketPriceSourceName()} OHLC`
+        };
+    })();
+
+    mtfHistoryInFlight.set(cacheKey, request);
+    try {
+        const value = await request;
+        mtfHistoryCache.set(cacheKey, { savedAt: Date.now(), value });
+        // Keep the tiny in-memory cache bounded if custom market selection changes.
+        while (mtfHistoryCache.size > 40) {
+            const oldestKey = mtfHistoryCache.keys().next().value;
+            mtfHistoryCache.delete(oldestKey);
+        }
+        return value;
+    } finally {
+        if (mtfHistoryInFlight.get(cacheKey) === request) mtfHistoryInFlight.delete(cacheKey);
     }
-
-    // Defensive frontend validation: providers may return null/empty OHLC fields
-    // for intervals without usable prices. Number(null) becomes zero, so reject
-    // zero/invalid-price rows before WMA calculations even if the Worker filtered them.
-    const usableBars = bars.filter(bar => {
-        const raw = [bar?.open ?? bar?.o, bar?.high ?? bar?.h, bar?.low ?? bar?.l, bar?.close ?? bar?.c];
-        if (raw.some(value => value === null || value === undefined || value === "")) return false;
-        const values = raw.map(Number);
-        return values.every(value => Number.isFinite(value) && value > 0) && values[1] >= values[2];
-    });
-    if (!usableBars.length) {
-        throw new Error(`Historical response had ${bars.length} rows but none had valid positive OHLC prices`);
-    }
-
-    const candles = marketBarsToCandles(usableBars, frame.minutes)
-        .sort((a, b) => a[0] - b[0]);
-    if (!candles.length) throw new Error("Historical response contained no valid OHLC candles");
-
-    const normalizedCandles = mergeMtfCandles([], candles);
-    return {
-        candles: normalizedCandles,
-        referenceCandles: getMtfReferenceCandles(normalizedCandles),
-        sourceBars: usableBars.length,
-        rejectedBars: bars.length - usableBars.length,
-        source: payload?.source || `${getMarketPriceSourceName()} OHLC`
-    };
 }
 
 function trendArrowSvg(state) {
@@ -4142,8 +4192,8 @@ setInterval(refreshMultiTimeframePanel, 60000);
         }
 
         const details = lastError?.message || String(lastError || 'Unknown feed error');
-        if (/failed to fetch|networkerror|load failed/i.test(details)) {
-            throw new Error(`The shared Cloudflare candle feed could not be reached after ${maxAttempts} attempts. Check Worker availability and CORS for this hosted page. (${details})`);
+        if (/failed to fetch|networkerror|load failed|browser could not reach the cloudflare candle feed/i.test(details)) {
+            throw new Error(`The shared Cloudflare candle feed could not be reached after ${maxAttempts} attempts. This is a browser/network-layer failure, commonly caused by a Worker outage, CORS origin mismatch, or opening the HTML outside the hosted HTTPS page. Check the browser Console. (${details})`);
         }
         throw new Error(`${intervalKey} candle feed failed after ${maxAttempts} attempts: ${details}`);
     }
