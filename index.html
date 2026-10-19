@@ -555,6 +555,42 @@
         .mtf-overall-value { text-align: left; }
     }
 
+
+
+/* =========================================================
+   DEMO ROBOT — PAPER TRADING ONLY
+========================================================= */
+.demo-robot-card { border: 1px solid #2d3a4b; }
+.demo-robot-top { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; flex-wrap:wrap; }
+.demo-robot-subtitle { color:#9ca3af; font-size:13px; line-height:1.55; margin:8px 0 16px; }
+.demo-robot-badge { display:inline-flex; align-items:center; gap:7px; border:1px solid #4b5563; border-radius:999px; padding:6px 10px; color:#cbd5e1; font-size:11px; font-weight:800; letter-spacing:.04em; white-space:nowrap; }
+.demo-robot-badge::before { content:""; width:7px; height:7px; border-radius:50%; background:#6b7280; display:inline-block; }
+.demo-robot-badge.active { color:#86efac; border-color:#166534; }
+.demo-robot-badge.active::before { background:#22c55e; }
+.demo-robot-badge.managing { color:#fde68a; border-color:#92400e; }
+.demo-robot-badge.managing::before { background:#f59e0b; }
+.demo-robot-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin:12px 0; }
+.demo-robot-stat { background:rgba(15,23,42,.55); border:1px solid #263244; border-radius:10px; padding:12px; min-width:0; }
+.demo-robot-stat .label { margin-bottom:7px; }
+.demo-robot-stat .value { font-size:17px; overflow-wrap:anywhere; }
+.demo-robot-message { border-radius:10px; padding:12px; background:#101827; border:1px solid #263244; color:#d1d5db; font-size:13px; line-height:1.55; margin:12px 0; }
+.demo-robot-controls { display:flex; gap:9px; flex-wrap:wrap; margin:12px 0; }
+.demo-robot-controls button { width:auto; margin:0; }
+.demo-robot-start { background:#166534 !important; }
+.demo-robot-pause { background:#92400e !important; }
+.demo-robot-clear { background:#374151 !important; }
+.demo-robot-log { list-style:none; padding:0; margin:8px 0 0; }
+.demo-robot-log li { display:flex; gap:10px; padding:9px 0; border-bottom:1px solid #253142; font-size:12px; line-height:1.45; }
+.demo-robot-log li:last-child { border-bottom:0; }
+.demo-robot-log-time { color:#9ca3af; min-width:72px; font-variant-numeric:tabular-nums; }
+.demo-robot-log-message { color:#e5e7eb; overflow-wrap:anywhere; }
+.demo-robot-footnote { color:#9ca3af; font-size:11px; line-height:1.5; margin-top:10px; }
+@media (max-width:640px) {
+  .demo-robot-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .demo-robot-stat .value { font-size:15px; }
+  .demo-robot-controls button { flex:1 1 150px; }
+}
+
 </style>
 </head>
 
@@ -739,6 +775,64 @@
                 </div>
             </div>
 
+        </div>
+    </div>
+
+    <!-- DEMO ROBOT: PAPER-TRADING ONLY -->
+    <div class="card demo-robot-card" id="demoRobotCard">
+        <div class="demo-robot-top">
+            <div>
+                <div class="section-title" style="margin-bottom:0;">Demo Robot · Support / Resistance Confirmation</div>
+                <div class="demo-robot-subtitle">
+                    Paper trading only. The robot waits for the dashboard ECI direction and the 1-minute WMA 100/200 trend to agree, watches a confirmed 15-minute swing level, then requires a closed 1-minute rejection candle before recording a simulated entry.
+                </div>
+            </div>
+            <span id="demoRobotBadge" class="demo-robot-badge">DEMO OFF</span>
+        </div>
+
+        <div class="demo-robot-grid">
+            <div class="demo-robot-stat">
+                <div class="label">Nearest Support (15m)</div>
+                <div id="demoRobotSupport" class="value">—</div>
+            </div>
+            <div class="demo-robot-stat">
+                <div class="label">Nearest Resistance (15m)</div>
+                <div id="demoRobotResistance" class="value">—</div>
+            </div>
+            <div class="demo-robot-stat">
+                <div class="label">Dashboard ECI</div>
+                <div id="demoRobotEci" class="value">Waiting</div>
+            </div>
+            <div class="demo-robot-stat">
+                <div class="label">1m WMA Trend</div>
+                <div id="demoRobotTrend" class="value">Waiting</div>
+            </div>
+            <div class="demo-robot-stat">
+                <div class="label">Closed Demo Trades</div>
+                <div id="demoRobotClosed" class="value">0</div>
+            </div>
+            <div class="demo-robot-stat">
+                <div class="label">Net Result</div>
+                <div id="demoRobotNetR" class="value">0.00R</div>
+            </div>
+        </div>
+
+        <div id="demoRobotMessage" class="demo-robot-message" aria-live="polite">
+            Demo robot is off. Start it to monitor market structure. It cannot place real orders.
+        </div>
+        <div id="demoRobotPosition" class="demo-robot-message" style="display:none;"></div>
+
+        <div class="demo-robot-controls">
+            <button id="demoRobotToggle" class="demo-robot-start" type="button">Start Demo Robot</button>
+            <button id="demoRobotClearLog" class="demo-robot-clear" type="button">Clear Log</button>
+        </div>
+
+        <div class="section-title" style="font-size:14px; margin-top:18px;">Demo Activity Log</div>
+        <ul id="demoRobotLog" class="demo-robot-log">
+            <li><span class="demo-robot-log-time">Ready</span><span class="demo-robot-log-message">No trades have been simulated.</span></li>
+        </ul>
+        <div class="demo-robot-footnote">
+            Entry rules: ECI direction must match trend; support/resistance comes from closed 15-minute swing candles; confirmation uses a closed 1-minute candle that touches the level and closes in the reversal direction beyond the previous candle. Demo target model: 50% exits at 2R; the remaining 50% targets 3R with the stop moved to entry after TP1. Quotes are polled, so this is a strategy test harness, not tick-by-tick execution or financial advice. Custom assets are not enabled in this first test.
         </div>
     </div>
 
@@ -3697,6 +3791,559 @@ setInterval(refreshMultiTimeframePanel, 60000);
         } catch (error) { setStatus(error.message, error.status === 401 ? 'error' : 'neutral'); }
         finally { if (button) button.disabled = false; }
     });
+})();
+</script>
+
+<script>
+/* =========================================================
+   DEMO ROBOT — SIMULATION ONLY
+   This code makes read-only GET requests for candle/price data.
+   It contains no trading credentials and sends no exchange orders.
+========================================================= */
+(function () {
+    'use strict';
+
+    const state = {
+        enabled: false,
+        busy: false,
+        activeMarket: null,
+        message: 'Demo robot is off. Start it to monitor market structure.',
+        confirmAll: [],
+        confirmClosed: [],
+        structureClosed: [],
+        lastConfirmFetch: 0,
+        lastStructureFetch: 0,
+        pending: null,
+        position: null,
+        levels: { support: null, resistance: null },
+        trend: null,
+        logs: [],
+        closedTrades: [],
+        wins: 0,
+        losses: 0,
+        netR: 0,
+        cooldownUntil: 0
+    };
+
+    const CONFIRM_INTERVAL_MINUTES = 1;
+    const STRUCTURE_INTERVAL_MINUTES = 15;
+    const CANDLE_LIMIT = 260;
+    const SWING_STRENGTH = 2;
+    const MAX_PENDING_MINUTES = 5;
+    const CONFIRM_REFRESH_MS = 12000;
+    const STRUCTURE_REFRESH_MS = 60000;
+    const ROBOT_POLL_MS = 15000;
+
+    const $ = (id) => document.getElementById(id);
+
+    function marketName(code) {
+        const names = { GOLD: 'Gold', BTC: 'Bitcoin', SILVER: 'Silver', NASDAQ: 'NASDAQ' };
+        return names[code] || code || 'Unknown market';
+    }
+
+    function directionFromSignal(signal) {
+        if (signal === 'Buy Long') return 'long';
+        if (signal === 'Sell Short') return 'short';
+        return null;
+    }
+
+    function fmtR(value) {
+        const n = Number(value);
+        return `${n > 0 ? '+' : ''}${n.toFixed(2)}R`;
+    }
+
+    function logEvent(message) {
+        state.logs.unshift({ time: new Date(), message: String(message) });
+        state.logs = state.logs.slice(0, 12);
+        renderLog();
+    }
+
+    function renderLog() {
+        const list = $('demoRobotLog');
+        if (!list) return;
+        list.replaceChildren();
+        if (!state.logs.length) {
+            const li = document.createElement('li');
+            const time = document.createElement('span');
+            const message = document.createElement('span');
+            time.className = 'demo-robot-log-time';
+            message.className = 'demo-robot-log-message';
+            time.textContent = 'Ready';
+            message.textContent = 'Log cleared. No new events yet.';
+            li.append(time, message);
+            list.append(li);
+            return;
+        }
+        for (const item of state.logs) {
+            const li = document.createElement('li');
+            const time = document.createElement('span');
+            const message = document.createElement('span');
+            time.className = 'demo-robot-log-time';
+            message.className = 'demo-robot-log-message';
+            time.textContent = item.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            message.textContent = item.message;
+            li.append(time, message);
+            list.append(li);
+        }
+    }
+
+    function resetMarketCaches(market) {
+        state.activeMarket = market;
+        state.confirmAll = [];
+        state.confirmClosed = [];
+        state.structureClosed = [];
+        state.lastConfirmFetch = 0;
+        state.lastStructureFetch = 0;
+        state.pending = null;
+        state.levels = { support: null, resistance: null };
+        state.trend = null;
+    }
+
+    function setMessage(message) {
+        state.message = String(message || 'Waiting for data…');
+    }
+
+    function renderUi() {
+        const badge = $('demoRobotBadge');
+        const toggle = $('demoRobotToggle');
+        const message = $('demoRobotMessage');
+        const positionEl = $('demoRobotPosition');
+        if (badge) {
+            badge.className = 'demo-robot-badge' + (state.enabled ? ' active' : (state.position ? ' managing' : ''));
+            badge.textContent = state.enabled ? 'DEMO ON · NO ORDERS' : (state.position ? 'MANAGING PAPER TRADE' : 'DEMO OFF');
+        }
+        if (toggle) {
+            toggle.textContent = state.enabled ? 'Pause New Entries' : (state.position ? 'Resume New Entries' : 'Start Demo Robot');
+            toggle.className = state.enabled ? 'demo-robot-pause' : 'demo-robot-start';
+        }
+        if (message) message.textContent = state.message;
+
+        if ($('demoRobotSupport')) $('demoRobotSupport').textContent = state.levels.support ? formatPrice(state.levels.support.price) : '—';
+        if ($('demoRobotResistance')) $('demoRobotResistance').textContent = state.levels.resistance ? formatPrice(state.levels.resistance.price) : '—';
+        if ($('demoRobotEci')) $('demoRobotEci').textContent = lastScalpSignal || 'No active signal';
+        if ($('demoRobotTrend')) $('demoRobotTrend').textContent = state.trend ? state.trend.label : 'Unavailable';
+        if ($('demoRobotClosed')) $('demoRobotClosed').textContent = String(state.closedTrades.length);
+        if ($('demoRobotNetR')) {
+            $('demoRobotNetR').textContent = fmtR(state.netR);
+            $('demoRobotNetR').style.color = state.netR > 0 ? '#22c55e' : (state.netR < 0 ? '#ef4444' : '');
+        }
+
+        if (positionEl) {
+            if (!state.position) {
+                positionEl.style.display = 'none';
+                positionEl.textContent = '';
+            } else {
+                const p = state.position;
+                positionEl.style.display = 'block';
+                const side = p.direction === 'long' ? 'PAPER LONG' : 'PAPER SHORT';
+                const runner = p.hitTP1 ? `TP1 reached; runner stop: ${formatPrice(p.activeStop)}` : `Stop: ${formatPrice(p.activeStop)}`;
+                positionEl.textContent = `${side} · ${marketName(p.market)} · Entry ${formatPrice(p.entry)} · ${runner} · TP1 ${formatPrice(p.tp1)} · TP2 ${formatPrice(p.tp2)}`;
+            }
+        }
+    }
+
+    async function fetchPriceForMarket(market) {
+        const params = new URLSearchParams({ market, price: '1', t: String(Date.now()) });
+        const response = await fetch(`${CLOUDFLARE_API}?${params.toString()}`, {
+            cache: 'no-store',
+            headers: { 'Accept': 'application/json' }
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload?.error) {
+            throw new Error(payload?.message || payload?.error || `Price request failed (${response.status})`);
+        }
+        const price = Number(payload?.price);
+        if (!Number.isFinite(price) || price <= 0) throw new Error('Price feed returned an invalid value.');
+        return price;
+    }
+
+    function averageTrueRange(candles, period = 14) {
+        if (!Array.isArray(candles) || candles.length < period + 1) return null;
+        const trs = [];
+        const start = Math.max(1, candles.length - period);
+        for (let i = start; i < candles.length; i++) {
+            const c = candles[i];
+            const prevClose = candles[i - 1][4];
+            trs.push(Math.max(c[2] - c[3], Math.abs(c[2] - prevClose), Math.abs(c[3] - prevClose)));
+        }
+        if (!trs.length) return null;
+        return trs.reduce((sum, v) => sum + v, 0) / trs.length;
+    }
+
+    function calcTrend(closedCandles) {
+        const closes = closedCandles.map(c => Number(c[4])).filter(Number.isFinite);
+        const wma100 = calculateWMA(closes, 100);
+        const wma200 = calculateWMA(closes, 200);
+        if (!Number.isFinite(wma100) || !Number.isFinite(wma200)) {
+            return { direction: 'neutral', label: 'Need 200 closed 1m bars', wma100, wma200 };
+        }
+        if (wma100 > wma200) return { direction: 'long', label: 'BULLISH · 100 > 200', wma100, wma200 };
+        if (wma100 < wma200) return { direction: 'short', label: 'BEARISH · 100 < 200', wma100, wma200 };
+        return { direction: 'neutral', label: 'NEUTRAL', wma100, wma200 };
+    }
+
+    function findSwingLevels(closedCandles, price, tolerance) {
+        const supports = [];
+        const resistances = [];
+        const strength = SWING_STRENGTH;
+        if (!Array.isArray(closedCandles) || closedCandles.length < strength * 2 + 10 || !Number.isFinite(price)) {
+            return { support: null, resistance: null };
+        }
+
+        for (let i = strength; i < closedCandles.length - strength; i++) {
+            const c = closedCandles[i];
+            let isSwingLow = true;
+            let isSwingHigh = true;
+            for (let j = 1; j <= strength; j++) {
+                if (c[3] >= closedCandles[i - j][3] || c[3] >= closedCandles[i + j][3]) isSwingLow = false;
+                if (c[2] <= closedCandles[i - j][2] || c[2] <= closedCandles[i + j][2]) isSwingHigh = false;
+            }
+            if (isSwingLow && c[3] <= price + tolerance) supports.push({ price: c[3], time: c[0], type: 'Support' });
+            if (isSwingHigh && c[2] >= price - tolerance) resistances.push({ price: c[2], time: c[0], type: 'Resistance' });
+        }
+        supports.sort((a, b) => Math.abs(price - a.price) - Math.abs(price - b.price));
+        resistances.sort((a, b) => Math.abs(a.price - price) - Math.abs(b.price - price));
+        return { support: supports[0] || null, resistance: resistances[0] || null };
+    }
+
+    async function fetchDemoBars(market, interval, limit) {
+        // Reuse the dashboard's authenticated-by-origin read-only candle feed.
+        // The Worker endpoint is queried only with GET requests; no order endpoint is used.
+        const params = new URLSearchParams({
+            market,
+            candles: '1',
+            interval: String(interval),
+            limit: String(limit),
+            t: String(Date.now())
+        });
+        const response = await fetch(`${CLOUDFLARE_API}?${params.toString()}`, {
+            cache: 'no-store',
+            headers: { 'Accept': 'application/json' }
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload?.error) {
+            throw new Error(payload?.message || payload?.error || `Candle request failed (${response.status})`);
+        }
+        if (!Array.isArray(payload?.bars) || !payload.bars.length) {
+            throw new Error(`No ${interval}-minute candles were returned.`);
+        }
+        return payload.bars;
+    }
+
+    function resetPending(reason) {
+        if (state.pending) logEvent(`Setup cancelled: ${reason}`);
+        state.pending = null;
+    }
+
+    function openPaperPosition(direction, level, confirmCandle, atr, tolerance, entryPrice, market) {
+        if (!Number.isFinite(entryPrice) || entryPrice <= 0) {
+            setMessage('Live price is unavailable; no demo entry recorded.');
+            return false;
+        }
+        const maxChase = tolerance * 2.5;
+        if (direction === 'long' && (entryPrice < level.price || entryPrice - level.price > maxChase)) {
+            setMessage('Confirmation candle appeared, but price moved too far from support. No chasing; waiting for another setup.');
+            logEvent('No entry: confirmation was valid, but price had moved too far from support.');
+            return false;
+        }
+        if (direction === 'short' && (entryPrice > level.price || level.price - entryPrice > maxChase)) {
+            setMessage('Confirmation candle appeared, but price moved too far from resistance. No chasing; waiting for another setup.');
+            logEvent('No entry: confirmation was valid, but price had moved too far from resistance.');
+            return false;
+        }
+
+        const buffer = Math.max((Number.isFinite(atr) ? atr : 0) * 0.25, entryPrice * 0.00004);
+        const structuralStop = direction === 'long'
+            ? Math.min(level.price, confirmCandle[3]) - buffer
+            : Math.max(level.price, confirmCandle[2]) + buffer;
+        const dashboardStop = Number(scalpStop);
+        const dashboardStopValid = Number.isFinite(dashboardStop) &&
+            (direction === 'long' ? dashboardStop < entryPrice : dashboardStop > entryPrice);
+        // Use the wider of the structural stop and the dashboard ECI stop when valid.
+        const stop = dashboardStopValid
+            ? (direction === 'long' ? Math.min(structuralStop, dashboardStop) : Math.max(structuralStop, dashboardStop))
+            : structuralStop;
+        const risk = direction === 'long' ? entryPrice - stop : stop - entryPrice;
+        if (!Number.isFinite(risk) || risk <= 0) {
+            setMessage('Stop placement is invalid for this setup. No demo entry recorded.');
+            logEvent('No entry: could not calculate a valid stop beyond structure.');
+            return false;
+        }
+
+        const sign = direction === 'long' ? 1 : -1;
+        const position = {
+            market,
+            direction,
+            entry: entryPrice,
+            initialStop: stop,
+            activeStop: stop,
+            risk,
+            tp1: entryPrice + sign * risk * 2,
+            tp2: entryPrice + sign * risk * 3,
+            hitTP1: false,
+            realizedR: 0,
+            openedAt: new Date(),
+            level: level.price,
+            confirmTime: confirmCandle[0]
+        };
+        state.position = position;
+        state.pending = null;
+        setMessage(`Paper ${direction.toUpperCase()} opened after confirmation at ${formatPrice(entryPrice)}. Monitoring simulated stop and targets.`);
+        logEvent(`${marketName(market)} PAPER ${direction.toUpperCase()} opened at ${formatPrice(entryPrice)}; SL ${formatPrice(stop)}, TP1 ${formatPrice(position.tp1)}, TP2 ${formatPrice(position.tp2)}.`);
+        renderUi();
+        return true;
+    }
+
+    function closePaperPosition(outcomeR, reason, markPrice) {
+        const p = state.position;
+        if (!p) return;
+        const closed = {
+            market: p.market,
+            direction: p.direction,
+            entry: p.entry,
+            exit: markPrice,
+            outcomeR,
+            reason,
+            openedAt: p.openedAt,
+            closedAt: new Date()
+        };
+        state.closedTrades.push(closed);
+        state.netR += outcomeR;
+        if (outcomeR > 0) state.wins++;
+        else if (outcomeR < 0) state.losses++;
+        state.position = null;
+        state.cooldownUntil = Date.now() + 60000;
+        setMessage(`Paper trade closed: ${reason}. Result ${fmtR(outcomeR)}. A one-minute cooldown is active.`);
+        logEvent(`${marketName(p.market)} PAPER trade closed at ${formatPrice(markPrice)}: ${reason}, ${fmtR(outcomeR)}.`);
+    }
+
+    function managePaperPosition(markPrice) {
+        const p = state.position;
+        if (!p || !Number.isFinite(markPrice) || markPrice <= 0) return;
+        const stopHit = p.direction === 'long' ? markPrice <= p.activeStop : markPrice >= p.activeStop;
+        if (stopHit) {
+            const outcome = p.hitTP1 ? p.realizedR : -1;
+            const reason = p.hitTP1 ? 'runner stopped at breakeven after TP1' : 'initial stop reached';
+            closePaperPosition(outcome, reason, markPrice);
+            return;
+        }
+
+        const tp1Hit = p.direction === 'long' ? markPrice >= p.tp1 : markPrice <= p.tp1;
+        if (!p.hitTP1 && tp1Hit) {
+            p.hitTP1 = true;
+            p.realizedR = 1; // Half of the simulated position exits at +2R.
+            p.activeStop = p.entry; // Remaining half moves to breakeven.
+            logEvent(`TP1 reached: simulated 50% exit at +2R; runner stop moved to entry ${formatPrice(p.entry)}.`);
+            setMessage('TP1 reached. Half the paper position is booked at +2R; the remaining half has its stop at entry.');
+        }
+
+        const tp2Hit = p.direction === 'long' ? markPrice >= p.tp2 : markPrice <= p.tp2;
+        if (p.hitTP1 && tp2Hit) {
+            closePaperPosition(2.5, 'TP2 reached after TP1', markPrice);
+        }
+    }
+
+    function currentCandleStartTime() {
+        if (!state.confirmAll.length) return null;
+        const latest = state.confirmAll[state.confirmAll.length - 1];
+        // When the feed only provides closed bars, point at the next 1-minute bar.
+        return latest[6] === true ? latest[0] : latest[0] + CONFIRM_INTERVAL_MINUTES * 60000;
+    }
+
+    function candleConfirms(direction, candle, previous, level, tolerance) {
+        if (!candle || !previous || !level) return false;
+        if (direction === 'long') {
+            return candle[3] <= level.price + tolerance &&
+                candle[4] >= level.price &&
+                candle[4] > candle[1] &&
+                candle[4] > previous[2];
+        }
+        return candle[2] >= level.price - tolerance &&
+            candle[4] <= level.price &&
+            candle[4] < candle[1] &&
+            candle[4] < previous[3];
+    }
+
+    async function cycle() {
+        if (state.busy) return;
+        if (!state.enabled && !state.position) {
+            renderUi();
+            return;
+        }
+        state.busy = true;
+        try {
+            // Manage an existing paper position first, even if new entries were paused.
+            if (state.position) {
+                let mark = null;
+                if (selectedMarket === state.position.market && Number.isFinite(currentPrice) && currentPrice > 0) {
+                    mark = currentPrice;
+                } else {
+                    mark = await fetchPriceForMarket(state.position.market);
+                }
+                managePaperPosition(mark);
+                if (state.position || !state.enabled) return;
+            }
+
+            if (!state.enabled) return;
+            if (String(selectedMarket).startsWith('CUSTOM:')) {
+                setMessage('Custom assets are disabled in this first demo version. Select Gold, BTC, Silver, or NASDAQ.');
+                return;
+            }
+
+            const market = selectedMarket;
+            if (state.activeMarket !== market) {
+                const previousMarket = state.activeMarket;
+                resetMarketCaches(market);
+                if (previousMarket) logEvent(`Dashboard market changed to ${marketName(market)}; robot data cache reset.`);
+            }
+
+            const now = Date.now();
+            if (!state.confirmAll.length || now - state.lastConfirmFetch >= CONFIRM_REFRESH_MS) {
+                const raw1m = await fetchDemoBars(market, CONFIRM_INTERVAL_MINUTES, CANDLE_LIMIT);
+                if (market !== selectedMarket) return;
+                state.confirmAll = marketBarsToCandles(raw1m, CONFIRM_INTERVAL_MINUTES);
+                state.confirmClosed = state.confirmAll.filter(c => c[6] !== true);
+                state.lastConfirmFetch = Date.now();
+            }
+            if (!state.structureClosed.length || Date.now() - state.lastStructureFetch >= STRUCTURE_REFRESH_MS) {
+                const raw15m = await fetchDemoBars(market, STRUCTURE_INTERVAL_MINUTES, CANDLE_LIMIT);
+                if (market !== selectedMarket) return;
+                const all15m = marketBarsToCandles(raw15m, STRUCTURE_INTERVAL_MINUTES);
+                state.structureClosed = all15m.filter(c => c[6] !== true);
+                state.lastStructureFetch = Date.now();
+            }
+
+            const price = selectedMarket === market && Number.isFinite(currentPrice) && currentPrice > 0
+                ? currentPrice
+                : null;
+            if (!Number.isFinite(price)) {
+                setMessage('Waiting for a valid live price from the dashboard feed. No entry can be recorded.');
+                return;
+            }
+            if (state.confirmClosed.length < 200) {
+                state.trend = { direction: 'neutral', label: `Need 200 closed 1m bars (${state.confirmClosed.length} available)` };
+                setMessage('Waiting for enough closed 1-minute candles to calculate WMA 100/200.');
+                return;
+            }
+
+            const trend = calcTrend(state.confirmClosed);
+            state.trend = trend;
+            const atr = averageTrueRange(state.confirmClosed, 14);
+            const tolerance = Math.max(price * 0.00025, Number.isFinite(atr) ? atr * 0.35 : 0);
+            const levels = findSwingLevels(state.structureClosed, price, tolerance);
+            state.levels = levels;
+
+            const signalDirection = directionFromSignal(lastScalpSignal);
+            const latestClosed = state.confirmClosed[state.confirmClosed.length - 1];
+            const previousClosed = state.confirmClosed[state.confirmClosed.length - 2];
+
+            if (state.pending) {
+                const pending = state.pending;
+                if (pending.market !== market) {
+                    resetPending('market changed');
+                } else if (Date.now() - pending.startedAt > MAX_PENDING_MINUTES * 60000) {
+                    resetPending('no confirmation within five minutes');
+                } else if (signalDirection !== pending.direction) {
+                    resetPending('dashboard ECI direction no longer matches the setup');
+                } else if (trend.direction !== 'neutral' && trend.direction !== pending.direction) {
+                    resetPending('1-minute WMA trend no longer agrees');
+                } else if (pending.direction === 'long' && price < pending.level.price - pending.tolerance * 1.5) {
+                    resetPending('price broke below support');
+                } else if (pending.direction === 'short' && price > pending.level.price + pending.tolerance * 1.5) {
+                    resetPending('price broke above resistance');
+                } else if (latestClosed && latestClosed[0] >= pending.triggerCandleTime && latestClosed[0] !== pending.lastEvaluatedTime) {
+                    pending.lastEvaluatedTime = latestClosed[0];
+                    if (candleConfirms(pending.direction, latestClosed, previousClosed, pending.level, pending.tolerance)) {
+                        const opened = openPaperPosition(pending.direction, pending.level, latestClosed, atr, pending.tolerance, price, market);
+                        if (!opened) state.pending = null;
+                    } else {
+                        setMessage(`Level touched at ${formatPrice(pending.level.price)}. Waiting for a closed 1-minute confirmation candle.`);
+                    }
+                } else {
+                    setMessage(`Setup detected at ${formatPrice(pending.level.price)}. Waiting for the 1-minute candle to close with confirmation.`);
+                }
+            } else {
+                const aligned = signalDirection && signalDirection === trend.direction;
+                if (Date.now() < state.cooldownUntil) {
+                    setMessage('Cooling down after the last paper trade. Waiting before looking for another setup.');
+                } else if (!signalDirection) {
+                    setMessage('Waiting for an active Buy Long or Sell Short signal from the dashboard ECI.');
+                } else if (trend.direction === 'neutral') {
+                    setMessage('Waiting for a clear 1-minute WMA 100/200 trend.');
+                } else if (!aligned) {
+                    setMessage(`No entry: dashboard ECI is ${lastScalpSignal}, but the 1-minute WMA trend is ${trend.label}. Direction must agree.`);
+                } else {
+                    const level = signalDirection === 'long' ? levels.support : levels.resistance;
+                    if (!level) {
+                        setMessage(`No confirmed ${signalDirection === 'long' ? 'support' : 'resistance'} is available in closed 15-minute swing candles. No level is invented.`);
+                    } else if (Math.abs(price - level.price) <= tolerance) {
+                        const triggerTime = currentCandleStartTime();
+                        if (triggerTime === null) {
+                            setMessage('Price reached the structure level, but the current 1-minute candle time is unavailable.');
+                        } else {
+                            state.pending = {
+                                market,
+                                direction: signalDirection,
+                                level,
+                                tolerance,
+                                atr,
+                                startedAt: Date.now(),
+                                triggerCandleTime: triggerTime,
+                                lastEvaluatedTime: null
+                            };
+                            logEvent(`${marketName(market)} touched ${signalDirection === 'long' ? 'support' : 'resistance'} at ${formatPrice(level.price)}. Waiting for a closed 1-minute confirmation candle.`);
+                            setMessage(`Price reached ${signalDirection === 'long' ? 'support' : 'resistance'} at ${formatPrice(level.price)}. Waiting for a closed 1-minute confirmation candle.`);
+                        }
+                    } else {
+                        setMessage(`Aligned ${signalDirection.toUpperCase()} conditions. Waiting for price to test ${signalDirection === 'long' ? 'support' : 'resistance'} (${formatPrice(level.price)}).`);
+                    }
+                }
+            }
+        } catch (error) {
+            setMessage(`Demo data error: ${error?.message || String(error)} No real orders were sent.`);
+        } finally {
+            state.busy = false;
+            renderUi();
+        }
+    }
+
+    function toggleRobot() {
+        if (!state.enabled) {
+            if (String(selectedMarket).startsWith('CUSTOM:')) {
+                setMessage('Custom assets are not enabled in this first demo version. Select a built-in market.');
+                renderUi();
+                return;
+            }
+            state.enabled = true;
+            if (!state.position) resetMarketCaches(selectedMarket);
+            setMessage(`Demo robot active on ${marketName(selectedMarket)}. Read-only market data only; no orders are sent.`);
+            logEvent(`Demo robot started on ${marketName(selectedMarket)}. Paper-trading mode only.`);
+            cycle();
+        } else {
+            state.enabled = false;
+            resetPending('new entries paused by user');
+            setMessage(state.position
+                ? 'New entries paused. The existing paper position will continue to be monitored.'
+                : 'Demo robot paused. No new setups will be scanned.');
+            logEvent('New paper entries paused by user.');
+        }
+        renderUi();
+    }
+
+    function clearLog() {
+        state.logs = [];
+        renderLog();
+        logEvent('Log cleared. Demo trade counters and any open paper position were not changed.');
+    }
+
+    const toggle = $('demoRobotToggle');
+    if (toggle) toggle.addEventListener('click', toggleRobot);
+    const clear = $('demoRobotClearLog');
+    if (clear) clear.addEventListener('click', clearLog);
+
+    renderUi();
+    renderLog();
+    setInterval(cycle, ROBOT_POLL_MS);
 })();
 </script>
 
