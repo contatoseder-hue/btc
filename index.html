@@ -548,7 +548,7 @@
     .btc-timeframe-control { max-width: 420px; margin: -4px auto 16px; padding: 12px 14px; border: 1px solid rgba(96, 165, 250, .42); border-radius: 10px; background: rgba(38, 110, 170, .10); }
     .btc-timeframe-control .label { margin-bottom: 7px; }
     .btc-timeframe-note { margin-top: 7px; color: #91a0ae; font-size: 11px; line-height: 1.4; }
-    .btc-timeframe-control  { width: 100%; }
+    .btc-timeframe-control select { width: 100%; }
     @media (max-width: 600px) {
         .mtf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .mtf-overall { align-items: flex-start; flex-direction: column; gap: 6px; }
@@ -610,9 +610,38 @@
   .demo-position-pnl { font-size:22px; }
 }
 
-</style>⚠️ **DASHBOARD UNDER DEVELOPMENT**
 
-Trading signals and demo results are experimental and may be inaccurate.
+
+/* Public beta notice displayed immediately below the demo robot. */
+.public-beta-notice {
+    margin: 12px 0 18px;
+    padding: 15px 17px;
+    border: 1px solid rgba(245, 158, 11, .42);
+    border-left: 4px solid #f59e0b;
+    border-radius: 10px;
+    background: rgba(120, 83, 16, .12);
+    color: #d1d5db;
+}
+.public-beta-notice-title {
+    margin: 0 0 7px;
+    color: #fbbf24;
+    font-size: 13px;
+    line-height: 1.4;
+    font-weight: 900;
+    letter-spacing: .035em;
+}
+.public-beta-notice p {
+    margin: 0;
+    color: #cbd5e1;
+    font-size: 12px;
+    line-height: 1.6;
+}
+@media (max-width: 640px) {
+    .public-beta-notice { padding: 13px 14px; }
+    .public-beta-notice-title { font-size: 12px; }
+}
+
+</style>
 </head>
 
 <body>
@@ -622,7 +651,7 @@ Trading signals and demo results are experimental and may be inaccurate.
     <!-- HEADER -->
     <div class="card header">
         <div style="max-width:420px;margin:0 auto 16px;">
-            <div class="label" style="text-align:left;">Select Market{DASHBOARD STILL BEING DEVELOPED]</div>
+            <div class="label" style="text-align:left;">Select Market</div>
             <select id="marketSelect" onchange="switchMarket(this.value)">
                 <option value="GOLD" selected>Gold / USD (XAU/USD)</option>
                 <option value="BTC">Bitcoin / USD (BTC/USD)</option>
@@ -881,6 +910,14 @@ Trading signals and demo results are experimental and may be inaccurate.
             Entry rules: ECI direction must match trend; support/resistance comes from closed 15-minute swing candles; confirmation uses a closed 1-minute candle that touches the level and closes in the reversal direction beyond the previous candle. Demo sizing assumes $10 risk at the initial stop; open and closed USD PnL are estimates for a linear position and exclude fees, spread, slippage and instrument-specific contract sizing. Demo target model: 50% exits at 2R; the remaining 50% targets 3R with the stop moved to entry after TP1. Quotes are polled about every 15 seconds, not tick-by-tick. Paper trading only; no exchange orders are sent. Custom assets are not enabled in this first test.
         </div>
     </div>
+
+    <!-- PUBLIC BETA NOTICE: positioned directly below the demo robot -->
+    <section class="card public-beta-notice" aria-label="Public beta notice">
+        <div class="public-beta-notice-title">⚠️ PUBLIC BETA · UNDER DEVELOPMENT</div>
+        <p>
+            This dashboard is actively being developed. Signals and market-structure levels are experimental and may be inaccurate, delayed, or temporarily unavailable. The demo robot currently supports paper trading only and does not place real orders.
+        </p>
+    </section>
 
     <!-- LIVE ECI SIGNAL ACCURACY -->
     <div class="card accuracy-card">
