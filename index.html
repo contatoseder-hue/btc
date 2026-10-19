@@ -1,4 +1,4 @@
-
+2
 
 <!DOCTYPE html>
 <html lang="en">
@@ -585,10 +585,29 @@
 .demo-robot-log-time { color:#9ca3af; min-width:72px; font-variant-numeric:tabular-nums; }
 .demo-robot-log-message { color:#e5e7eb; overflow-wrap:anywhere; }
 .demo-robot-footnote { color:#9ca3af; font-size:11px; line-height:1.5; margin-top:10px; }
+.demo-position-card { display:none; margin:12px 0; padding:15px; border:1px solid #344256; border-radius:12px; background:linear-gradient(145deg,rgba(15,23,42,.96),rgba(17,24,39,.96)); }
+.demo-position-header { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
+.demo-position-title { font-size:14px; font-weight:900; letter-spacing:.04em; color:#f3f4f6; }
+.demo-position-subtitle { margin-top:5px; color:#9ca3af; font-size:12px; }
+.demo-position-pnl-wrap { text-align:right; margin-left:auto; }
+.demo-position-pnl-label { color:#9ca3af; font-size:11px; margin-bottom:4px; }
+.demo-position-pnl { font-size:25px; font-weight:900; font-variant-numeric:tabular-nums; line-height:1.15; }
+.demo-position-pnl.positive { color:#22c55e; }
+.demo-position-pnl.negative { color:#ef4444; }
+.demo-position-pnl.neutral { color:#d1d5db; }
+.demo-position-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; }
+.demo-position-stat { min-width:0; padding:10px; background:rgba(2,6,23,.5); border:1px solid #263244; border-radius:9px; }
+.demo-position-stat-label { color:#9ca3af; font-size:11px; margin-bottom:6px; }
+.demo-position-stat-value { color:#f3f4f6; font-size:15px; font-weight:800; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+.demo-position-note { margin-top:10px; color:#9ca3af; font-size:11px; line-height:1.45; }
+.demo-position-side.long { color:#4ade80; }
+.demo-position-side.short { color:#f87171; }
 @media (max-width:640px) {
   .demo-robot-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .demo-robot-stat .value { font-size:15px; }
   .demo-robot-controls button { flex:1 1 150px; }
+  .demo-position-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .demo-position-pnl { font-size:22px; }
 }
 
 </style>
@@ -815,12 +834,37 @@
                 <div class="label">Net Result</div>
                 <div id="demoRobotNetR" class="value">0.00R</div>
             </div>
+            <div class="demo-robot-stat">
+                <div class="label">Closed PnL (USD)</div>
+                <div id="demoRobotNetPnl" class="value">$0.00</div>
+            </div>
         </div>
 
         <div id="demoRobotMessage" class="demo-robot-message" aria-live="polite">
             Demo robot is off. Start it to monitor market structure. It cannot place real orders.
         </div>
-        <div id="demoRobotPosition" class="demo-robot-message" style="display:none;"></div>
+
+        <div id="demoRobotPosition" class="demo-position-card" style="display:none;" aria-live="polite">
+            <div class="demo-position-header">
+                <div>
+                    <div id="demoPositionTitle" class="demo-position-title">OPEN PAPER POSITION</div>
+                    <div id="demoPositionSubtitle" class="demo-position-subtitle">Waiting for simulated position data…</div>
+                </div>
+                <div class="demo-position-pnl-wrap">
+                    <div class="demo-position-pnl-label">Total Open PnL · USD</div>
+                    <div id="demoPositionPnl" class="demo-position-pnl neutral">$0.00</div>
+                </div>
+            </div>
+            <div class="demo-position-grid">
+                <div class="demo-position-stat"><div class="demo-position-stat-label">Current Mark</div><div id="demoPositionMark" class="demo-position-stat-value">—</div></div>
+                <div class="demo-position-stat"><div class="demo-position-stat-label">Entry Price</div><div id="demoPositionEntry" class="demo-position-stat-value">—</div></div>
+                <div class="demo-position-stat"><div class="demo-position-stat-label">Simulated Quantity</div><div id="demoPositionQty" class="demo-position-stat-value">—</div></div>
+                <div class="demo-position-stat"><div class="demo-position-stat-label">Active Stop Loss</div><div id="demoPositionStop" class="demo-position-stat-value">—</div></div>
+                <div class="demo-position-stat"><div class="demo-position-stat-label">Take Profit 1</div><div id="demoPositionTp1" class="demo-position-stat-value">—</div></div>
+                <div class="demo-position-stat"><div class="demo-position-stat-label">Take Profit 2</div><div id="demoPositionTp2" class="demo-position-stat-value">—</div></div>
+            </div>
+            <div id="demoPositionPnlBreakdown" class="demo-position-note">PnL is calculated from the simulated quantity. No exchange order is placed.</div>
+        </div>
 
         <div class="demo-robot-controls">
             <button id="demoRobotToggle" class="demo-robot-start" type="button">Start Demo Robot</button>
@@ -832,7 +876,7 @@
             <li><span class="demo-robot-log-time">Ready</span><span class="demo-robot-log-message">No trades have been simulated.</span></li>
         </ul>
         <div class="demo-robot-footnote">
-            Entry rules: ECI direction must match trend; support/resistance comes from closed 15-minute swing candles; confirmation uses a closed 1-minute candle that touches the level and closes in the reversal direction beyond the previous candle. Demo target model: 50% exits at 2R; the remaining 50% targets 3R with the stop moved to entry after TP1. Quotes are polled, so this is a strategy test harness, not tick-by-tick execution or financial advice. Custom assets are not enabled in this first test.
+            Entry rules: ECI direction must match trend; support/resistance comes from closed 15-minute swing candles; confirmation uses a closed 1-minute candle that touches the level and closes in the reversal direction beyond the previous candle. Demo sizing assumes $10 risk at the initial stop; open and closed USD PnL are estimates for a linear position and exclude fees, spread, slippage and instrument-specific contract sizing. Demo target model: 50% exits at 2R; the remaining 50% targets 3R with the stop moved to entry after TP1. Quotes are polled about every 15 seconds, not tick-by-tick. Paper trading only; no exchange orders are sent. Custom assets are not enabled in this first test.
         </div>
     </div>
 
@@ -3822,6 +3866,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
         wins: 0,
         losses: 0,
         netR: 0,
+        netPnlUsd: 0,
         cooldownUntil: 0
     };
 
@@ -3833,6 +3878,9 @@ setInterval(refreshMultiTimeframePanel, 60000);
     const CONFIRM_REFRESH_MS = 12000;
     const STRUCTURE_REFRESH_MS = 60000;
     const ROBOT_POLL_MS = 15000;
+    // Transparent paper-sizing assumption: approximate $10 loss if the initial stop is hit.
+    // This is simulated linear USD PnL, not exchange-specific contract sizing.
+    const DEMO_RISK_USD = 10;
 
     const $ = (id) => document.getElementById(id);
 
@@ -3850,6 +3898,19 @@ setInterval(refreshMultiTimeframePanel, 60000);
     function fmtR(value) {
         const n = Number(value);
         return `${n > 0 ? '+' : ''}${n.toFixed(2)}R`;
+    }
+
+    function fmtUsdPnl(value) {
+        const n = Number(value);
+        if (!Number.isFinite(n)) return '—';
+        const sign = n > 0 ? '+' : (n < 0 ? '−' : '');
+        return `${sign}$${Math.abs(n).toFixed(2)}`;
+    }
+
+    function fmtQuantity(value) {
+        const n = Number(value);
+        if (!Number.isFinite(n)) return '—';
+        return n.toLocaleString(undefined, { maximumFractionDigits: 8 });
     }
 
     function logEvent(message) {
@@ -3928,16 +3989,44 @@ setInterval(refreshMultiTimeframePanel, 60000);
             $('demoRobotNetR').style.color = state.netR > 0 ? '#22c55e' : (state.netR < 0 ? '#ef4444' : '');
         }
 
+        const closedPnlEl = $('demoRobotNetPnl');
+        if (closedPnlEl) {
+            closedPnlEl.textContent = fmtUsdPnl(state.netPnlUsd);
+            closedPnlEl.style.color = state.netPnlUsd > 0 ? '#22c55e' : (state.netPnlUsd < 0 ? '#ef4444' : '');
+        }
+
         if (positionEl) {
             if (!state.position) {
                 positionEl.style.display = 'none';
-                positionEl.textContent = '';
             } else {
                 const p = state.position;
+                const mark = Number.isFinite(p.markPrice) && p.markPrice > 0 ? p.markPrice : p.entry;
+                const remainingQty = Number.isFinite(p.remainingQuantity) ? p.remainingQuantity : p.quantity;
+                const floatingPnl = (p.direction === 'long' ? mark - p.entry : p.entry - mark) * remainingQty;
+                const totalOpenPnl = (Number(p.realizedPnlUsd) || 0) + floatingPnl;
+                const pnlEl = $('demoPositionPnl');
+                const titleEl = $('demoPositionTitle');
+                const subtitleEl = $('demoPositionSubtitle');
+                if (titleEl) {
+                    titleEl.textContent = p.direction === 'long' ? 'OPEN PAPER POSITION · LONG' : 'OPEN PAPER POSITION · SHORT';
+                    titleEl.className = 'demo-position-title demo-position-side ' + p.direction;
+                }
+                if (subtitleEl) subtitleEl.textContent = `${marketName(p.market)} · ${p.hitTP1 ? 'TP1 reached · 50% closed' : 'Position open'} · Mark refreshes about every 15 seconds`;
+                if (pnlEl) {
+                    pnlEl.textContent = fmtUsdPnl(totalOpenPnl);
+                    pnlEl.className = 'demo-position-pnl ' + (totalOpenPnl > 0 ? 'positive' : (totalOpenPnl < 0 ? 'negative' : 'neutral'));
+                }
+                if ($('demoPositionMark')) $('demoPositionMark').textContent = formatPrice(mark);
+                if ($('demoPositionEntry')) $('demoPositionEntry').textContent = formatPrice(p.entry);
+                if ($('demoPositionQty')) $('demoPositionQty').textContent = fmtQuantity(remainingQty) + (p.hitTP1 ? ' left' : '');
+                if ($('demoPositionStop')) $('demoPositionStop').textContent = formatPrice(p.activeStop);
+                if ($('demoPositionTp1')) $('demoPositionTp1').textContent = p.hitTP1 ? 'HIT ✓' : formatPrice(p.tp1);
+                if ($('demoPositionTp2')) $('demoPositionTp2').textContent = formatPrice(p.tp2);
+                if ($('demoPositionPnlBreakdown')) {
+                    const realized = Number(p.realizedPnlUsd) || 0;
+                    $('demoPositionPnlBreakdown').textContent = `Assumed risk: $${p.riskUsd.toFixed(2)} at the initial stop · Realized from partial exits: ${fmtUsdPnl(realized)} · Floating PnL on remaining quantity: ${fmtUsdPnl(floatingPnl)}. Estimate excludes fees, spread, slippage and exchange contract specifications.`;
+                }
                 positionEl.style.display = 'block';
-                const side = p.direction === 'long' ? 'PAPER LONG' : 'PAPER SHORT';
-                const runner = p.hitTP1 ? `TP1 reached; runner stop: ${formatPrice(p.activeStop)}` : `Stop: ${formatPrice(p.activeStop)}`;
-                positionEl.textContent = `${side} · ${marketName(p.market)} · Entry ${formatPrice(p.entry)} · ${runner} · TP1 ${formatPrice(p.tp1)} · TP2 ${formatPrice(p.tp2)}`;
             }
         }
     }
@@ -4100,13 +4189,25 @@ setInterval(refreshMultiTimeframePanel, 60000);
         }
 
         const sign = direction === 'long' ? 1 : -1;
+        const riskUsd = DEMO_RISK_USD;
+        const quantity = riskUsd / risk;
+        if (!Number.isFinite(quantity) || quantity <= 0) {
+            setMessage('Simulated position size could not be calculated. No demo entry recorded.');
+            logEvent('No entry: simulated quantity was invalid for the calculated stop distance.');
+            return false;
+        }
         const position = {
             market,
             direction,
             entry: entryPrice,
+            markPrice: entryPrice,
             initialStop: stop,
             activeStop: stop,
             risk,
+            riskUsd,
+            quantity,
+            remainingQuantity: quantity,
+            realizedPnlUsd: 0,
             tp1: entryPrice + sign * risk * 2,
             tp2: entryPrice + sign * risk * 3,
             hitTP1: false,
@@ -4118,7 +4219,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
         state.position = position;
         state.pending = null;
         setMessage(`Paper ${direction.toUpperCase()} opened after confirmation at ${formatPrice(entryPrice)}. Monitoring simulated stop and targets.`);
-        logEvent(`${marketName(market)} PAPER ${direction.toUpperCase()} opened at ${formatPrice(entryPrice)}; SL ${formatPrice(stop)}, TP1 ${formatPrice(position.tp1)}, TP2 ${formatPrice(position.tp2)}.`);
+        logEvent(`${marketName(market)} PAPER ${direction.toUpperCase()} opened at ${formatPrice(entryPrice)}; assumed initial risk $${riskUsd.toFixed(2)}, quantity ${fmtQuantity(quantity)}, SL ${formatPrice(stop)}, TP1 ${formatPrice(position.tp1)}, TP2 ${formatPrice(position.tp2)}.`);
         renderUi();
         return true;
     }
@@ -4126,18 +4227,21 @@ setInterval(refreshMultiTimeframePanel, 60000);
     function closePaperPosition(outcomeR, reason, markPrice) {
         const p = state.position;
         if (!p) return;
+        const cashPnlUsd = outcomeR * p.riskUsd;
         const closed = {
             market: p.market,
             direction: p.direction,
             entry: p.entry,
             exit: markPrice,
             outcomeR,
+            cashPnlUsd,
             reason,
             openedAt: p.openedAt,
             closedAt: new Date()
         };
         state.closedTrades.push(closed);
         state.netR += outcomeR;
+        state.netPnlUsd += cashPnlUsd;
         if (outcomeR > 0) state.wins++;
         else if (outcomeR < 0) state.losses++;
         state.position = null;
@@ -4149,6 +4253,8 @@ setInterval(refreshMultiTimeframePanel, 60000);
     function managePaperPosition(markPrice) {
         const p = state.position;
         if (!p || !Number.isFinite(markPrice) || markPrice <= 0) return;
+        p.markPrice = markPrice;
+        p.lastMarkTime = Date.now();
         const stopHit = p.direction === 'long' ? markPrice <= p.activeStop : markPrice >= p.activeStop;
         if (stopHit) {
             const outcome = p.hitTP1 ? p.realizedR : -1;
@@ -4161,6 +4267,8 @@ setInterval(refreshMultiTimeframePanel, 60000);
         if (!p.hitTP1 && tp1Hit) {
             p.hitTP1 = true;
             p.realizedR = 1; // Half of the simulated position exits at +2R.
+            p.realizedPnlUsd = p.riskUsd; // 50% closed at +2R books +1R of the initial cash risk.
+            p.remainingQuantity = p.quantity / 2;
             p.activeStop = p.entry; // Remaining half moves to breakeven.
             logEvent(`TP1 reached: simulated 50% exit at +2R; runner stop moved to entry ${formatPrice(p.entry)}.`);
             setMessage('TP1 reached. Half the paper position is booked at +2R; the remaining half has its stop at entry.');
