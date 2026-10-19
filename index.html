@@ -784,7 +784,7 @@
             <div>
                 <div class="section-title" style="margin-bottom:0;">Demo Robot · Support / Resistance Confirmation</div>
                 <div class="demo-robot-subtitle">
-                    Paper trading only. The robot waits for the dashboard ECI direction and the 1-minute WMA 100/200 trend to agree, watches a confirmed 15-minute swing level, then requires a closed 1-minute rejection candle before recording a simulated entry.
+                    Paper trading only. The robot uses the dashboard’s shared market feed, waits for ECI direction and the 1-minute WMA 100/200 trend to agree, watches a confirmed 15-minute swing level on the correct side of price, then requires a closed 1-minute rejection candle before recording a simulated entry.
                 </div>
             </div>
             <span id="demoRobotBadge" class="demo-robot-badge">DEMO OFF</span>
@@ -3990,6 +3990,9 @@ setInterval(refreshMultiTimeframePanel, 60000);
             return { support: null, resistance: null };
         }
 
+        // Only confirmed swing points from CLOSED candles are passed in here.
+        // Support must be strictly below the current price; resistance must be
+        // strictly above it. A tolerance must never reverse those relationships.
         for (let i = strength; i < closedCandles.length - strength; i++) {
             const c = closedCandles[i];
             let isSwingLow = true;
@@ -3998,37 +4001,62 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 if (c[3] >= closedCandles[i - j][3] || c[3] >= closedCandles[i + j][3]) isSwingLow = false;
                 if (c[2] <= closedCandles[i - j][2] || c[2] <= closedCandles[i + j][2]) isSwingHigh = false;
             }
-            if (isSwingLow && c[3] <= price + tolerance) supports.push({ price: c[3], time: c[0], type: 'Support' });
-            if (isSwingHigh && c[2] >= price - tolerance) resistances.push({ price: c[2], time: c[0], type: 'Resistance' });
+            if (isSwingLow && Number.isFinite(c[3]) && c[3] < price) {
+                supports.push({ price: c[3], time: c[0], type: 'Support' });
+            }
+            if (isSwingHigh && Number.isFinite(c[2]) && c[2] > price) {
+                resistances.push({ price: c[2], time: c[0], type: 'Resistance' });
+            }
         }
-        supports.sort((a, b) => Math.abs(price - a.price) - Math.abs(price - b.price));
-        resistances.sort((a, b) => Math.abs(a.price - price) - Math.abs(b.price - price));
-        return { support: supports[0] || null, resistance: resistances[0] || null };
+        supports.sort((a, b) => (price - a.price) - (price - b.price));
+        resistances.sort((a, b) => (a.price - price) - (b.price - price));
+
+        const support = supports[0] || null;
+        const resistance = resistances[0] || null;
+        // Defensive invariant: never display inverted levels even if provider data
+        // contains malformed OHLC rows or a future edit changes the selection logic.
+        return {
+            support: support && support.price < price ? support : null,
+            resistance: resistance && resistance.price > price ? resistance : null
+        };
     }
 
     async function fetchDemoBars(market, intervalKey, intervalMinutes, limit) {
-        // The Worker expects interval keys such as "1m" and "15m", not bare
-        // minute counts such as "1" and "15". Keep minutes separately for candle normalization.
-        // This is a read-only GET request; the demo robot has no order endpoint.
-        const params = new URLSearchParams({
-            market,
-            candles: '1',
-            interval: intervalKey,
-            limit: String(limit),
-            t: String(Date.now())
-        });
-        const response = await fetch(`${CLOUDFLARE_API}?${params.toString()}`, {
-            cache: 'no-store',
-            headers: { 'Accept': 'application/json' }
-        });
-        const payload = await response.json().catch(() => ({}));
-        if (!response.ok || payload?.error) {
-            throw new Error(payload?.message || payload?.error || `Candle request failed (${response.status})`);
+        // Reuse the same validated market-feed function as the dashboard's MTF panel.
+        // This avoids a separate request format or a second source of candle parsing.
+        // Only read-only candle requests are made; no order endpoint exists in this robot.
+        const frame = mtfFrames.find(item => item.key === intervalKey);
+        if (!frame || frame.minutes !== intervalMinutes) {
+            throw new Error(`Unsupported demo interval: ${intervalKey}`);
         }
-        if (!Array.isArray(payload?.bars) || !payload.bars.length) {
-            throw new Error(`No ${intervalKey} candles were returned.`);
+
+        let lastError = null;
+        const maxAttempts = 3;
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+            try {
+                const history = await fetchMtfCandleHistory(market, frame);
+                const candles = Array.isArray(history?.candles) ? history.candles : [];
+                if (!candles.length) throw new Error(`No validated ${intervalKey} candles were returned.`);
+                const recent = candles.slice(-Math.max(200, limit || CANDLE_LIMIT));
+                if (recent.length < 200 && intervalKey === '1m') {
+                    throw new Error(`Only ${recent.length} ${intervalKey} candles were returned; at least 200 are required for WMA 100/200.`);
+                }
+                return recent;
+            } catch (error) {
+                lastError = error;
+                if (attempt < maxAttempts) {
+                    // Brief retry for transient fetch/network failures. If CORS or
+                    // Worker configuration is wrong, the final error remains visible.
+                    await new Promise(resolve => setTimeout(resolve, 350 * attempt));
+                }
+            }
         }
-        return payload.bars;
+
+        const details = lastError?.message || String(lastError || 'Unknown feed error');
+        if (/failed to fetch|networkerror|load failed/i.test(details)) {
+            throw new Error(`The shared Cloudflare candle feed could not be reached after ${maxAttempts} attempts. Check Worker availability and CORS for this hosted page. (${details})`);
+        }
+        throw new Error(`${intervalKey} candle feed failed after ${maxAttempts} attempts: ${details}`);
     }
 
     function resetPending(reason) {
@@ -4200,16 +4228,14 @@ setInterval(refreshMultiTimeframePanel, 60000);
 
             const now = Date.now();
             if (!state.confirmAll.length || now - state.lastConfirmFetch >= CONFIRM_REFRESH_MS) {
-                const raw1m = await fetchDemoBars(market, '1m', CONFIRM_INTERVAL_MINUTES, CANDLE_LIMIT);
+                state.confirmAll = await fetchDemoBars(market, '1m', CONFIRM_INTERVAL_MINUTES, CANDLE_LIMIT);
                 if (market !== selectedMarket) return;
-                state.confirmAll = marketBarsToCandles(raw1m, CONFIRM_INTERVAL_MINUTES);
                 state.confirmClosed = state.confirmAll.filter(c => c[6] !== true);
                 state.lastConfirmFetch = Date.now();
             }
             if (!state.structureClosed.length || Date.now() - state.lastStructureFetch >= STRUCTURE_REFRESH_MS) {
-                const raw15m = await fetchDemoBars(market, '15m', STRUCTURE_INTERVAL_MINUTES, CANDLE_LIMIT);
+                const all15m = await fetchDemoBars(market, '15m', STRUCTURE_INTERVAL_MINUTES, CANDLE_LIMIT);
                 if (market !== selectedMarket) return;
-                const all15m = marketBarsToCandles(raw15m, STRUCTURE_INTERVAL_MINUTES);
                 state.structureClosed = all15m.filter(c => c[6] !== true);
                 state.lastStructureFetch = Date.now();
             }
