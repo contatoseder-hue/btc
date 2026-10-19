@@ -4006,13 +4006,14 @@ setInterval(refreshMultiTimeframePanel, 60000);
         return { support: supports[0] || null, resistance: resistances[0] || null };
     }
 
-    async function fetchDemoBars(market, interval, limit) {
-        // Reuse the dashboard's authenticated-by-origin read-only candle feed.
-        // The Worker endpoint is queried only with GET requests; no order endpoint is used.
+    async function fetchDemoBars(market, intervalKey, intervalMinutes, limit) {
+        // The Worker expects interval keys such as "1m" and "15m", not bare
+        // minute counts such as "1" and "15". Keep minutes separately for candle normalization.
+        // This is a read-only GET request; the demo robot has no order endpoint.
         const params = new URLSearchParams({
             market,
             candles: '1',
-            interval: String(interval),
+            interval: intervalKey,
             limit: String(limit),
             t: String(Date.now())
         });
@@ -4025,7 +4026,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
             throw new Error(payload?.message || payload?.error || `Candle request failed (${response.status})`);
         }
         if (!Array.isArray(payload?.bars) || !payload.bars.length) {
-            throw new Error(`No ${interval}-minute candles were returned.`);
+            throw new Error(`No ${intervalKey} candles were returned.`);
         }
         return payload.bars;
     }
@@ -4199,14 +4200,14 @@ setInterval(refreshMultiTimeframePanel, 60000);
 
             const now = Date.now();
             if (!state.confirmAll.length || now - state.lastConfirmFetch >= CONFIRM_REFRESH_MS) {
-                const raw1m = await fetchDemoBars(market, CONFIRM_INTERVAL_MINUTES, CANDLE_LIMIT);
+                const raw1m = await fetchDemoBars(market, '1m', CONFIRM_INTERVAL_MINUTES, CANDLE_LIMIT);
                 if (market !== selectedMarket) return;
                 state.confirmAll = marketBarsToCandles(raw1m, CONFIRM_INTERVAL_MINUTES);
                 state.confirmClosed = state.confirmAll.filter(c => c[6] !== true);
                 state.lastConfirmFetch = Date.now();
             }
             if (!state.structureClosed.length || Date.now() - state.lastStructureFetch >= STRUCTURE_REFRESH_MS) {
-                const raw15m = await fetchDemoBars(market, STRUCTURE_INTERVAL_MINUTES, CANDLE_LIMIT);
+                const raw15m = await fetchDemoBars(market, '15m', STRUCTURE_INTERVAL_MINUTES, CANDLE_LIMIT);
                 if (market !== selectedMarket) return;
                 const all15m = marketBarsToCandles(raw15m, STRUCTURE_INTERVAL_MINUTES);
                 state.structureClosed = all15m.filter(c => c[6] !== true);
