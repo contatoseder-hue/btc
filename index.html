@@ -609,8 +609,19 @@
   .demo-position-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .demo-position-pnl { font-size:22px; }
 }
-
-
+.demo-history-wrap { overflow-x:auto; margin-top:10px; border:1px solid #263244; border-radius:10px; }
+.demo-history-table { width:100%; min-width:1040px; border-collapse:collapse; font-size:12px; }
+.demo-history-table th, .demo-history-table td { padding:9px 10px; border-bottom:1px solid #263244; text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.demo-history-table th { color:#9ca3af; background:#101827; font-weight:800; }
+.demo-history-table th:first-child, .demo-history-table td:first-child,
+.demo-history-table th:nth-child(2), .demo-history-table td:nth-child(2),
+.demo-history-table th:nth-child(3), .demo-history-table td:nth-child(3),
+.demo-history-table th:last-child, .demo-history-table td:last-child { text-align:left; }
+.demo-history-positive { color:#22c55e; font-weight:800; }
+.demo-history-negative { color:#ef4444; font-weight:800; }
+.demo-history-empty { padding:14px; color:#9ca3af; font-size:12px; }
+.demo-history-status { color:#9ca3af; font-size:11px; margin-top:5px; }
+.demo-leverage-note { color:#fbbf24; }
 
 /* Public beta notice displayed immediately below the demo robot. */
 .public-beta-notice {
@@ -869,6 +880,10 @@
                 <div class="label">Closed PnL (USD)</div>
                 <div id="demoRobotNetPnl" class="value">$0.00</div>
             </div>
+            <div class="demo-robot-stat">
+                <div class="label">Leverage Used</div>
+                <div id="demoRobotLeverageMode" class="value demo-leverage-note">Not modeled</div>
+            </div>
         </div>
 
         <div id="demoRobotMessage" class="demo-robot-message" aria-live="polite">
@@ -893,6 +908,8 @@
                 <div class="demo-position-stat"><div class="demo-position-stat-label">Active Stop Loss</div><div id="demoPositionStop" class="demo-position-stat-value">—</div></div>
                 <div class="demo-position-stat"><div class="demo-position-stat-label">Take Profit 1</div><div id="demoPositionTp1" class="demo-position-stat-value">—</div></div>
                 <div class="demo-position-stat"><div class="demo-position-stat-label">Take Profit 2</div><div id="demoPositionTp2" class="demo-position-stat-value">—</div></div>
+                <div class="demo-position-stat"><div class="demo-position-stat-label">Leverage Used</div><div id="demoPositionLeverage" class="demo-position-stat-value demo-leverage-note">Not modeled</div></div>
+                <div class="demo-position-stat"><div class="demo-position-stat-label">Notional Exposure (remaining)</div><div id="demoPositionNotional" class="demo-position-stat-value">—</div></div>
             </div>
             <div id="demoPositionPnlBreakdown" class="demo-position-note">PnL is calculated from the simulated quantity. No exchange order is placed.</div>
         </div>
@@ -906,8 +923,20 @@
         <ul id="demoRobotLog" class="demo-robot-log">
             <li><span class="demo-robot-log-time">Ready</span><span class="demo-robot-log-message">No trades have been simulated.</span></li>
         </ul>
+
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:18px; flex-wrap:wrap;">
+            <div class="section-title" style="font-size:14px; margin:0;">Closed Trade History</div>
+            <button id="demoRobotExportHistory" class="demo-robot-clear" type="button" style="width:auto; margin:0;">Export CSV</button>
+        </div>
+        <div id="demoRobotHistorySummary" class="demo-history-status">History will be saved automatically in this browser.</div>
+        <div class="demo-history-wrap">
+            <table class="demo-history-table">
+                <thead><tr><th>Closed</th><th>Market</th><th>Side</th><th>Entry</th><th>Exit</th><th>Entry Notional</th><th>Leverage Model</th><th>Result</th><th>Net PnL</th><th>Reason</th></tr></thead>
+                <tbody id="demoRobotHistoryBody"><tr><td colspan="10" class="demo-history-empty">No closed demo trades recorded yet.</td></tr></tbody>
+            </table>
+        </div>
         <div class="demo-robot-footnote">
-            Entry rules: ECI direction must match trend; support/resistance comes from closed 15-minute swing candles; confirmation uses a closed 1-minute candle that touches the level and closes in the reversal direction beyond the previous candle. Demo sizing assumes $10 risk at the initial stop; open and closed USD PnL are estimates for a linear position and exclude fees, spread, slippage and instrument-specific contract sizing. Demo target model: 50% exits at 2R; the remaining 50% targets 3R with the stop moved to entry after TP1. Quotes are polled about every 15 seconds, not tick-by-tick. Paper trading only; no exchange orders are sent. Custom assets are not enabled in this first test.
+            Entry rules: ECI direction must match trend; support/resistance comes from closed 15-minute swing candles; confirmation uses a closed 1-minute candle. Demo sizing assumes $10 risk at the initial stop; leverage and margin are not currently modeled, and the panel reports notional exposure instead. Open and closed USD PnL are estimates for a linear position and exclude fees, spread, slippage and instrument-specific contract sizing. TP1 is price-based at 2R; 50% exits there and the remaining 50% targets 3R, with the stop moved to entry after TP1. These targets are not timed to 5-minute candles. Closed-trade history, cumulative net R/USD and an open paper position are automatically saved in this browser's local storage; history is specific to this browser and site origin. Quotes are polled about every 15 seconds, not tick-by-tick. Paper trading only; no exchange orders are sent. Custom assets are not enabled in this first test.
         </div>
     </div>
 
@@ -3946,6 +3975,10 @@ setInterval(refreshMultiTimeframePanel, 60000);
         structureClosed: [],
         lastConfirmFetch: 0,
         lastStructureFetch: 0,
+        // Keep structure candles for the open position's market separately.
+        // The selected dashboard market can change while an existing paper trade is managed.
+        positionStructureClosed: [],
+        lastPositionStructureFetch: 0,
         pending: null,
         position: null,
         levels: { support: null, resistance: null },
@@ -3959,6 +3992,9 @@ setInterval(refreshMultiTimeframePanel, 60000);
         cooldownUntil: 0
     };
 
+    const STORAGE_KEY = 'goldEciDemoRobotState_v2';
+    const MAX_SAVED_CLOSED_TRADES = 1000;
+    const MAX_SAVED_LOG_EVENTS = 100;
     const CONFIRM_INTERVAL_MINUTES = 1;
     const STRUCTURE_INTERVAL_MINUTES = 15;
     const CANDLE_LIMIT = 260;
@@ -4002,10 +4038,91 @@ setInterval(refreshMultiTimeframePanel, 60000);
         return n.toLocaleString(undefined, { maximumFractionDigits: 8 });
     }
 
+    function parseDate(value, fallback = new Date()) {
+        const date = value instanceof Date ? value : new Date(value);
+        return Number.isNaN(date.getTime()) ? fallback : date;
+    }
+
+    function savePersistentState() {
+        try {
+            const toSave = {
+                version: 2,
+                savedAt: new Date().toISOString(),
+                // The bot always restarts with new entries paused for safety.
+                position: state.position,
+                closedTrades: state.closedTrades.slice(-MAX_SAVED_CLOSED_TRADES),
+                wins: state.wins,
+                losses: state.losses,
+                netR: state.netR,
+                netPnlUsd: state.netPnlUsd,
+                cooldownUntil: state.cooldownUntil,
+                logs: state.logs.slice(0, MAX_SAVED_LOG_EVENTS)
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+            const status = $('demoRobotHistorySummary');
+            if (status) status.textContent = `Auto-saved locally · ${state.closedTrades.length} closed trades · cumulative ${fmtUsdPnl(state.netPnlUsd)} (${fmtR(state.netR)}). Saved history is specific to this browser and site origin.`;
+            return true;
+        } catch (error) {
+            const status = $('demoRobotHistorySummary');
+            if (status) status.textContent = 'Local saving is unavailable in this browser. Keep this page open and export or record results before closing it.';
+            return false;
+        }
+    }
+
+    function restorePersistentState() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return;
+            const saved = JSON.parse(raw);
+            if (!saved || saved.version !== 2) return;
+
+            state.closedTrades = Array.isArray(saved.closedTrades)
+                ? saved.closedTrades.slice(-MAX_SAVED_CLOSED_TRADES).map(trade => ({
+                    ...trade,
+                    openedAt: parseDate(trade.openedAt),
+                    closedAt: parseDate(trade.closedAt)
+                }))
+                : [];
+            state.wins = Number.isFinite(Number(saved.wins)) ? Number(saved.wins) : state.closedTrades.filter(t => Number(t.outcomeR) > 0).length;
+            state.losses = Number.isFinite(Number(saved.losses)) ? Number(saved.losses) : state.closedTrades.filter(t => Number(t.outcomeR) < 0).length;
+            state.netR = Number.isFinite(Number(saved.netR)) ? Number(saved.netR) : state.closedTrades.reduce((sum, t) => sum + (Number(t.outcomeR) || 0), 0);
+            state.netPnlUsd = Number.isFinite(Number(saved.netPnlUsd)) ? Number(saved.netPnlUsd) : state.closedTrades.reduce((sum, t) => sum + (Number(t.cashPnlUsd) || 0), 0);
+            state.cooldownUntil = Number(saved.cooldownUntil) || 0;
+            state.logs = Array.isArray(saved.logs) ? saved.logs.slice(0, 12).map(item => ({
+                time: parseDate(item.time),
+                message: String(item.message || '')
+            })) : [];
+
+            const p = saved.position;
+            if (p && ['long', 'short'].includes(p.direction) && Number.isFinite(Number(p.entry)) && Number(p.entry) > 0 && Number.isFinite(Number(p.quantity)) && Number(p.quantity) > 0) {
+                state.position = {
+                    ...p,
+                    openedAt: parseDate(p.openedAt),
+                    entry: Number(p.entry),
+                    markPrice: Number(p.markPrice) > 0 ? Number(p.markPrice) : Number(p.entry),
+                    activeStop: Number(p.activeStop),
+                    initialStop: Number(p.initialStop),
+                    quantity: Number(p.quantity),
+                    remainingQuantity: Number.isFinite(Number(p.remainingQuantity)) ? Number(p.remainingQuantity) : Number(p.quantity),
+                    realizedPnlUsd: Number(p.realizedPnlUsd) || 0,
+                    riskUsd: Number(p.riskUsd) || DEMO_RISK_USD,
+                    hitTP1: Boolean(p.hitTP1)
+                };
+                state.enabled = false;
+                state.positionStructureClosed = [];
+                state.lastPositionStructureFetch = 0;
+                state.message = 'Restored saved paper position. New entries are paused; the open paper position will continue to be monitored.';
+            }
+        } catch (error) {
+            console.warn('Could not restore the saved demo history:', error);
+        }
+    }
+
     function logEvent(message) {
         state.logs.unshift({ time: new Date(), message: String(message) });
         state.logs = state.logs.slice(0, 12);
         renderLog();
+        savePersistentState();
     }
 
     function renderLog() {
@@ -4034,6 +4151,55 @@ setInterval(refreshMultiTimeframePanel, 60000);
             message.textContent = item.message;
             li.append(time, message);
             list.append(li);
+        }
+    }
+
+    function renderHistory() {
+        const body = $('demoRobotHistoryBody');
+        if (!body) return;
+        body.replaceChildren();
+        const trades = state.closedTrades.slice(-30).reverse();
+        if (!trades.length) {
+            const row = document.createElement('tr');
+            const cell = document.createElement('td');
+            cell.colSpan = 10;
+            cell.className = 'demo-history-empty';
+            cell.textContent = 'No closed demo trades recorded yet.';
+            row.append(cell);
+            body.append(row);
+        } else {
+            for (const trade of trades) {
+                const row = document.createElement('tr');
+                const closed = parseDate(trade.closedAt);
+                const entryNotional = Number(trade.notionalExposureAtEntry);
+                const values = [
+                    closed.toLocaleString([], { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+                    marketName(trade.market),
+                    String(trade.direction || '').toUpperCase(),
+                    formatPrice(Number(trade.entry)),
+                    formatPrice(Number(trade.exit)),
+                    Number.isFinite(entryNotional) && entryNotional > 0 ? `$${entryNotional.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—',
+                    'Not applied',
+                    fmtR(Number(trade.outcomeR)),
+                    fmtUsdPnl(Number(trade.cashPnlUsd)),
+                    String(trade.reason || '')
+                ];
+                values.forEach((value, index) => {
+                    const cell = document.createElement('td');
+                    cell.textContent = value;
+                    if (index === 7 || index === 8) {
+                        const pnl = index === 7 ? Number(trade.outcomeR) : Number(trade.cashPnlUsd);
+                        cell.className = pnl > 0 ? 'demo-history-positive' : (pnl < 0 ? 'demo-history-negative' : '');
+                    }
+                    row.append(cell);
+                });
+                body.append(row);
+            }
+        }
+        const status = $('demoRobotHistorySummary');
+        if (status) {
+            const total = state.closedTrades.length;
+            status.textContent = `Showing up to the latest 30 of ${total} saved closed trades · cumulative net ${fmtUsdPnl(state.netPnlUsd)} (${fmtR(state.netR)}) · auto-saves locally in this browser/site origin.`;
         }
     }
 
@@ -4073,6 +4239,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
         if ($('demoRobotEci')) $('demoRobotEci').textContent = lastScalpSignal || 'No active signal';
         if ($('demoRobotTrend')) $('demoRobotTrend').textContent = state.trend ? state.trend.label : 'Unavailable';
         if ($('demoRobotClosed')) $('demoRobotClosed').textContent = String(state.closedTrades.length);
+        if ($('demoRobotLeverageMode')) $('demoRobotLeverageMode').textContent = 'Not applied';
         if ($('demoRobotNetR')) {
             $('demoRobotNetR').textContent = fmtR(state.netR);
             $('demoRobotNetR').style.color = state.netR > 0 ? '#22c55e' : (state.netR < 0 ? '#ef4444' : '');
@@ -4111,13 +4278,18 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 if ($('demoPositionStop')) $('demoPositionStop').textContent = formatPrice(p.activeStop);
                 if ($('demoPositionTp1')) $('demoPositionTp1').textContent = p.hitTP1 ? 'HIT ✓' : formatPrice(p.tp1);
                 if ($('demoPositionTp2')) $('demoPositionTp2').textContent = formatPrice(p.tp2);
+                if ($('demoPositionLeverage')) $('demoPositionLeverage').textContent = 'Not applied';
+                if ($('demoPositionNotional')) $('demoPositionNotional').textContent = fmtUsdPnl(Math.abs(mark * remainingQty)).replace(/^\+/, '');
                 if ($('demoPositionPnlBreakdown')) {
                     const realized = Number(p.realizedPnlUsd) || 0;
-                    $('demoPositionPnlBreakdown').textContent = `Assumed risk: $${p.riskUsd.toFixed(2)} at the initial stop · Realized from partial exits: ${fmtUsdPnl(realized)} · Floating PnL on remaining quantity: ${fmtUsdPnl(floatingPnl)}. Estimate excludes fees, spread, slippage and exchange contract specifications.`;
+                    const remainingNotional = Math.abs(mark * remainingQty);
+                    $('demoPositionPnlBreakdown').textContent = `Assumed risk: $${p.riskUsd.toFixed(2)} at the initial stop · Realized from partial exits: ${fmtUsdPnl(realized)} · Floating PnL on remaining quantity: ${fmtUsdPnl(floatingPnl)} · Remaining notional exposure: $${remainingNotional.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}. Leverage/margin is not modeled in this paper simulation; sizing is based on a fixed $${p.riskUsd.toFixed(2)} initial risk. PnL excludes fees, spread, slippage and exchange contract specifications.`;
                 }
                 positionEl.style.display = 'block';
             }
         }
+        renderHistory();
+        savePersistentState();
     }
 
     async function fetchPriceForMarket(market) {
@@ -4296,6 +4468,8 @@ setInterval(refreshMultiTimeframePanel, 60000);
             riskUsd,
             quantity,
             remainingQuantity: quantity,
+            notionalExposureAtEntry: Math.abs(entryPrice * quantity),
+            leverageModel: 'not_applied',
             realizedPnlUsd: 0,
             tp1: entryPrice + sign * risk * 2,
             tp2: entryPrice + sign * risk * 3,
@@ -4306,6 +4480,8 @@ setInterval(refreshMultiTimeframePanel, 60000);
             confirmTime: confirmCandle[0]
         };
         state.position = position;
+        state.positionStructureClosed = Array.isArray(state.structureClosed) ? state.structureClosed.slice() : [];
+        state.lastPositionStructureFetch = 0; // refresh from the position market at the next cycle
         state.pending = null;
         setMessage(`Paper ${direction.toUpperCase()} opened after confirmation at ${formatPrice(entryPrice)}. Monitoring simulated stop and targets.`);
         logEvent(`${marketName(market)} PAPER ${direction.toUpperCase()} opened at ${formatPrice(entryPrice)}; assumed initial risk $${riskUsd.toFixed(2)}, quantity ${fmtQuantity(quantity)}, SL ${formatPrice(stop)}, TP1 ${formatPrice(position.tp1)}, TP2 ${formatPrice(position.tp2)}.`);
@@ -4324,6 +4500,9 @@ setInterval(refreshMultiTimeframePanel, 60000);
             exit: markPrice,
             outcomeR,
             cashPnlUsd,
+            riskUsd: p.riskUsd,
+            notionalExposureAtEntry: Number(p.notionalExposureAtEntry) || Math.abs(Number(p.entry) * Number(p.quantity)),
+            leverageModel: 'not_applied',
             reason,
             openedAt: p.openedAt,
             closedAt: new Date()
@@ -4334,6 +4513,8 @@ setInterval(refreshMultiTimeframePanel, 60000);
         if (outcomeR > 0) state.wins++;
         else if (outcomeR < 0) state.losses++;
         state.position = null;
+        state.positionStructureClosed = [];
+        state.lastPositionStructureFetch = 0;
         state.cooldownUntil = Date.now() + 60000;
         setMessage(`Paper trade closed: ${reason}. Result ${fmtR(outcomeR)}. A one-minute cooldown is active.`);
         logEvent(`${marketName(p.market)} PAPER trade closed at ${formatPrice(markPrice)}: ${reason}, ${fmtR(outcomeR)}.`);
@@ -4399,14 +4580,43 @@ setInterval(refreshMultiTimeframePanel, 60000);
         state.busy = true;
         try {
             // Manage an existing paper position first, even if new entries were paused.
+            // Refresh structure relative to the latest mark while a trade is open. Without this,
+            // levels from the entry-time price can remain displayed after price moves through them.
             if (state.position) {
+                const positionMarket = state.position.market;
                 let mark = null;
-                if (selectedMarket === state.position.market && Number.isFinite(currentPrice) && currentPrice > 0) {
+                if (selectedMarket === positionMarket && Number.isFinite(currentPrice) && currentPrice > 0) {
                     mark = currentPrice;
                 } else {
-                    mark = await fetchPriceForMarket(state.position.market);
+                    mark = await fetchPriceForMarket(positionMarket);
                 }
                 managePaperPosition(mark);
+
+                if (state.position) {
+                    try {
+                        const now = Date.now();
+                        if (!state.positionStructureClosed.length || now - state.lastPositionStructureFetch >= STRUCTURE_REFRESH_MS) {
+                            const all15m = await fetchDemoBars(positionMarket, '15m', STRUCTURE_INTERVAL_MINUTES, CANDLE_LIMIT);
+                            if (state.position && state.position.market === positionMarket) {
+                                const closed15m = all15m.filter(c => c[6] !== true);
+                                if (closed15m.length) {
+                                    state.positionStructureClosed = closed15m;
+                                    state.lastPositionStructureFetch = Date.now();
+                                }
+                            }
+                        }
+                    } catch (levelError) {
+                        // Continue managing the paper position if structure refresh fails.
+                        // The cached swing candles are still re-filtered against the latest price below,
+                        // so a previously valid support cannot stay displayed above the current market.
+                        console.warn('Paper-position structure refresh failed:', levelError);
+                    }
+
+                    const positionStructure = state.positionStructureClosed.length
+                        ? state.positionStructureClosed
+                        : state.structureClosed;
+                    state.levels = findSwingLevels(positionStructure, mark, 0);
+                }
                 if (state.position || !state.enabled) return;
             }
 
@@ -4554,6 +4764,39 @@ setInterval(refreshMultiTimeframePanel, 60000);
         renderUi();
     }
 
+    function exportHistoryCsv() {
+        if (!state.closedTrades.length) {
+            setMessage('There are no closed paper trades to export yet.');
+            renderUi();
+            return;
+        }
+        const headers = ['Closed At', 'Market', 'Direction', 'Entry', 'Exit', 'Entry Notional USD', 'Leverage Model', 'Result R', 'Net PnL USD', 'Reason'];
+        const csvCell = value => `"${String(value ?? '').replace(/"/g, '""')}"`;
+        const rows = state.closedTrades.map(trade => [
+            parseDate(trade.closedAt).toISOString(),
+            marketName(trade.market),
+            String(trade.direction || '').toUpperCase(),
+            Number(trade.entry),
+            Number(trade.exit),
+            Number(trade.notionalExposureAtEntry) || 0,
+            'Not applied',
+            Number(trade.outcomeR) || 0,
+            Number(trade.cashPnlUsd) || 0,
+            String(trade.reason || '')
+        ]);
+        const csv = [headers, ...rows].map(row => row.map(csvCell).join(',')).join('\r\n');
+        const blob = new Blob(['\ufeff', csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = `paper-trade-history-${new Date().toISOString().slice(0, 10)}.csv`;
+        document.body.append(anchor);
+        anchor.click();
+        anchor.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        logEvent(`Exported ${state.closedTrades.length} closed paper trades to CSV.`);
+    }
+
     function clearLog() {
         state.logs = [];
         renderLog();
@@ -4564,9 +4807,15 @@ setInterval(refreshMultiTimeframePanel, 60000);
     if (toggle) toggle.addEventListener('click', toggleRobot);
     const clear = $('demoRobotClearLog');
     if (clear) clear.addEventListener('click', clearLog);
+    const exportButton = $('demoRobotExportHistory');
+    if (exportButton) exportButton.addEventListener('click', exportHistoryCsv);
 
+    restorePersistentState();
     renderUi();
     renderLog();
+    if (state.position) {
+        logEvent(`Restored saved ${marketName(state.position.market)} PAPER ${state.position.direction.toUpperCase()} position from local history. New entries remain paused until resumed.`);
+    }
     setInterval(cycle, ROBOT_POLL_MS);
 })();
 </script>
