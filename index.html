@@ -4794,6 +4794,44 @@ setInterval(refreshMultiTimeframePanel, 60000);
                     state.levels = findStableSwingLevels(positionStructure, mark, 0, state.levels, state.levelsMarket, positionMarket);
                     state.levelsMarket = positionMarket;
                 }
+
+                // Keep the robot's 1-minute WMA status current while an existing position is open.
+                // Previously, the early return below skipped 1m candles during position management,
+                // leaving the panel as "Unavailable" even when the data feed was healthy.
+                if (state.position) {
+                    try {
+                        const now = Date.now();
+                        if (!state.confirmAll.length || now - state.lastConfirmFetch >= CONFIRM_REFRESH_MS) {
+                            const all1m = await fetchDemoBars(positionMarket, '1m', CONFIRM_INTERVAL_MINUTES, CANDLE_LIMIT);
+                            if (state.position && state.position.market === positionMarket) {
+                                state.confirmAll = all1m;
+                                state.confirmClosed = all1m.filter(c => c[6] !== true);
+                                state.lastConfirmFetch = Date.now();
+                                if (state.confirmClosed.length >= 200) {
+                                    state.trend = calcTrend(state.confirmClosed);
+                                } else {
+                                    state.trend = { direction: 'neutral', label: `Need 200 closed 1m bars (${state.confirmClosed.length} available)` };
+                                }
+                            }
+                        }
+                    } catch (trendError) {
+                        state.trend = { direction: 'neutral', label: 'Unavailable (1m candle feed failed)' };
+                        console.warn('1-minute WMA refresh while managing paper position failed:', trendError);
+                    }
+
+                    // Explicitly explain why a saved LONG may coexist with a current SHORT signal:
+                    // a signal change does not auto-close or reverse an already-open paper position.
+                    // Only one position is allowed, and no new entry is scanned until it closes.
+                    if (state.position) {
+                        const openDirection = state.position.direction;
+                        const currentSignalDirection = directionFromSignal(lastScalpSignal);
+                        const oppositeSignal = currentSignalDirection && currentSignalDirection !== openDirection;
+                        const trendLabel = state.trend ? state.trend.label : 'Unavailable';
+                        setMessage(oppositeSignal
+                            ? `Managing existing PAPER ${openDirection.toUpperCase()} opened at ${formatPrice(state.position.entry)}. Current dashboard ECI is ${lastScalpSignal}, opposite to this position; signals do not auto-close or reverse an open trade. No new entry will be considered until this position closes. 1m WMA: ${trendLabel}.`
+                            : `Managing existing PAPER ${openDirection.toUpperCase()} opened at ${formatPrice(state.position.entry)}. Current dashboard ECI: ${lastScalpSignal || 'No active signal'}. 1m WMA: ${trendLabel}. The position remains subject to its simulated stop/targets; no second position is opened.`);
+                    }
+                }
                 if (state.position || !state.enabled) return;
             }
 
