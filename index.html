@@ -652,6 +652,21 @@
     .public-beta-notice-title { font-size: 12px; }
 }
 
+
+/* Optional paper-only limit-entry controls */
+.demo-limit-controls { margin: 12px 0 14px; padding: 12px; border: 1px solid #334155; border-radius: 10px; background: rgba(15,23,42,.48); }
+.demo-limit-toggle { display:flex; align-items:flex-start; gap:10px; color:#e5e7eb; cursor:pointer; font-size:13px; line-height:1.45; }
+.demo-limit-toggle input { margin-top:3px; accent-color:#60a5fa; flex:0 0 auto; }
+.demo-limit-toggle span { display:block; }
+.demo-limit-toggle strong, .demo-limit-toggle small { display:block; }
+.demo-limit-toggle small { color:#9ca3af; font-size:12px; margin-top:3px; }
+.demo-limit-price-row { display:flex; gap:9px; align-items:flex-end; flex-wrap:wrap; margin-top:12px; }
+.demo-limit-price-field { flex:1 1 220px; min-width:0; }
+.demo-limit-price-field label { display:block; color:#cbd5e1; font-size:12px; margin-bottom:5px; }
+.demo-limit-price-field input { width:100%; box-sizing:border-box; min-height:38px; color:#f8fafc; background:#0b1220; border:1px solid #475569; border-radius:7px; padding:8px 10px; }
+.demo-limit-price-row button { width:auto; margin:0; }
+.demo-limit-note { color:#9ca3af; font-size:11px; line-height:1.5; margin-top:9px; }
+@media (max-width: 600px) { .demo-limit-price-field { flex-basis:100%; } .demo-limit-price-row button { flex:1 1 100%; } }
 </style>
 </head>
 
@@ -914,6 +929,21 @@
             <div id="demoPositionPnlBreakdown" class="demo-position-note">PnL is calculated from the simulated quantity. No exchange order is placed.</div>
         </div>
 
+        <div class="demo-limit-controls" id="demoRobotLimitControls">
+            <label class="demo-limit-toggle" for="demoRobotLimitMode">
+                <input id="demoRobotLimitMode" type="checkbox">
+                <span><strong>Optional Paper Limit Entry Mode</strong><small>OFF by default. When enabled, place a simulated limit at the nearest confirmed support (LONG) or resistance (SHORT), without waiting for the rejection-candle entry.</small></span>
+            </label>
+            <div class="demo-limit-price-row">
+                <div class="demo-limit-price-field">
+                    <label for="demoRobotLimitPrice">Limit Price Override (optional)</label>
+                    <input id="demoRobotLimitPrice" type="number" inputmode="decimal" step="any" placeholder="Auto: nearest confirmed level" autocomplete="off">
+                </div>
+                <button id="demoRobotUseNearest" class="demo-robot-clear" type="button">Use Nearest Level</button>
+            </div>
+            <div class="demo-limit-note">Limit orders can fill during a breakout and are riskier than confirmed entries. This is paper simulation only. Pending limit orders expire after 30 minutes and are cancelled if ECI/WMA direction changes or the level is invalidated.</div>
+        </div>
+
         <div class="demo-robot-controls">
             <button id="demoRobotToggle" class="demo-robot-start" type="button">Start Demo Robot</button>
             <button id="demoRobotClearLog" class="demo-robot-clear" type="button">Clear Log</button>
@@ -936,7 +966,7 @@
             </table>
         </div>
         <div class="demo-robot-footnote">
-            Entry rules: ECI direction must match trend; support/resistance comes from closed 15-minute swing candles; confirmation uses a closed 1-minute candle. Demo sizing assumes $10 risk at the initial stop; leverage and margin are not currently modeled, and the panel reports notional exposure instead. Open and closed USD PnL are estimates for a linear position and exclude fees, spread, slippage and instrument-specific contract sizing. TP1 is price-based at 2R; 50% exits there and the remaining 50% targets 3R, with the stop moved to entry after TP1. These targets are not timed to 5-minute candles. Closed-trade history, cumulative net R/USD and an open paper position are automatically saved in this browser's local storage; history is specific to this browser and site origin. Quotes are polled about every 15 seconds, not tick-by-tick. Paper trading only; no exchange orders are sent. Custom assets are not enabled in this first test.
+            Standard mode: ECI direction must match the 1-minute WMA trend, then a closed 1-minute rejection candle confirms the 15-minute swing level. Optional Paper Limit Entry mode skips the rejection-candle requirement and simulates a limit at the nearest confirmed support/resistance (or a nearby manual override); it is higher risk and expires after 30 minutes. Support/resistance stays fixed as price moves, changing only if crossed/invalidated or replaced by a newer confirmed, closer swing. Demo sizing assumes $10 risk at the initial stop; leverage and margin are not modeled, and notional exposure is shown instead. USD PnL is an estimate and excludes fees, spread, slippage and instrument-specific contract sizing. TP1 is 2R; 50% exits there and the remaining 50% targets 3R, with the stop moved to entry after TP1. State, pending setup/order, levels, open position and trade history are saved locally and an active robot resumes on refresh. JavaScript cannot monitor trades while the browser/page is closed; it resumes only when the dashboard is open again. Quotes are polled about every 15 seconds, not tick-by-tick. Paper trading only; no exchange orders are sent. Custom assets are not enabled in this test.
         </div>
     </div>
 
@@ -3982,6 +4012,9 @@ setInterval(refreshMultiTimeframePanel, 60000);
         pending: null,
         position: null,
         levels: { support: null, resistance: null },
+        levelsMarket: null,
+        limitMode: false,
+        limitPriceOverride: '',
         trend: null,
         logs: [],
         closedTrades: [],
@@ -4000,6 +4033,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
     const CANDLE_LIMIT = 260;
     const SWING_STRENGTH = 2;
     const MAX_PENDING_MINUTES = 5;
+    const MAX_LIMIT_PENDING_MINUTES = 30;
     const CONFIRM_REFRESH_MS = 12000;
     const STRUCTURE_REFRESH_MS = 60000;
     const ROBOT_POLL_MS = 15000;
@@ -4046,9 +4080,16 @@ setInterval(refreshMultiTimeframePanel, 60000);
     function savePersistentState() {
         try {
             const toSave = {
-                version: 2,
+                version: 3,
                 savedAt: new Date().toISOString(),
-                // The bot always restarts with new entries paused for safety.
+                // Resume only if the user had left the paper robot running before refresh.
+                enabled: Boolean(state.enabled),
+                activeMarket: state.activeMarket,
+                pending: state.pending,
+                levels: state.levels,
+                levelsMarket: state.levelsMarket,
+                limitMode: Boolean(state.limitMode),
+                limitPriceOverride: String(state.limitPriceOverride || ''),
                 position: state.position,
                 closedTrades: state.closedTrades.slice(-MAX_SAVED_CLOSED_TRADES),
                 wins: state.wins,
@@ -4074,7 +4115,34 @@ setInterval(refreshMultiTimeframePanel, 60000);
             const raw = localStorage.getItem(STORAGE_KEY);
             if (!raw) return;
             const saved = JSON.parse(raw);
-            if (!saved || saved.version !== 2) return;
+            if (!saved || ![2, 3].includes(saved.version)) return;
+
+            state.enabled = saved.version >= 3 && Boolean(saved.enabled);
+            state.activeMarket = saved.activeMarket || null;
+            state.limitMode = Boolean(saved.limitMode);
+            state.limitPriceOverride = String(saved.limitPriceOverride || '');
+            if (saved.levels && typeof saved.levels === 'object') {
+                const validLevel = (level, side) => level && Number.isFinite(Number(level.price)) && Number(level.price) > 0 && (side === 'support' ? 'Support' : 'Resistance') === level.type
+                    ? { price: Number(level.price), time: Number(level.time) || 0, type: level.type }
+                    : null;
+                state.levels = {
+                    support: validLevel(saved.levels.support, 'support'),
+                    resistance: validLevel(saved.levels.resistance, 'resistance')
+                };
+                state.levelsMarket = saved.levelsMarket || saved.activeMarket || null;
+            }
+            if (saved.pending && ['long', 'short'].includes(saved.pending.direction) && Number(saved.pending.level?.price) > 0) {
+                state.pending = {
+                    ...saved.pending,
+                    startedAt: Number(saved.pending.startedAt) || Date.now(),
+                    tolerance: Number(saved.pending.tolerance) > 0 ? Number(saved.pending.tolerance) : 0,
+                    atr: Number(saved.pending.atr) || null,
+                    limitPrice: Number(saved.pending.limitPrice) > 0 ? Number(saved.pending.limitPrice) : null,
+                    triggerCandleTime: Number(saved.pending.triggerCandleTime) || null,
+                    lastEvaluatedTime: Number(saved.pending.lastEvaluatedTime) || null,
+                    level: { ...saved.pending.level, price: Number(saved.pending.level.price), time: Number(saved.pending.level.time) || 0 }
+                };
+            }
 
             state.closedTrades = Array.isArray(saved.closedTrades)
                 ? saved.closedTrades.slice(-MAX_SAVED_CLOSED_TRADES).map(trade => ({
@@ -4108,10 +4176,13 @@ setInterval(refreshMultiTimeframePanel, 60000);
                     riskUsd: Number(p.riskUsd) || DEMO_RISK_USD,
                     hitTP1: Boolean(p.hitTP1)
                 };
-                state.enabled = false;
                 state.positionStructureClosed = [];
                 state.lastPositionStructureFetch = 0;
-                state.message = 'Restored saved paper position. New entries are paused; the open paper position will continue to be monitored.';
+                state.message = state.enabled
+                    ? 'Restored active paper robot after refresh. Monitoring the saved position and setup; no exchange orders are sent.'
+                    : 'Restored saved paper position. New entries remain paused; the open paper position will continue to be monitored.';
+            } else if (state.enabled) {
+                state.message = 'Restored active paper robot after refresh. Resuming market monitoring; no exchange orders are sent.';
             }
         } catch (error) {
             console.warn('Could not restore the saved demo history:', error);
@@ -4212,6 +4283,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
         state.lastStructureFetch = 0;
         state.pending = null;
         state.levels = { support: null, resistance: null };
+        state.levelsMarket = market;
         state.trend = null;
     }
 
@@ -4236,10 +4308,19 @@ setInterval(refreshMultiTimeframePanel, 60000);
 
         if ($('demoRobotSupport')) $('demoRobotSupport').textContent = state.levels.support ? formatPrice(state.levels.support.price) : '—';
         if ($('demoRobotResistance')) $('demoRobotResistance').textContent = state.levels.resistance ? formatPrice(state.levels.resistance.price) : '—';
-        if ($('demoRobotEci')) $('demoRobotEci').textContent = lastScalpSignal || 'No active signal';
+        if ($('demoRobotEci')) {
+            const eci = $('demoRobotEci');
+            eci.textContent = lastScalpSignal || 'No active signal';
+            eci.style.color = lastScalpSignal === 'Sell Short' ? '#ef4444' : (lastScalpSignal === 'Buy Long' ? '#22c55e' : '#9ca3af');
+            eci.style.fontWeight = lastScalpSignal ? '800' : '500';
+        }
+        const modeToggle = $('demoRobotLimitMode');
+        const limitPriceInput = $('demoRobotLimitPrice');
+        if (modeToggle && modeToggle.checked !== state.limitMode) modeToggle.checked = state.limitMode;
+        if (limitPriceInput && limitPriceInput.value !== state.limitPriceOverride) limitPriceInput.value = state.limitPriceOverride;
+        if ($('demoRobotLeverageMode')) $('demoRobotLeverageMode').textContent = 'Not modeled';
         if ($('demoRobotTrend')) $('demoRobotTrend').textContent = state.trend ? state.trend.label : 'Unavailable';
         if ($('demoRobotClosed')) $('demoRobotClosed').textContent = String(state.closedTrades.length);
-        if ($('demoRobotLeverageMode')) $('demoRobotLeverageMode').textContent = 'Not applied';
         if ($('demoRobotNetR')) {
             $('demoRobotNetR').textContent = fmtR(state.netR);
             $('demoRobotNetR').style.color = state.netR > 0 ? '#22c55e' : (state.netR < 0 ? '#ef4444' : '');
@@ -4371,6 +4452,27 @@ setInterval(refreshMultiTimeframePanel, 60000);
         };
     }
 
+    function chooseStableLevel(previous, candidate, price, side) {
+        const isCorrectSide = level => level && (side === 'support' ? level.price < price : level.price > price);
+        if (!isCorrectSide(previous)) return candidate || null;
+        if (!isCorrectSide(candidate)) return previous;
+        const previousDistance = Math.abs(price - previous.price);
+        const candidateDistance = Math.abs(price - candidate.price);
+        const newerConfirmedSwing = Number(candidate.time) > Number(previous.time);
+        // Price fluctuations alone do not move the displayed level. Replace it only
+        // when a newer confirmed swing is objectively closer and on the correct side.
+        return newerConfirmedSwing && candidateDistance < previousDistance ? candidate : previous;
+    }
+
+    function findStableSwingLevels(closedCandles, price, tolerance, previous, previousMarket, market) {
+        const candidates = findSwingLevels(closedCandles, price, tolerance);
+        if (previousMarket !== market) return candidates;
+        return {
+            support: chooseStableLevel(previous?.support, candidates.support, price, 'support'),
+            resistance: chooseStableLevel(previous?.resistance, candidates.resistance, price, 'resistance')
+        };
+    }
+
     async function fetchDemoBars(market, intervalKey, intervalMinutes, limit) {
         // Reuse the same validated market-feed function as the dashboard's MTF panel.
         // This avoids a separate request format or a second source of candle parsing.
@@ -4414,18 +4516,19 @@ setInterval(refreshMultiTimeframePanel, 60000);
         state.pending = null;
     }
 
-    function openPaperPosition(direction, level, confirmCandle, atr, tolerance, entryPrice, market) {
+    function openPaperPosition(direction, level, confirmCandle, atr, tolerance, entryPrice, market, options = {}) {
         if (!Number.isFinite(entryPrice) || entryPrice <= 0) {
-            setMessage('Live price is unavailable; no demo entry recorded.');
+            setMessage('Entry price is unavailable; no demo entry recorded.');
             return false;
         }
+        const isLimitFill = options.mode === 'limit';
         const maxChase = tolerance * 2.5;
-        if (direction === 'long' && (entryPrice < level.price || entryPrice - level.price > maxChase)) {
+        if (!isLimitFill && direction === 'long' && (entryPrice < level.price || entryPrice - level.price > maxChase)) {
             setMessage('Confirmation candle appeared, but price moved too far from support. No chasing; waiting for another setup.');
             logEvent('No entry: confirmation was valid, but price had moved too far from support.');
             return false;
         }
-        if (direction === 'short' && (entryPrice > level.price || level.price - entryPrice > maxChase)) {
+        if (!isLimitFill && direction === 'short' && (entryPrice > level.price || level.price - entryPrice > maxChase)) {
             setMessage('Confirmation candle appeared, but price moved too far from resistance. No chasing; waiting for another setup.');
             logEvent('No entry: confirmation was valid, but price had moved too far from resistance.');
             return false;
@@ -4477,14 +4580,17 @@ setInterval(refreshMultiTimeframePanel, 60000);
             realizedR: 0,
             openedAt: new Date(),
             level: level.price,
-            confirmTime: confirmCandle[0]
+            entryMode: isLimitFill ? 'paper_limit' : 'confirmed_rejection',
+            confirmTime: confirmCandle?.[0] || Date.now()
         };
         state.position = position;
         state.positionStructureClosed = Array.isArray(state.structureClosed) ? state.structureClosed.slice() : [];
         state.lastPositionStructureFetch = 0; // refresh from the position market at the next cycle
         state.pending = null;
-        setMessage(`Paper ${direction.toUpperCase()} opened after confirmation at ${formatPrice(entryPrice)}. Monitoring simulated stop and targets.`);
-        logEvent(`${marketName(market)} PAPER ${direction.toUpperCase()} opened at ${formatPrice(entryPrice)}; assumed initial risk $${riskUsd.toFixed(2)}, quantity ${fmtQuantity(quantity)}, SL ${formatPrice(stop)}, TP1 ${formatPrice(position.tp1)}, TP2 ${formatPrice(position.tp2)}.`);
+        setMessage(isLimitFill
+            ? `Paper ${direction.toUpperCase()} limit filled at ${formatPrice(entryPrice)}. Monitoring simulated stop and targets.`
+            : `Paper ${direction.toUpperCase()} opened after confirmation at ${formatPrice(entryPrice)}. Monitoring simulated stop and targets.`);
+        logEvent(`${marketName(market)} PAPER ${direction.toUpperCase()} ${isLimitFill ? 'LIMIT FILLED' : 'confirmation entry'} at ${formatPrice(entryPrice)}; assumed initial risk $${riskUsd.toFixed(2)}, quantity ${fmtQuantity(quantity)}, SL ${formatPrice(stop)}, TP1 ${formatPrice(position.tp1)}, TP2 ${formatPrice(position.tp2)}.`);
         renderUi();
         return true;
     }
@@ -4615,7 +4721,8 @@ setInterval(refreshMultiTimeframePanel, 60000);
                     const positionStructure = state.positionStructureClosed.length
                         ? state.positionStructureClosed
                         : state.structureClosed;
-                    state.levels = findSwingLevels(positionStructure, mark, 0);
+                    state.levels = findStableSwingLevels(positionStructure, mark, 0, state.levels, state.levelsMarket, positionMarket);
+                    state.levelsMarket = positionMarket;
                 }
                 if (state.position || !state.enabled) return;
             }
@@ -4664,8 +4771,9 @@ setInterval(refreshMultiTimeframePanel, 60000);
             state.trend = trend;
             const atr = averageTrueRange(state.confirmClosed, 14);
             const tolerance = Math.max(price * 0.00025, Number.isFinite(atr) ? atr * 0.35 : 0);
-            const levels = findSwingLevels(state.structureClosed, price, tolerance);
+            const levels = findStableSwingLevels(state.structureClosed, price, tolerance, state.levels, state.levelsMarket, market);
             state.levels = levels;
+            state.levelsMarket = market;
 
             const signalDirection = directionFromSignal(lastScalpSignal);
             const latestClosed = state.confirmClosed[state.confirmClosed.length - 1];
@@ -4673,18 +4781,30 @@ setInterval(refreshMultiTimeframePanel, 60000);
 
             if (state.pending) {
                 const pending = state.pending;
+                const isLimitOrder = pending.kind === 'limit';
+                const maxAgeMinutes = isLimitOrder ? MAX_LIMIT_PENDING_MINUTES : MAX_PENDING_MINUTES;
                 if (pending.market !== market) {
                     resetPending('market changed');
-                } else if (Date.now() - pending.startedAt > MAX_PENDING_MINUTES * 60000) {
-                    resetPending('no confirmation within five minutes');
+                } else if (Date.now() - pending.startedAt > maxAgeMinutes * 60000) {
+                    resetPending(isLimitOrder ? 'paper limit order expired after 30 minutes' : 'no confirmation within five minutes');
                 } else if (signalDirection !== pending.direction) {
                     resetPending('dashboard ECI direction no longer matches the setup');
-                } else if (trend.direction !== 'neutral' && trend.direction !== pending.direction) {
-                    resetPending('1-minute WMA trend no longer agrees');
-                } else if (pending.direction === 'long' && price < pending.level.price - pending.tolerance * 1.5) {
+                } else if (trend.direction !== pending.direction) {
+                    resetPending('1-minute WMA trend no longer agrees or became neutral');
+                } else if (isLimitOrder && latestClosed && ((pending.direction === 'long' && latestClosed[4] < pending.level.price - pending.tolerance) || (pending.direction === 'short' && latestClosed[4] > pending.level.price + pending.tolerance))) {
+                    resetPending('the last closed 1-minute candle invalidated the support/resistance level');
+                } else if (!isLimitOrder && pending.direction === 'long' && price < pending.level.price - pending.tolerance * 1.5) {
                     resetPending('price broke below support');
-                } else if (pending.direction === 'short' && price > pending.level.price + pending.tolerance * 1.5) {
+                } else if (!isLimitOrder && pending.direction === 'short' && price > pending.level.price + pending.tolerance * 1.5) {
                     resetPending('price broke above resistance');
+                } else if (isLimitOrder && pending.direction === 'long' && price <= pending.limitPrice) {
+                    const opened = openPaperPosition('long', pending.level, latestClosed, pending.atr || atr, pending.tolerance, pending.limitPrice, market, { mode: 'limit' });
+                    if (!opened) state.pending = null;
+                } else if (isLimitOrder && pending.direction === 'short' && price >= pending.limitPrice) {
+                    const opened = openPaperPosition('short', pending.level, latestClosed, pending.atr || atr, pending.tolerance, pending.limitPrice, market, { mode: 'limit' });
+                    if (!opened) state.pending = null;
+                } else if (isLimitOrder) {
+                    setMessage(`Paper ${pending.direction.toUpperCase()} limit order waiting at ${formatPrice(pending.limitPrice)} (${MAX_LIMIT_PENDING_MINUTES - Math.floor((Date.now() - pending.startedAt) / 60000)} min max).`);
                 } else if (latestClosed && latestClosed[0] >= pending.triggerCandleTime && latestClosed[0] !== pending.lastEvaluatedTime) {
                     pending.lastEvaluatedTime = latestClosed[0];
                     if (candleConfirms(pending.direction, latestClosed, previousClosed, pending.level, pending.tolerance)) {
@@ -4710,20 +4830,33 @@ setInterval(refreshMultiTimeframePanel, 60000);
                     const level = signalDirection === 'long' ? levels.support : levels.resistance;
                     if (!level) {
                         setMessage(`No confirmed ${signalDirection === 'long' ? 'support' : 'resistance'} is available in closed 15-minute swing candles. No level is invented.`);
+                    } else if (state.limitMode) {
+                        const overrideRaw = String(state.limitPriceOverride || '').trim();
+                        const limitPrice = overrideRaw ? Number(overrideRaw) : Number(level.price);
+                        const correctSide = Number.isFinite(limitPrice) && (signalDirection === 'long' ? limitPrice < price : limitPrice > price);
+                        const maxLevelAdjust = Math.max((Number.isFinite(atr) ? atr : 0) * 1.5, price * 0.0005);
+                        const nearStructure = Math.abs(limitPrice - level.price) <= maxLevelAdjust;
+                        if (!correctSide) {
+                            setMessage(`Limit price must be ${signalDirection === 'long' ? 'below' : 'above'} current market price ${formatPrice(price)}. No paper order placed.`);
+                        } else if (!nearStructure) {
+                            setMessage(`Limit override is too far from the confirmed ${level.type.toLowerCase()}. Keep it within ${formatPrice(maxLevelAdjust)} of ${formatPrice(level.price)}, or use the nearest level.`);
+                        } else {
+                            state.pending = {
+                                kind: 'limit', market, direction: signalDirection, level,
+                                limitPrice, tolerance, atr, startedAt: Date.now(),
+                                triggerCandleTime: null, lastEvaluatedTime: null
+                            };
+                            logEvent(`${marketName(market)} PAPER ${signalDirection.toUpperCase()} LIMIT placed at ${formatPrice(limitPrice)} using ${level.type.toLowerCase()} ${formatPrice(level.price)}. Expires in ${MAX_LIMIT_PENDING_MINUTES} minutes unless signals change or level invalidates.`);
+                            setMessage(`Paper ${signalDirection.toUpperCase()} limit order placed at ${formatPrice(limitPrice)} (${overrideRaw ? 'manual override' : 'nearest confirmed level'}). Waiting for price to reach the limit.`);
+                        }
                     } else if (Math.abs(price - level.price) <= tolerance) {
                         const triggerTime = currentCandleStartTime();
                         if (triggerTime === null) {
                             setMessage('Price reached the structure level, but the current 1-minute candle time is unavailable.');
                         } else {
                             state.pending = {
-                                market,
-                                direction: signalDirection,
-                                level,
-                                tolerance,
-                                atr,
-                                startedAt: Date.now(),
-                                triggerCandleTime: triggerTime,
-                                lastEvaluatedTime: null
+                                kind: 'confirmation', market, direction: signalDirection, level, tolerance, atr,
+                                startedAt: Date.now(), triggerCandleTime: triggerTime, lastEvaluatedTime: null
                             };
                             logEvent(`${marketName(market)} touched ${signalDirection === 'long' ? 'support' : 'resistance'} at ${formatPrice(level.price)}. Waiting for a closed 1-minute confirmation candle.`);
                             setMessage(`Price reached ${signalDirection === 'long' ? 'support' : 'resistance'} at ${formatPrice(level.price)}. Waiting for a closed 1-minute confirmation candle.`);
@@ -4805,6 +4938,35 @@ setInterval(refreshMultiTimeframePanel, 60000);
 
     const toggle = $('demoRobotToggle');
     if (toggle) toggle.addEventListener('click', toggleRobot);
+    const limitModeInput = $('demoRobotLimitMode');
+    if (limitModeInput) {
+        limitModeInput.addEventListener('change', () => {
+            state.limitMode = Boolean(limitModeInput.checked);
+            if (!state.limitMode && state.pending?.kind === 'limit') resetPending('paper limit-entry mode was switched off');
+            logEvent(state.limitMode
+                ? 'Paper limit-entry mode enabled. The robot will use a limit at confirmed support/resistance; no real orders are sent.'
+                : 'Paper limit-entry mode disabled. The standard closed-candle confirmation rule is active.');
+            setMessage(state.limitMode
+                ? 'Paper limit-entry mode is ON. ECI and 1-minute WMA must still agree; limit orders are simulated only.'
+                : 'Paper limit-entry mode is OFF. Standard rejection-candle confirmation remains active.');
+            renderUi();
+        });
+    }
+    const limitPriceInput = $('demoRobotLimitPrice');
+    if (limitPriceInput) {
+        limitPriceInput.addEventListener('input', () => {
+            state.limitPriceOverride = String(limitPriceInput.value || '').trim();
+            savePersistentState();
+        });
+    }
+    const nearestButton = $('demoRobotUseNearest');
+    if (nearestButton) nearestButton.addEventListener('click', () => {
+        state.limitPriceOverride = '';
+        if (limitPriceInput) limitPriceInput.value = '';
+        savePersistentState();
+        setMessage('Limit override cleared. Paper limit entries will use the nearest confirmed support/resistance.');
+        renderUi();
+    });
     const clear = $('demoRobotClearLog');
     if (clear) clear.addEventListener('click', clearLog);
     const exportButton = $('demoRobotExportHistory');
@@ -4814,8 +4976,22 @@ setInterval(refreshMultiTimeframePanel, 60000);
     renderUi();
     renderLog();
     if (state.position) {
-        logEvent(`Restored saved ${marketName(state.position.market)} PAPER ${state.position.direction.toUpperCase()} position from local history. New entries remain paused until resumed.`);
+        logEvent(`Restored saved ${marketName(state.position.market)} PAPER ${state.position.direction.toUpperCase()} position from local history. It will continue to be monitored while this dashboard page is open.`);
     }
+    if (state.enabled) {
+        if (String(selectedMarket).startsWith('CUSTOM:')) {
+            state.enabled = false;
+            setMessage('Robot was restored, but the selected custom asset is not supported by the paper robot. Select Gold, BTC, Silver or NASDAQ and start it again.');
+        } else {
+            setMessage(state.pending?.kind === 'limit'
+                ? `Restored active paper robot and pending ${state.pending.direction.toUpperCase()} limit at ${formatPrice(state.pending.limitPrice)}. Monitoring resumed after refresh.`
+                : (state.pending ? 'Restored active paper robot and its pending confirmation setup. Monitoring resumed after refresh.' : 'Restored active paper robot after refresh. Monitoring resumed; no exchange orders are sent.'));
+            logEvent('Paper robot automatically resumed after page refresh, using saved state and trade history.');
+        }
+    }
+    renderUi();
+    savePersistentState();
+    if (state.enabled || state.position) cycle();
     setInterval(cycle, ROBOT_POLL_MS);
 })();
 </script>
