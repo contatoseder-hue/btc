@@ -1,4 +1,4 @@
-
+l
 
 <!DOCTYPE html>
 <html lang="en">
@@ -897,7 +897,7 @@
             </div>
             <div class="demo-robot-stat">
                 <div class="label">Leverage Used</div>
-                <div id="demoRobotLeverageMode" class="value demo-leverage-note">Not modeled</div>
+                <div id="demoRobotLeverageMode" class="value demo-leverage-note">10× paper leverage</div>
             </div>
         </div>
 
@@ -923,7 +923,7 @@
                 <div class="demo-position-stat"><div class="demo-position-stat-label">Active Stop Loss</div><div id="demoPositionStop" class="demo-position-stat-value">—</div></div>
                 <div class="demo-position-stat"><div class="demo-position-stat-label">Take Profit 1</div><div id="demoPositionTp1" class="demo-position-stat-value">—</div></div>
                 <div class="demo-position-stat"><div class="demo-position-stat-label">Take Profit 2</div><div id="demoPositionTp2" class="demo-position-stat-value">—</div></div>
-                <div class="demo-position-stat"><div class="demo-position-stat-label">Leverage Used</div><div id="demoPositionLeverage" class="demo-position-stat-value demo-leverage-note">Not modeled</div></div>
+                <div class="demo-position-stat"><div class="demo-position-stat-label">Leverage Used</div><div id="demoPositionLeverage" class="demo-position-stat-value demo-leverage-note">10× paper leverage</div></div>
                 <div class="demo-position-stat"><div class="demo-position-stat-label">Notional Exposure (remaining)</div><div id="demoPositionNotional" class="demo-position-stat-value">—</div></div>
             </div>
             <div id="demoPositionPnlBreakdown" class="demo-position-note">PnL is calculated from the simulated quantity. No exchange order is placed.</div>
@@ -966,7 +966,7 @@
             </table>
         </div>
         <div class="demo-robot-footnote">
-            Standard mode: ECI direction must match the 1-minute WMA trend, then a closed 1-minute rejection candle confirms the 15-minute swing level. Optional Paper Limit Entry mode skips the rejection-candle requirement and simulates a limit at the nearest confirmed support/resistance (or a nearby manual override); it is higher risk and expires after 30 minutes. Support/resistance stays fixed as price moves, changing only if crossed/invalidated or replaced by a newer confirmed, closer swing. Demo sizing assumes $10 risk at the initial stop; leverage and margin are not modeled, and notional exposure is shown instead. USD PnL is an estimate and excludes fees, spread, slippage and instrument-specific contract sizing. TP1 is 2R; 50% exits there and the remaining 50% targets 3R, with the stop moved to entry after TP1. State, pending setup/order, levels, open position and trade history are saved locally and an active robot resumes on refresh. JavaScript cannot monitor trades while the browser/page is closed; it resumes only when the dashboard is open again. Quotes are polled about every 15 seconds, not tick-by-tick. Paper trading only; no exchange orders are sent. Custom assets are not enabled in this test.
+            Standard mode: ECI direction must match the 1-minute WMA trend, then a closed 1-minute rejection candle confirms the 15-minute swing level. Optional Paper Limit Entry mode skips the rejection-candle requirement and simulates a limit at the nearest confirmed support/resistance (or a nearby manual override); it is higher risk and expires after 30 minutes. Support/resistance stays fixed as price moves, changing only if crossed/invalidated or replaced by a newer confirmed, closer swing. Demo sizing assumes $10 risk at the initial stop and uses 10× leverage for estimated margin display only; position quantity and PnL remain risk-based, and liquidation is not modeled. USD PnL is an estimate and excludes fees, spread, slippage and instrument-specific contract sizing. TP1 is 2R; 50% exits there and the remaining 50% targets 3R, with the stop moved to entry after TP1. State, pending setup/order, levels, open position and trade history are saved locally and an active robot resumes on refresh. JavaScript cannot monitor trades while the browser/page is closed; it resumes only when the dashboard is open again. Quotes are polled about every 15 seconds, not tick-by-tick. Paper trading only; no exchange orders are sent. Custom assets are not enabled in this test.
         </div>
     </div>
 
@@ -4320,7 +4320,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
                     formatPrice(Number(trade.entry)),
                     formatPrice(Number(trade.exit)),
                     Number.isFinite(entryNotional) && entryNotional > 0 ? `$${entryNotional.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—',
-                    'Not applied',
+                    '10× (paper model)',
                     fmtR(Number(trade.outcomeR)),
                     fmtUsdPnl(Number(trade.cashPnlUsd)),
                     String(trade.reason || '')
@@ -4388,7 +4388,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
         const limitPriceInput = $('demoRobotLimitPrice');
         if (modeToggle && modeToggle.checked !== state.limitMode) modeToggle.checked = state.limitMode;
         if (limitPriceInput && limitPriceInput.value !== state.limitPriceOverride) limitPriceInput.value = state.limitPriceOverride;
-        if ($('demoRobotLeverageMode')) $('demoRobotLeverageMode').textContent = 'Not modeled';
+        if ($('demoRobotLeverageMode')) $('demoRobotLeverageMode').textContent = '10× (paper model)';
         if ($('demoRobotTrend')) $('demoRobotTrend').textContent = state.trend ? state.trend.label : 'Unavailable';
         if ($('demoRobotClosed')) $('demoRobotClosed').textContent = String(state.closedTrades.length);
         if ($('demoRobotNetR')) {
@@ -4429,12 +4429,13 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 if ($('demoPositionStop')) $('demoPositionStop').textContent = formatPrice(p.activeStop);
                 if ($('demoPositionTp1')) $('demoPositionTp1').textContent = p.hitTP1 ? 'HIT ✓' : formatPrice(p.tp1);
                 if ($('demoPositionTp2')) $('demoPositionTp2').textContent = formatPrice(p.tp2);
-                if ($('demoPositionLeverage')) $('demoPositionLeverage').textContent = 'Not applied';
+                if ($('demoPositionLeverage')) $('demoPositionLeverage').textContent = '10× (paper model)';
                 if ($('demoPositionNotional')) $('demoPositionNotional').textContent = fmtUsdPnl(Math.abs(mark * remainingQty)).replace(/^\+/, '');
                 if ($('demoPositionPnlBreakdown')) {
                     const realized = Number(p.realizedPnlUsd) || 0;
                     const remainingNotional = Math.abs(mark * remainingQty);
-                    $('demoPositionPnlBreakdown').textContent = `Assumed risk: $${p.riskUsd.toFixed(2)} at the initial stop · Realized from partial exits: ${fmtUsdPnl(realized)} · Floating PnL on remaining quantity: ${fmtUsdPnl(floatingPnl)} · Remaining notional exposure: $${remainingNotional.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}. Leverage/margin is not modeled in this paper simulation; sizing is based on a fixed $${p.riskUsd.toFixed(2)} initial risk. PnL excludes fees, spread, slippage and exchange contract specifications.`;
+                    const estimatedMargin = remainingNotional / 10;
+                    $('demoPositionPnlBreakdown').textContent = `Assumed risk: $${p.riskUsd.toFixed(2)} at the initial stop · Simulated leverage: 10× · Estimated margin at 10×: $${estimatedMargin.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · Realized from partial exits: ${fmtUsdPnl(realized)} · Floating PnL on remaining quantity: ${fmtUsdPnl(floatingPnl)} · Remaining notional exposure: $${remainingNotional.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}. Quantity remains sized from fixed initial risk; this is a paper estimate and does not model liquidation. PnL excludes fees, spread, slippage and exchange contract specifications.`;
                 }
                 positionEl.style.display = 'block';
             }
@@ -5020,7 +5021,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
             Number(trade.entry),
             Number(trade.exit),
             Number(trade.notionalExposureAtEntry) || 0,
-            'Not applied',
+            '10× (paper model)',
             Number(trade.outcomeR) || 0,
             Number(trade.cashPnlUsd) || 0,
             String(trade.reason || '')
