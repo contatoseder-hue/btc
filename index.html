@@ -3060,6 +3060,47 @@ function getMtfTargetCandles(sourceCandles, frame) {
         : sourceCandles;
 }
 
+// Direct, read-only fallback for BTC candles. The Worker uses Binance USDⓈ-M Futures
+// for BTC, so this fallback queries the same public BTCUSDT futures klines directly.
+// It does not place orders and is used only when the shared Worker feed fails.
+async function fetchDirectBtcCandlePayload(frame) {
+    const params = new URLSearchParams({
+        symbol: "BTCUSDT",
+        interval: String(frame.interval),
+        limit: "500"
+    });
+    const url = `https://fapi.binance.com/fapi/v1/klines?${params.toString()}`;
+    const response = await fetch(url, {
+        cache: "no-store",
+        headers: { "Accept": "application/json" }
+    });
+    const rows = await response.json().catch(() => null);
+    if (!response.ok) {
+        const details = rows && !Array.isArray(rows) ? (rows.msg || rows.message || JSON.stringify(rows)) : "no details";
+        throw new Error(`Binance Futures returned HTTP ${response.status}: ${details}`);
+    }
+    if (!Array.isArray(rows) || !rows.length) {
+        throw new Error("Binance Futures returned no BTCUSDT candles.");
+    }
+    const bars = rows
+        .filter(row => Array.isArray(row) && row.length >= 7)
+        .map(row => ({
+            openTime: Number(row[0]),
+            open: row[1],
+            high: row[2],
+            low: row[3],
+            close: row[4],
+            volume: row[5],
+            isOpen: Number(row[6]) >= Date.now()
+        }))
+        .filter(bar =>
+            Number.isFinite(bar.openTime) &&
+            [bar.open, bar.high, bar.low, bar.close].every(value => Number.isFinite(Number(value)) && Number(value) > 0)
+        );
+    if (!bars.length) throw new Error("Binance Futures candles failed OHLC validation.");
+    return { bars, source: "Binance USDⓈ-M Futures direct fallback (BTCUSDT)" };
+}
+
 // Share identical candle requests between the dashboard's MTF panel and demo robot.
 // A brief cache reduces duplicate calls without making the chart meaningfully stale.
 const mtfHistoryInFlight = new Map();
@@ -3087,41 +3128,70 @@ async function fetchMtfCandleHistory(marketCode, frame) {
             t: String(Date.now())
         });
         const url = `${CLOUDFLARE_API}?${params.toString()}`;
-        let response;
+        let payload = null;
+        let workerFailure = null;
         try {
-            response = await fetch(url, {
+            const response = await fetch(url, {
                 cache: "no-store",
                 headers: { "Accept": "application/json" }
             });
+            payload = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(
+                    `Cloudflare MTF history request failed (${response.status}): ` +
+                    `${payload?.message || payload?.error || "no error details"}`
+                );
+            }
+            if (!Array.isArray(payload?.bars) || !payload.bars.length) {
+                throw new Error(
+                    `Cloudflare returned no ${frame.interval} candles: ` +
+                    `${payload?.message || payload?.error || "empty bars array"}`
+                );
+            }
         } catch (error) {
-            const pageOrigin = window.location && window.location.origin ? window.location.origin : "unknown";
-            console.error("[Dashboard candle feed] Browser fetch failed", {
-                pageOrigin,
-                url,
-                market: marketCode,
-                interval: frame.interval,
-                error: error?.message || String(error)
-            });
-            throw new Error(
-                `Browser could not reach the Cloudflare candle feed for ${marketCode} ${frame.interval}. ` +
-                `Page origin: ${pageOrigin}. If the origin is "null", open this HTML from your hosted HTTPS page. ` +
-                `Otherwise check the browser Console for a CORS block or verify that the Worker is responding. ` +
-                `(${error?.message || String(error)})`
-            );
-        }
+            workerFailure = error;
+            if (marketCode !== "BTC") {
+                const detail = error?.message || String(error);
+                if (/failed to fetch|networkerror|load failed/i.test(detail)) {
+                    const pageOrigin = window.location && window.location.origin ? window.location.origin : "unknown";
+                    console.error("[Dashboard candle feed] Browser fetch failed", {
+                        pageOrigin, url, market: marketCode, interval: frame.interval, error: detail
+                    });
+                    throw new Error(
+                        `Browser could not reach the Cloudflare candle feed for ${marketCode} ${frame.interval}. ` +
+                        `Page origin: ${pageOrigin}. Check the browser Console for a CORS block or verify that the Worker is responding. ` +
+                        `(${detail})`
+                    );
+                }
+                throw error;
+            }
 
-        const payload = await response.json().catch(() => ({}));
-        if (!response.ok) {
-            throw new Error(
-                `Cloudflare MTF history request failed (${response.status}): ` +
-                `${payload?.message || payload?.error || "no error details"}`
-            );
+            // BTC's Worker source is Binance USDⓈ-M Futures, so direct klines are a
+            // compatible fallback for read-only candles when the Worker/CORS path fails.
+            try {
+                payload = await fetchDirectBtcCandlePayload(frame);
+                console.warn(
+                    `[Dashboard candle feed] Cloudflare failed for BTC ${frame.interval}; using direct Binance Futures fallback.`,
+                    workerFailure?.message || String(workerFailure)
+                );
+            } catch (fallbackError) {
+                console.error("[Dashboard candle feed] Both Cloudflare and direct BTC fallback failed", {
+                    market: marketCode, interval: frame.interval,
+                    workerError: workerFailure?.message || String(workerFailure),
+                    fallbackError: fallbackError?.message || String(fallbackError)
+                });
+                throw new Error(
+                    `BTC ${frame.interval} candles unavailable. Cloudflare feed failed (${workerFailure?.message || String(workerFailure)}); ` +
+                    `direct Binance Futures fallback also failed (${fallbackError?.message || String(fallbackError)}). ` +
+                    `No real orders were sent.`
+                );
+            }
         }
 
         const bars = Array.isArray(payload?.bars) ? payload.bars : [];
         if (!bars.length) {
             throw new Error(
-                `Cloudflare returned no ${frame.interval} candles: ` +
+                `No ${frame.interval} candles returned by the configured feed: ` +
                 `${payload?.message || payload?.error || "empty bars array"}`
             );
         }
