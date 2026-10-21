@@ -1,4 +1,4 @@
-l
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -667,6 +667,46 @@ l
 .demo-limit-price-row button { width:auto; margin:0; }
 .demo-limit-note { color:#9ca3af; font-size:11px; line-height:1.5; margin-top:9px; }
 @media (max-width: 600px) { .demo-limit-price-field { flex-basis:100%; } .demo-limit-price-row button { flex:1 1 100%; } }
+
+/* Layout hardening: keep the limit toggle and its copy inside the panel. */
+#demoRobotLimitControls,
+#demoRobotLimitControls * { box-sizing: border-box; }
+#demoRobotLimitControls { width: 100%; min-width: 0; }
+#demoRobotLimitControls .demo-limit-toggle {
+    display: grid;
+    grid-template-columns: 18px minmax(0, 1fr);
+    align-items: start;
+    gap: 10px;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+}
+#demoRobotLimitControls .demo-limit-toggle input {
+    position: static;
+    display: block;
+    width: 14px;
+    height: 14px;
+    margin: 3px 0 0;
+}
+#demoRobotLimitControls .demo-limit-toggle > span {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+#demoRobotLimitControls .demo-limit-toggle strong,
+#demoRobotLimitControls .demo-limit-toggle small {
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+#demoRobotLimitControls .demo-limit-price-row { width: 100%; min-width: 0; }
+#demoRobotLimitControls .demo-limit-price-field { flex: 1 1 260px; min-width: 0; }
+#demoRobotLimitControls .demo-limit-price-row button { flex: 0 0 auto; max-width: 100%; }
+#demoRobotLimitControls .demo-limit-note { overflow-wrap: anywhere; }
+@media (max-width: 600px) {
+    #demoRobotLimitControls .demo-limit-price-field { flex: 1 1 100%; }
+    #demoRobotLimitControls .demo-limit-price-row button { flex: 1 1 100%; }
+}
 </style>
 </head>
 
