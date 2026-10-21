@@ -707,6 +707,19 @@
     #demoRobotLimitControls .demo-limit-price-field { flex: 1 1 100%; }
     #demoRobotLimitControls .demo-limit-price-row button { flex: 1 1 100%; }
 }
+
+/* Paper robot account controls and manual close */
+.demo-account-controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:14px 0;padding:14px;background:#0d131a;border:1px solid #26313c;border-radius:10px}
+.demo-account-field{min-width:0;display:flex;flex-direction:column;gap:7px}
+.demo-account-field label{font-size:12px;color:#aab6c2;font-weight:700}
+.demo-account-field input{width:100%;min-width:0;background:#080d12;color:#fff;border:1px solid #354454;border-radius:7px;padding:10px;font-size:15px}
+.demo-account-stat{font-size:12px;color:#aab6c2;grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}
+.demo-account-stat strong{color:#fff}
+.demo-position-actions{display:flex;justify-content:flex-end;margin-top:12px}
+.demo-position-close{background:#7f1d1d;color:#fff;border:1px solid #ef4444;border-radius:8px;padding:10px 16px;font-weight:800;cursor:pointer}
+.demo-position-close:hover{background:#991b1b}
+@media(max-width:650px){.demo-account-controls{grid-template-columns:1fr}.demo-account-stat{grid-column:auto}.demo-position-actions{justify-content:stretch}.demo-position-close{width:100%}}
+
 </style>
 </head>
 
@@ -941,6 +954,13 @@
             </div>
         </div>
 
+        <div class="demo-account-controls" id="demoRobotAccountControls">
+            <div class="demo-account-field"><label for="demoRobotFunding">Starting Account Funding (USD)</label><input id="demoRobotFunding" type="number" min="1" step="any" value="1000"></div>
+            <div class="demo-account-field"><label for="demoRobotAllocation">Trade Allocation / Margin (USD)</label><input id="demoRobotAllocation" type="number" min="1" step="any" value="100"></div>
+            <div class="demo-account-field"><label for="demoRobotRisk">Max Initial Stop Risk (USD)</label><input id="demoRobotRisk" type="number" min="0.01" step="any" value="10"></div>
+            <div class="demo-account-stat"><span>Current Demo Equity: <strong id="demoRobotEquity">$1,000.00</strong></span><span>Estimated margin per trade: <strong id="demoRobotMargin">$100.00</strong></span><span>Leverage model: <strong>10×</strong></span></div>
+        </div>
+
         <div id="demoRobotMessage" class="demo-robot-message" aria-live="polite">
             Demo robot is off. Start it to monitor market structure. It cannot place real orders.
         </div>
@@ -967,6 +987,7 @@
                 <div class="demo-position-stat"><div class="demo-position-stat-label">Notional Exposure (remaining)</div><div id="demoPositionNotional" class="demo-position-stat-value">—</div></div>
             </div>
             <div id="demoPositionPnlBreakdown" class="demo-position-note">PnL is calculated from the simulated quantity. No exchange order is placed.</div>
+            <div class="demo-position-actions"><button id="demoRobotClosePosition" class="demo-position-close" type="button">Close Position at Current Mark</button></div>
         </div>
 
         <div class="demo-limit-controls" id="demoRobotLimitControls">
@@ -1006,7 +1027,7 @@
             </table>
         </div>
         <div class="demo-robot-footnote">
-            Standard mode: ECI direction must match the 1-minute WMA trend, then a closed 1-minute rejection candle confirms the 15-minute swing level. Optional Paper Limit Entry mode skips the rejection-candle requirement and simulates a limit at the nearest confirmed support/resistance (or a nearby manual override); it is higher risk and expires after 30 minutes. Support/resistance stays fixed as price moves, changing only if crossed/invalidated or replaced by a newer confirmed, closer swing. Demo sizing assumes $10 risk at the initial stop and uses 10× leverage for estimated margin display only; position quantity and PnL remain risk-based, and liquidation is not modeled. USD PnL is an estimate and excludes fees, spread, slippage and instrument-specific contract sizing. TP1 is 2R; 50% exits there and the remaining 50% targets 3R, with the stop moved to entry after TP1. State, pending setup/order, levels, open position and trade history are saved locally and an active robot resumes on refresh. JavaScript cannot monitor trades while the browser/page is closed; it resumes only when the dashboard is open again. Quotes are polled about every 15 seconds, not tick-by-tick. Paper trading only; no exchange orders are sent. Custom assets are not enabled in this test.
+            Standard mode: ECI direction must match the 1-minute WMA trend, then a closed 1-minute rejection candle confirms the 15-minute swing level. Optional Paper Limit Entry mode skips the rejection-candle requirement and simulates a limit at the nearest confirmed support/resistance (or a nearby manual override); it is higher risk and expires after 30 minutes. Support/resistance stays fixed as price moves, changing only if crossed/invalidated or replaced by a newer confirmed, closer swing. Demo sizing respects both the configured maximum initial stop risk and the configured margin allocation at the 10× paper model; estimated margin is not an exchange simulation and liquidation is not modeled. USD PnL is an estimate and excludes fees, spread, slippage and instrument-specific contract sizing. TP1 is 2R; 50% exits there and the remaining 50% targets 3R, with the stop moved to entry after TP1. State, pending setup/order, levels, open position and trade history are saved locally and an active robot resumes on refresh. JavaScript cannot monitor trades while the browser/page is closed; it resumes only when the dashboard is open again. BTC open-position mark and floating PnL use a public mark-price WebSocket when available; entry decisions still require closed candles. Other market marks continue to use the existing polling feed. Paper trading only; no exchange orders are sent. Custom assets are not enabled in this test.
         </div>
     </div>
 
@@ -4132,6 +4153,9 @@ setInterval(refreshMultiTimeframePanel, 60000);
         losses: 0,
         netR: 0,
         netPnlUsd: 0,
+        startingFundingUsd: 1000,
+        tradeAllocationUsd: 100,
+        maxRiskUsd: 10,
         cooldownUntil: 0
     };
 
@@ -4206,6 +4230,9 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 losses: state.losses,
                 netR: state.netR,
                 netPnlUsd: state.netPnlUsd,
+                startingFundingUsd: state.startingFundingUsd,
+                tradeAllocationUsd: state.tradeAllocationUsd,
+                maxRiskUsd: state.maxRiskUsd,
                 cooldownUntil: state.cooldownUntil,
                 logs: state.logs.slice(0, MAX_SAVED_LOG_EVENTS)
             };
@@ -4265,6 +4292,9 @@ setInterval(refreshMultiTimeframePanel, 60000);
             state.losses = Number.isFinite(Number(saved.losses)) ? Number(saved.losses) : state.closedTrades.filter(t => Number(t.outcomeR) < 0).length;
             state.netR = Number.isFinite(Number(saved.netR)) ? Number(saved.netR) : state.closedTrades.reduce((sum, t) => sum + (Number(t.outcomeR) || 0), 0);
             state.netPnlUsd = Number.isFinite(Number(saved.netPnlUsd)) ? Number(saved.netPnlUsd) : state.closedTrades.reduce((sum, t) => sum + (Number(t.cashPnlUsd) || 0), 0);
+            state.startingFundingUsd = Number(saved.startingFundingUsd) > 0 ? Number(saved.startingFundingUsd) : 1000;
+            state.tradeAllocationUsd = Number(saved.tradeAllocationUsd) > 0 ? Number(saved.tradeAllocationUsd) : 100;
+            state.maxRiskUsd = Number(saved.maxRiskUsd) > 0 ? Number(saved.maxRiskUsd) : 10;
             state.cooldownUntil = Number(saved.cooldownUntil) || 0;
             state.logs = Array.isArray(saved.logs) ? saved.logs.slice(0, 12).map(item => ({
                 time: parseDate(item.time),
@@ -4429,6 +4459,27 @@ setInterval(refreshMultiTimeframePanel, 60000);
         if (modeToggle && modeToggle.checked !== state.limitMode) modeToggle.checked = state.limitMode;
         if (limitPriceInput && limitPriceInput.value !== state.limitPriceOverride) limitPriceInput.value = state.limitPriceOverride;
         if ($('demoRobotLeverageMode')) $('demoRobotLeverageMode').textContent = '10× (paper model)';
+        const fundingInput = $('demoRobotFunding');
+        const allocationInput = $('demoRobotAllocation');
+        const riskInput = $('demoRobotRisk');
+        if (fundingInput && document.activeElement !== fundingInput) fundingInput.value = String(state.startingFundingUsd);
+        if (allocationInput && document.activeElement !== allocationInput) allocationInput.value = String(state.tradeAllocationUsd);
+        if (riskInput && document.activeElement !== riskInput) riskInput.value = String(state.maxRiskUsd);
+        const equityEl = $('demoRobotEquity');
+        if (equityEl) {
+            let openPositionPnl = 0;
+            if (state.position) {
+                const pos = state.position;
+                const mark = Number(pos.markPrice) || Number(pos.entry);
+                const qty = Number.isFinite(pos.remainingQuantity) ? pos.remainingQuantity : pos.quantity;
+                const floating = (pos.direction === 'long' ? mark - Number(pos.entry) : Number(pos.entry) - mark) * qty;
+                openPositionPnl = (Number(pos.realizedPnlUsd) || 0) + floating;
+            }
+            const equity = state.startingFundingUsd + state.netPnlUsd + openPositionPnl;
+            equityEl.textContent = `$${equity.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+            equityEl.style.color = equity >= state.startingFundingUsd ? '#22c55e' : '#ef4444';
+        }
+        const marginEl = $('demoRobotMargin'); if (marginEl) marginEl.textContent = `$${Number(state.tradeAllocationUsd).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}`;
         if ($('demoRobotTrend')) $('demoRobotTrend').textContent = state.trend ? state.trend.label : 'Unavailable';
         if ($('demoRobotClosed')) $('demoRobotClosed').textContent = String(state.closedTrades.length);
         if ($('demoRobotNetR')) {
@@ -4458,7 +4509,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
                     titleEl.textContent = p.direction === 'long' ? 'OPEN PAPER POSITION · LONG' : 'OPEN PAPER POSITION · SHORT';
                     titleEl.className = 'demo-position-title demo-position-side ' + p.direction;
                 }
-                if (subtitleEl) subtitleEl.textContent = `${marketName(p.market)} · ${p.hitTP1 ? 'TP1 reached · 50% closed' : 'Position open'} · Mark refreshes about every 15 seconds`;
+                if (subtitleEl) subtitleEl.textContent = `${marketName(p.market)} · ${p.hitTP1 ? 'TP1 reached · 50% closed' : 'Position open'} · Live BTC mark when WebSocket is available; other feeds use polling`;
                 if (pnlEl) {
                     pnlEl.textContent = fmtUsdPnl(totalOpenPnl);
                     pnlEl.className = 'demo-position-pnl ' + (totalOpenPnl > 0 ? 'positive' : (totalOpenPnl < 0 ? 'negative' : 'neutral'));
@@ -4664,8 +4715,13 @@ setInterval(refreshMultiTimeframePanel, 60000);
         }
 
         const sign = direction === 'long' ? 1 : -1;
-        const riskUsd = DEMO_RISK_USD;
-        const quantity = riskUsd / risk;
+        const riskUsd = Math.max(0.01, Number(state.maxRiskUsd) || DEMO_RISK_USD);
+        const riskSizedQuantity = riskUsd / risk;
+        const maxNotional = Math.max(1, Number(state.tradeAllocationUsd) || 100) * 10;
+        const allocationSizedQuantity = maxNotional / entryPrice;
+        // Respect both the user's allocation (margin × 10 leverage) and the configured stop-risk cap.
+        const quantity = Math.min(riskSizedQuantity, allocationSizedQuantity);
+        const actualRiskUsd = quantity * risk;
         if (!Number.isFinite(quantity) || quantity <= 0) {
             setMessage('Simulated position size could not be calculated. No demo entry recorded.');
             logEvent('No entry: simulated quantity was invalid for the calculated stop distance.');
@@ -4679,11 +4735,12 @@ setInterval(refreshMultiTimeframePanel, 60000);
             initialStop: stop,
             activeStop: stop,
             risk,
-            riskUsd,
+            riskUsd: actualRiskUsd,
+            riskCapUsd: riskUsd,
             quantity,
             remainingQuantity: quantity,
             notionalExposureAtEntry: Math.abs(entryPrice * quantity),
-            leverageModel: 'not_applied',
+            leverageModel: '10x_paper_model',
             realizedPnlUsd: 0,
             tp1: entryPrice + sign * risk * 2,
             tp2: entryPrice + sign * risk * 3,
@@ -4701,7 +4758,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
         setMessage(isLimitFill
             ? `Paper ${direction.toUpperCase()} limit filled at ${formatPrice(entryPrice)}. Monitoring simulated stop and targets.`
             : `Paper ${direction.toUpperCase()} opened after confirmation at ${formatPrice(entryPrice)}. Monitoring simulated stop and targets.`);
-        logEvent(`${marketName(market)} PAPER ${direction.toUpperCase()} ${isLimitFill ? 'LIMIT FILLED' : 'confirmation entry'} at ${formatPrice(entryPrice)}; assumed initial risk $${riskUsd.toFixed(2)}, quantity ${fmtQuantity(quantity)}, SL ${formatPrice(stop)}, TP1 ${formatPrice(position.tp1)}, TP2 ${formatPrice(position.tp2)}.`);
+        logEvent(`${marketName(market)} PAPER ${direction.toUpperCase()} ${isLimitFill ? 'LIMIT FILLED' : 'confirmation entry'} at ${formatPrice(entryPrice)}; risk cap $${riskUsd.toFixed(2)}, allocation cap $${Number(state.tradeAllocationUsd).toFixed(2)} margin at 10×, quantity ${fmtQuantity(quantity)}, SL ${formatPrice(stop)}, TP1 ${formatPrice(position.tp1)}, TP2 ${formatPrice(position.tp2)}.`);
         renderUi();
         return true;
     }
@@ -4735,6 +4792,34 @@ setInterval(refreshMultiTimeframePanel, 60000);
         state.cooldownUntil = Date.now() + 60000;
         setMessage(`Paper trade closed: ${reason}. Result ${fmtR(outcomeR)}. A one-minute cooldown is active.`);
         logEvent(`${marketName(p.market)} PAPER trade closed at ${formatPrice(markPrice)}: ${reason}, ${fmtR(outcomeR)}.`);
+    }
+
+    function manuallyClosePaperPosition() {
+        const p = state.position;
+        if (!p) { setMessage('There is no open paper position to close.'); renderUi(); return; }
+        const mark = Number(p.markPrice) > 0 ? Number(p.markPrice) : Number(p.entry);
+        const remainingQty = Number.isFinite(Number(p.remainingQuantity)) ? Number(p.remainingQuantity) : Number(p.quantity);
+        const floating = (p.direction === 'long' ? mark - Number(p.entry) : Number(p.entry) - mark) * remainingQty;
+        const cashPnlUsd = (Number(p.realizedPnlUsd) || 0) + floating;
+        const riskUsd = Math.max(0.01, Number(p.riskUsd) || Number(state.maxRiskUsd) || DEMO_RISK_USD);
+        const outcomeR = cashPnlUsd / riskUsd;
+        const closed = {
+            market: p.market, direction: p.direction, entry: Number(p.entry), exit: mark,
+            outcomeR, cashPnlUsd, riskUsd,
+            notionalExposureAtEntry: Number(p.notionalExposureAtEntry) || Math.abs(Number(p.entry) * Number(p.quantity)),
+            leverageModel: '10x_paper_model', reason: 'manual close', openedAt: p.openedAt, closedAt: new Date()
+        };
+        state.closedTrades.push(closed);
+        state.netR += outcomeR;
+        state.netPnlUsd += cashPnlUsd;
+        if (cashPnlUsd > 0) state.wins++; else if (cashPnlUsd < 0) state.losses++;
+        state.position = null;
+        state.positionStructureClosed = [];
+        state.lastPositionStructureFetch = 0;
+        state.cooldownUntil = Date.now() + 60000;
+        setMessage(`Paper position manually closed at ${formatPrice(mark)}. Realized PnL: ${fmtUsdPnl(cashPnlUsd)}. Added to cumulative closed PnL.`);
+        logEvent(`${marketName(p.market)} PAPER ${p.direction.toUpperCase()} manually closed at ${formatPrice(mark)}; realized ${fmtUsdPnl(cashPnlUsd)} (${fmtR(outcomeR)}).`);
+        renderUi();
     }
 
     function managePaperPosition(markPrice) {
@@ -5087,6 +5172,29 @@ setInterval(refreshMultiTimeframePanel, 60000);
 
     const toggle = $('demoRobotToggle');
     if (toggle) toggle.addEventListener('click', toggleRobot);
+    const closePositionButton = $('demoRobotClosePosition');
+    if (closePositionButton) closePositionButton.addEventListener('click', () => {
+        if (!state.position) return;
+        if (window.confirm('Close this PAPER position at the latest available mark and add its PnL to closed results?')) manuallyClosePaperPosition();
+    });
+    const bindNumericSetting = (id, key, minValue) => {
+        const input = $(id); if (!input) return;
+        input.addEventListener('change', () => {
+            const value = Number(input.value);
+            if (!Number.isFinite(value) || value < minValue) {
+                input.value = String(state[key]);
+                setMessage(`Enter a valid value of at least ${minValue} for ${input.previousElementSibling?.textContent || key}.`);
+                return;
+            }
+            state[key] = value;
+            savePersistentState();
+            renderUi();
+            logEvent(`${key === 'startingFundingUsd' ? 'Starting demo funding' : key === 'tradeAllocationUsd' ? 'Trade allocation / margin' : 'Maximum initial stop risk'} set to $${value.toFixed(2)}.`);
+        });
+    };
+    bindNumericSetting('demoRobotFunding', 'startingFundingUsd', 1);
+    bindNumericSetting('demoRobotAllocation', 'tradeAllocationUsd', 1);
+    bindNumericSetting('demoRobotRisk', 'maxRiskUsd', 0.01);
     const limitModeInput = $('demoRobotLimitMode');
     if (limitModeInput) {
         limitModeInput.addEventListener('change', () => {
@@ -5120,6 +5228,32 @@ setInterval(refreshMultiTimeframePanel, 60000);
     if (clear) clear.addEventListener('click', clearLog);
     const exportButton = $('demoRobotExportHistory');
     if (exportButton) exportButton.addEventListener('click', exportHistoryCsv);
+
+    // Tick-level BTC mark updates for the paper position only. Entry decisions remain candle-confirmed.
+    let btcMarkSocket = null;
+    let btcMarkReconnectTimer = null;
+    function connectBtcMarkStream() {
+        if (btcMarkSocket && (btcMarkSocket.readyState === WebSocket.OPEN || btcMarkSocket.readyState === WebSocket.CONNECTING)) return;
+        try {
+            btcMarkSocket = new WebSocket('wss://fstream.binance.com/ws/btcusdt@markPrice');
+            btcMarkSocket.onmessage = event => {
+                try {
+                    const data = JSON.parse(event.data);
+                    const mark = Number(data.p);
+                    if (!Number.isFinite(mark) || mark <= 0) return;
+                    if (state.position && state.position.market === 'BTC') {
+                        state.position.markPrice = mark;
+                        state.position.lastMarkTime = Date.now();
+                        managePaperPosition(mark);
+                        renderUi();
+                    }
+                } catch (_) {}
+            };
+            btcMarkSocket.onclose = () => { btcMarkSocket = null; clearTimeout(btcMarkReconnectTimer); btcMarkReconnectTimer = setTimeout(connectBtcMarkStream, 5000); };
+            btcMarkSocket.onerror = () => { try { btcMarkSocket.close(); } catch (_) {} };
+        } catch (_) { btcMarkReconnectTimer = setTimeout(connectBtcMarkStream, 10000); }
+    }
+    if (typeof WebSocket !== 'undefined') connectBtcMarkStream();
 
     restorePersistentState();
     renderUi();
