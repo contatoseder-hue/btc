@@ -947,6 +947,8 @@
             <div class="demo-robot-stat">
                 <div class="label">Closed PnL (USD)</div>
                 <div id="demoRobotNetPnl" class="value">$0.00</div>
+                <div class="label" style="margin-top:4px;">Realized return</div>
+                <div id="demoRobotNetPnlPct" class="value" style="font-size:0.95rem;">0.00%</div>
             </div>
             <div class="demo-robot-stat">
                 <div class="label">Leverage Used</div>
@@ -974,6 +976,10 @@
                 <div class="demo-position-pnl-wrap">
                     <div class="demo-position-pnl-label">Total Open PnL · USD</div>
                     <div id="demoPositionPnl" class="demo-position-pnl neutral">$0.00</div>
+                    <div class="demo-position-subtitle" style="margin-top:5px;line-height:1.65;">
+                        Position ROI: <strong id="demoPositionRoi">0.00%</strong><br>
+                        Account impact: <strong id="demoPositionAccountImpact">0.00%</strong>
+                    </div>
                 </div>
             </div>
             <div class="demo-position-grid">
@@ -986,7 +992,7 @@
                 <div class="demo-position-stat"><div class="demo-position-stat-label">Leverage Used</div><div id="demoPositionLeverage" class="demo-position-stat-value demo-leverage-note">10× paper leverage</div></div>
                 <div class="demo-position-stat"><div class="demo-position-stat-label">Notional Exposure (remaining)</div><div id="demoPositionNotional" class="demo-position-stat-value">—</div></div>
             </div>
-            <div id="demoPositionPnlBreakdown" class="demo-position-note">PnL is calculated from the simulated quantity. No exchange order is placed.</div>
+            <div id="demoPositionPnlBreakdown" class="demo-position-note">Percentages update with the open position: ROI = floating PnL ÷ estimated remaining margin at 10×; account impact = floating PnL ÷ starting funding. Realized return uses closed PnL ÷ starting funding. Paper only; no exchange order is placed.</div>
             <div class="demo-position-actions"><button id="demoRobotClosePosition" class="demo-position-close" type="button">Close Position at Current Mark</button></div>
         </div>
 
@@ -4492,6 +4498,12 @@ setInterval(refreshMultiTimeframePanel, 60000);
             closedPnlEl.textContent = fmtUsdPnl(state.netPnlUsd);
             closedPnlEl.style.color = state.netPnlUsd > 0 ? '#22c55e' : (state.netPnlUsd < 0 ? '#ef4444' : '');
         }
+        const realizedPct = state.startingFundingUsd > 0 ? (state.netPnlUsd / state.startingFundingUsd) * 100 : 0;
+        const realizedPctEl = $('demoRobotNetPnlPct');
+        if (realizedPctEl) {
+            realizedPctEl.textContent = `${realizedPct > 0 ? '+' : ''}${realizedPct.toFixed(2)}%`;
+            realizedPctEl.style.color = realizedPct > 0 ? '#22c55e' : (realizedPct < 0 ? '#ef4444' : '');
+        }
 
         if (positionEl) {
             if (!state.position) {
@@ -4513,6 +4525,20 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 if (pnlEl) {
                     pnlEl.textContent = fmtUsdPnl(totalOpenPnl);
                     pnlEl.className = 'demo-position-pnl ' + (totalOpenPnl > 0 ? 'positive' : (totalOpenPnl < 0 ? 'negative' : 'neutral'));
+                }
+                const remainingNotionalForRoi = Math.abs(mark * remainingQty);
+                const estimatedMarginForRoi = remainingNotionalForRoi / 10;
+                const positionRoi = estimatedMarginForRoi > 0 ? (floatingPnl / estimatedMarginForRoi) * 100 : 0;
+                const accountImpact = state.startingFundingUsd > 0 ? (floatingPnl / state.startingFundingUsd) * 100 : 0;
+                const positionRoiEl = $('demoPositionRoi');
+                if (positionRoiEl) {
+                    positionRoiEl.textContent = `${positionRoi > 0 ? '+' : ''}${positionRoi.toFixed(2)}%`;
+                    positionRoiEl.style.color = positionRoi > 0 ? '#22c55e' : (positionRoi < 0 ? '#ef4444' : '');
+                }
+                const accountImpactEl = $('demoPositionAccountImpact');
+                if (accountImpactEl) {
+                    accountImpactEl.textContent = `${accountImpact > 0 ? '+' : ''}${accountImpact.toFixed(2)}%`;
+                    accountImpactEl.style.color = accountImpact > 0 ? '#22c55e' : (accountImpact < 0 ? '#ef4444' : '');
                 }
                 if ($('demoPositionMark')) $('demoPositionMark').textContent = formatPrice(mark);
                 if ($('demoPositionEntry')) $('demoPositionEntry').textContent = formatPrice(p.entry);
