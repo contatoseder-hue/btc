@@ -4457,7 +4457,27 @@ setInterval(refreshMultiTimeframePanel, 60000);
         const message = $('demoRobotMessage');
         const positionEl = $('demoRobotPosition');
         const scanningEl = $('demoRobotScanning');
-        if (scanningEl) scanningEl.style.display = state.enabled && !state.position ? 'flex' : 'none';
+        if (scanningEl) {
+            const scanningIcon = scanningEl.querySelector('.demo-robot-scanning-icon');
+            const scanningTitle = scanningEl.querySelector('strong');
+            const scanningDetail = scanningEl.querySelector('small');
+            if (state.position) {
+                const p = state.position;
+                if (scanningIcon) scanningIcon.textContent = '✅';
+                if (scanningTitle) scanningTitle.textContent = `ENTRY FOUND · ${p.direction === 'long' ? 'LONG' : 'SHORT'}`;
+                if (scanningDetail) scanningDetail.textContent = `Paper entry confirmed at ${formatPrice(p.entry)}. Position is now being managed; no real order was placed.`;
+                scanningEl.style.display = 'flex';
+                scanningEl.setAttribute('aria-label', `Paper entry found: ${p.direction} at ${formatPrice(p.entry)}`);
+            } else if (state.enabled) {
+                if (scanningIcon) scanningIcon.textContent = '🔎';
+                if (scanningTitle) scanningTitle.textContent = 'SCANNING THE MARKET';
+                if (scanningDetail) scanningDetail.textContent = 'Checking direction, support/resistance and entry confirmation…';
+                scanningEl.style.display = 'flex';
+                scanningEl.setAttribute('aria-label', 'Scanning the market for a valid paper entry');
+            } else {
+                scanningEl.style.display = 'none';
+            }
+        }
         if (badge) {
             badge.className = 'demo-robot-badge' + (state.enabled ? ' active' : (state.position ? ' managing' : ''));
             badge.textContent = state.enabled ? 'DEMO ON · NO ORDERS' : (state.position ? 'MANAGING PAPER TRADE' : 'DEMO OFF');
