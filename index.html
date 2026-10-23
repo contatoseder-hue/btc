@@ -960,6 +960,7 @@
             <div class="demo-account-field"><label for="demoRobotFunding">Starting Account Funding (USD)</label><input id="demoRobotFunding" type="number" min="1" step="any" value="1000"></div>
             <div class="demo-account-field"><label for="demoRobotAllocation">Trade Allocation / Margin (USD)</label><input id="demoRobotAllocation" type="number" min="1" step="any" value="100"></div>
             <div class="demo-account-field"><label for="demoRobotRisk">Max Initial Stop Risk (USD)</label><input id="demoRobotRisk" type="number" min="0.01" step="any" value="10"></div>
+            <div class="demo-account-field"><label for="demoRobotFeeRate">Estimated Trading Fee per Side (%)</label><input id="demoRobotFeeRate" type="number" min="0" max="1" step="0.001" value="0.05"><small style="display:block;color:#9ca3af;font-size:11px;margin-top:4px;">Default 0.05% per side; adjust to your actual fee tier.</small></div>
             <div class="demo-account-stat"><span>Current Demo Equity: <strong id="demoRobotEquity">$1,000.00</strong></span><span>Estimated margin per trade: <strong id="demoRobotMargin">$100.00</strong></span><span>Leverage model: <strong>10×</strong></span></div>
         </div>
 
@@ -992,7 +993,7 @@
                 <div class="demo-position-stat"><div class="demo-position-stat-label">Leverage Used</div><div id="demoPositionLeverage" class="demo-position-stat-value demo-leverage-note">10× paper leverage</div></div>
                 <div class="demo-position-stat"><div class="demo-position-stat-label">Notional Exposure (remaining)</div><div id="demoPositionNotional" class="demo-position-stat-value">—</div></div>
             </div>
-            <div id="demoPositionPnlBreakdown" class="demo-position-note">Percentages update with the open position: ROI = floating PnL ÷ estimated remaining margin at 10×; account impact = floating PnL ÷ starting funding. Realized return uses closed PnL ÷ starting funding. Paper only; no exchange order is placed.</div>
+            <div id="demoPositionPnlBreakdown" class="demo-position-note">Percentages update with the open position: ROI = floating PnL ÷ estimated remaining margin at 10×; account impact = floating PnL ÷ starting funding. Pre-TP1 protection estimates round-trip fees and moves the stop to cover those fees plus a small buffer. Paper only; no exchange order is placed.</div>
             <div class="demo-position-actions"><button id="demoRobotClosePosition" class="demo-position-close" type="button">Close Position at Current Mark</button></div>
         </div>
 
@@ -4162,6 +4163,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
         startingFundingUsd: 1000,
         tradeAllocationUsd: 100,
         maxRiskUsd: 10,
+        assumedFeeRatePct: 0.05,
         cooldownUntil: 0
     };
 
@@ -4239,6 +4241,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 startingFundingUsd: state.startingFundingUsd,
                 tradeAllocationUsd: state.tradeAllocationUsd,
                 maxRiskUsd: state.maxRiskUsd,
+                assumedFeeRatePct: state.assumedFeeRatePct,
                 cooldownUntil: state.cooldownUntil,
                 logs: state.logs.slice(0, MAX_SAVED_LOG_EVENTS)
             };
@@ -4301,6 +4304,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
             state.startingFundingUsd = Number(saved.startingFundingUsd) > 0 ? Number(saved.startingFundingUsd) : 1000;
             state.tradeAllocationUsd = Number(saved.tradeAllocationUsd) > 0 ? Number(saved.tradeAllocationUsd) : 100;
             state.maxRiskUsd = Number(saved.maxRiskUsd) > 0 ? Number(saved.maxRiskUsd) : 10;
+            state.assumedFeeRatePct = Number.isFinite(Number(saved.assumedFeeRatePct)) && Number(saved.assumedFeeRatePct) >= 0 && Number(saved.assumedFeeRatePct) <= 1 ? Number(saved.assumedFeeRatePct) : 0.05;
             state.cooldownUntil = Number(saved.cooldownUntil) || 0;
             state.logs = Array.isArray(saved.logs) ? saved.logs.slice(0, 12).map(item => ({
                 time: parseDate(item.time),
@@ -4320,7 +4324,9 @@ setInterval(refreshMultiTimeframePanel, 60000);
                     remainingQuantity: Number.isFinite(Number(p.remainingQuantity)) ? Number(p.remainingQuantity) : Number(p.quantity),
                     realizedPnlUsd: Number(p.realizedPnlUsd) || 0,
                     riskUsd: Number(p.riskUsd) || DEMO_RISK_USD,
-                    hitTP1: Boolean(p.hitTP1)
+                    hitTP1: Boolean(p.hitTP1),
+                    profitProtectionActive: Boolean(p.profitProtectionActive),
+                    profitProtectionStop: Number(p.profitProtectionStop) > 0 ? Number(p.profitProtectionStop) : null
                 };
                 state.positionStructureClosed = [];
                 state.lastPositionStructureFetch = 0;
@@ -4468,9 +4474,11 @@ setInterval(refreshMultiTimeframePanel, 60000);
         const fundingInput = $('demoRobotFunding');
         const allocationInput = $('demoRobotAllocation');
         const riskInput = $('demoRobotRisk');
+        const feeRateInput = $('demoRobotFeeRate');
         if (fundingInput && document.activeElement !== fundingInput) fundingInput.value = String(state.startingFundingUsd);
         if (allocationInput && document.activeElement !== allocationInput) allocationInput.value = String(state.tradeAllocationUsd);
         if (riskInput && document.activeElement !== riskInput) riskInput.value = String(state.maxRiskUsd);
+        if (feeRateInput && document.activeElement !== feeRateInput) feeRateInput.value = String(state.assumedFeeRatePct);
         const equityEl = $('demoRobotEquity');
         if (equityEl) {
             let openPositionPnl = 0;
@@ -4552,7 +4560,12 @@ setInterval(refreshMultiTimeframePanel, 60000);
                     const realized = Number(p.realizedPnlUsd) || 0;
                     const remainingNotional = Math.abs(mark * remainingQty);
                     const estimatedMargin = remainingNotional / 10;
-                    $('demoPositionPnlBreakdown').textContent = `Assumed risk: $${p.riskUsd.toFixed(2)} at the initial stop · Simulated leverage: 10× · Estimated margin at 10×: $${estimatedMargin.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · Realized from partial exits: ${fmtUsdPnl(realized)} · Floating PnL on remaining quantity: ${fmtUsdPnl(floatingPnl)} · Remaining notional exposure: $${remainingNotional.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}. Quantity remains sized from fixed initial risk; this is a paper estimate and does not model liquidation. PnL excludes fees, spread, slippage and exchange contract specifications.`;
+                    const feeRate = Math.max(0, Number(state.assumedFeeRatePct) || 0) / 100;
+                    const entryFeeEstimate = Math.abs(Number(p.entry) * Number(p.quantity)) * feeRate;
+                    const exitFeeEstimate = Math.abs(mark * remainingQty) * feeRate;
+                    const roundTripFeeEstimate = entryFeeEstimate + exitFeeEstimate;
+                    const protectionStatus = p.hitTP1 ? 'TP1 reached; runner stop uses the existing breakeven rule.' : (p.profitProtectionActive ? `Pre-TP1 fee-covering stop ACTIVE at ${formatPrice(p.activeStop)}; estimated round-trip fees $${roundTripFeeEstimate.toFixed(2)}.` : `Pre-TP1 fee protection waiting; estimated round-trip fees $${roundTripFeeEstimate.toFixed(2)} at ${(Number(state.assumedFeeRatePct) || 0).toFixed(3)}% per side.`);
+                    $('demoPositionPnlBreakdown').textContent = `Assumed risk: $${p.riskUsd.toFixed(2)} at the initial stop · Simulated leverage: 10× · Estimated margin at 10×: $${estimatedMargin.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · Realized from partial exits: ${fmtUsdPnl(realized)} · Floating PnL on remaining quantity: ${fmtUsdPnl(floatingPnl)} · Remaining notional exposure: $${remainingNotional.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}. ${protectionStatus} Fee-covering stop uses estimated entry + exit fees and a small $0.05 minimum / 10% fee buffer. This is paper-only; PnL otherwise excludes fees, spread, slippage and exchange contract specifications.`;
                 }
                 positionEl.style.display = 'block';
             }
@@ -4772,6 +4785,8 @@ setInterval(refreshMultiTimeframePanel, 60000);
             tp2: entryPrice + sign * risk * 3,
             hitTP1: false,
             realizedR: 0,
+            profitProtectionActive: false,
+            profitProtectionStop: null,
             openedAt: new Date(),
             level: level.price,
             entryMode: isLimitFill ? 'paper_limit' : 'confirmed_rejection',
@@ -4853,11 +4868,20 @@ setInterval(refreshMultiTimeframePanel, 60000);
         if (!p || !Number.isFinite(markPrice) || markPrice <= 0) return;
         p.markPrice = markPrice;
         p.lastMarkTime = Date.now();
+
         const stopHit = p.direction === 'long' ? markPrice <= p.activeStop : markPrice >= p.activeStop;
         if (stopHit) {
-            const outcome = p.hitTP1 ? p.realizedR : -1;
-            const reason = p.hitTP1 ? 'runner stopped at breakeven after TP1' : 'initial stop reached';
-            closePaperPosition(outcome, reason, markPrice);
+            if (!p.hitTP1 && p.profitProtectionActive) {
+                // Simulate a stop fill at the configured stop price (no gap/slippage model).
+                const stopFill = Number(p.activeStop);
+                const grossPnl = (p.direction === 'long' ? stopFill - p.entry : p.entry - stopFill) * p.quantity;
+                const riskUsd = Math.max(0.01, Number(p.riskUsd) || DEMO_RISK_USD);
+                closePaperPosition(grossPnl / riskUsd, 'pre-TP1 fee-covering profit stop reached', stopFill);
+            } else {
+                const outcome = p.hitTP1 ? p.realizedR : -1;
+                const reason = p.hitTP1 ? 'runner stopped at breakeven after TP1' : 'initial stop reached';
+                closePaperPosition(outcome, reason, markPrice);
+            }
             return;
         }
 
@@ -4867,9 +4891,39 @@ setInterval(refreshMultiTimeframePanel, 60000);
             p.realizedR = 1; // Half of the simulated position exits at +2R.
             p.realizedPnlUsd = p.riskUsd; // 50% closed at +2R books +1R of the initial cash risk.
             p.remainingQuantity = p.quantity / 2;
-            p.activeStop = p.entry; // Remaining half moves to breakeven.
-            logEvent(`TP1 reached: simulated 50% exit at +2R; runner stop moved to entry ${formatPrice(p.entry)}.`);
+            p.activeStop = p.entry; // Existing runner stop rule remains unchanged after TP1.
+            p.profitProtectionActive = false;
+            logEvent(`TP1 reached: simulated 50% exit at +2R; runner stop moved to breakeven ${formatPrice(p.entry)}.`);
             setMessage('TP1 reached. Half the paper position is booked at +2R; the remaining half has its stop at entry.');
+        }
+
+        // Before TP1, activate once the open gross profit can cover estimated entry + exit fees
+        // and a small net buffer. The stop is placed to preserve that amount if revisited.
+        if (!p.hitTP1 && !p.profitProtectionActive) {
+            const qty = Number(p.quantity);
+            const feeRate = Math.max(0, Math.min(1, Number(state.assumedFeeRatePct) || 0)) / 100;
+            const grossOpenPnl = (p.direction === 'long' ? markPrice - p.entry : p.entry - markPrice) * qty;
+            const entryFee = Math.abs(p.entry * qty) * feeRate;
+            const exitFeeAtMark = Math.abs(markPrice * qty) * feeRate;
+            const estimatedRoundTripFees = entryFee + exitFeeAtMark;
+            const smallNetBuffer = Math.max(0.05, estimatedRoundTripFees * 0.10);
+            if (grossOpenPnl >= estimatedRoundTripFees + smallNetBuffer && qty > 0) {
+                let protectedStop;
+                if (p.direction === 'long') {
+                    protectedStop = (p.entry * qty + entryFee + smallNetBuffer) / (qty * (1 - feeRate));
+                } else {
+                    protectedStop = (p.entry * qty - entryFee - smallNetBuffer) / (qty * (1 + feeRate));
+                }
+                const validStop = Number.isFinite(protectedStop) && protectedStop > 0 &&
+                    (p.direction === 'long' ? protectedStop > p.entry && protectedStop < markPrice : protectedStop < p.entry && protectedStop > markPrice);
+                if (validStop) {
+                    p.activeStop = protectedStop;
+                    p.profitProtectionStop = protectedStop;
+                    p.profitProtectionActive = true;
+                    logEvent(`Pre-TP1 profit protection activated: stop moved to ${formatPrice(protectedStop)} to cover estimated round-trip fees plus a small buffer (assumed fee ${feeRate * 100}% per side).`);
+                    setMessage(`Pre-TP1 profit protection ACTIVE. Stop moved to ${formatPrice(protectedStop)} to target estimated round-trip fee coverage plus a small net buffer.`);
+                }
+            }
         }
 
         const tp2Hit = p.direction === 'long' ? markPrice >= p.tp2 : markPrice <= p.tp2;
@@ -5221,6 +5275,19 @@ setInterval(refreshMultiTimeframePanel, 60000);
     bindNumericSetting('demoRobotFunding', 'startingFundingUsd', 1);
     bindNumericSetting('demoRobotAllocation', 'tradeAllocationUsd', 1);
     bindNumericSetting('demoRobotRisk', 'maxRiskUsd', 0.01);
+    const feeRateInput = $('demoRobotFeeRate');
+    if (feeRateInput) feeRateInput.addEventListener('change', () => {
+        const value = Number(feeRateInput.value);
+        if (!Number.isFinite(value) || value < 0 || value > 1) {
+            feeRateInput.value = String(state.assumedFeeRatePct);
+            setMessage('Estimated fee per side must be between 0% and 1%.');
+            return;
+        }
+        state.assumedFeeRatePct = value;
+        savePersistentState();
+        renderUi();
+        logEvent(`Estimated trading fee assumption set to ${value.toFixed(3)}% per side. Confirm this against your exchange fee tier.`);
+    });
     const limitModeInput = $('demoRobotLimitMode');
     if (limitModeInput) {
         limitModeInput.addEventListener('change', () => {
