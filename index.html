@@ -574,6 +574,10 @@
 .demo-robot-stat .label { margin-bottom:7px; }
 .demo-robot-stat .value { font-size:17px; overflow-wrap:anywhere; }
 .demo-robot-message { border-radius:10px; padding:12px; background:#101827; border:1px solid #263244; color:#d1d5db; font-size:13px; line-height:1.55; margin:12px 0; }
+.demo-robot-scanning { display:flex; align-items:center; gap:11px; border:1px solid rgba(96,165,250,.42); background:rgba(38,110,170,.10); color:#dbeafe; border-radius:10px; padding:12px 14px; margin:12px 0; }
+.demo-robot-scanning-icon { font-size:23px; line-height:1; }
+.demo-robot-scanning strong { display:block; font-size:13px; font-weight:800; }
+.demo-robot-scanning small { display:block; margin-top:3px; color:#aabbd0; font-size:11px; line-height:1.45; }
 .demo-robot-controls { display:flex; gap:9px; flex-wrap:wrap; margin:12px 0; }
 .demo-robot-controls button { width:auto; margin:0; }
 .demo-robot-start { background:#166534 !important; }
@@ -966,6 +970,10 @@
 
         <div id="demoRobotMessage" class="demo-robot-message" aria-live="polite">
             Demo robot is off. Start it to monitor market structure. It cannot place real orders.
+        </div>
+        <div id="demoRobotScanning" class="demo-robot-scanning" style="display:none;" role="status" aria-live="polite">
+            <span class="demo-robot-scanning-icon" aria-hidden="true">🔎</span>
+            <span><strong>Scanning the market</strong><small>Looking for the best valid entry point and direction…</small></span>
         </div>
 
         <div id="demoRobotPosition" class="demo-position-card" style="display:none;" aria-live="polite">
@@ -4448,6 +4456,8 @@ setInterval(refreshMultiTimeframePanel, 60000);
         const toggle = $('demoRobotToggle');
         const message = $('demoRobotMessage');
         const positionEl = $('demoRobotPosition');
+        const scanningEl = $('demoRobotScanning');
+        if (scanningEl) scanningEl.style.display = state.enabled && !state.position ? 'flex' : 'none';
         if (badge) {
             badge.className = 'demo-robot-badge' + (state.enabled ? ' active' : (state.position ? ' managing' : ''));
             badge.textContent = state.enabled ? 'DEMO ON · NO ORDERS' : (state.position ? 'MANAGING PAPER TRADE' : 'DEMO OFF');
