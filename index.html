@@ -672,6 +672,28 @@
 .demo-limit-note { color:#9ca3af; font-size:11px; line-height:1.5; margin-top:9px; }
 @media (max-width: 600px) { .demo-limit-price-field { flex-basis:100%; } .demo-limit-price-row button { flex:1 1 100%; } }
 
+/* Force Limit Entry panel layout: keep copy and action aligned within the panel. */
+#demoRobotForceLimitControls,
+#demoRobotForceLimitControls * { box-sizing: border-box; }
+#demoRobotForceLimitControls { width: 100%; min-width: 0; }
+#demoRobotForceLimitControls .demo-limit-toggle {
+    display: grid;
+    grid-template-columns: 18px minmax(0, 1fr);
+    align-items: start;
+    gap: 10px;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+}
+#demoRobotForceLimitControls .demo-limit-toggle input { position: static; display: block; width: 14px; height: 14px; margin: 3px 0 0; }
+#demoRobotForceLimitControls .demo-limit-toggle > span { display: block; width: 100%; min-width: 0; overflow-wrap: anywhere; }
+#demoRobotForceLimitControls .demo-limit-toggle strong,
+#demoRobotForceLimitControls .demo-limit-toggle small { display: block; white-space: normal; overflow-wrap: anywhere; }
+#demoRobotForceLimitControls .demo-robot-controls { justify-content: flex-start; width: 100%; min-width: 0; }
+#demoRobotForceLimitControls .demo-robot-controls button { flex: 0 1 auto; max-width: 100%; white-space: normal; }
+#demoRobotForceLimitControls .demo-limit-note { overflow-wrap: anywhere; }
+@media (max-width: 600px) { #demoRobotForceLimitControls .demo-robot-controls button { flex: 1 1 100%; width: 100%; } }
+
 /* Layout hardening: keep the limit toggle and its copy inside the panel. */
 #demoRobotLimitControls,
 #demoRobotLimitControls * { box-sizing: border-box; }
@@ -1008,12 +1030,12 @@
         <div class="demo-limit-controls" id="demoRobotForceLimitControls">
             <label class="demo-limit-toggle" for="demoRobotForceLimitMode">
                 <input id="demoRobotForceLimitMode" type="checkbox">
-                <span><strong>Force Limit Entry</strong><small>Alternative paper entry: LONG uses the previous closed 5-minute candle close as its limit; SHORT uses the same rule in reverse. Existing ECI/WMA agreement, support/resistance, SL and TP rules remain active.</small></span>
+                <span><strong>Force Limit Entry</strong><small>Search for a forced entry opportunity when enabled.</small></span>
             </label>
             <div class="demo-robot-controls" style="margin-top:8px;">
                 <button id="demoRobotForceLimitRefresh" class="demo-robot-clear" type="button" disabled>Force / Refresh Limit Entry</button>
             </div>
-            <div class="demo-limit-note">When first enabled, the latest closed 5-minute candle sets the entry price. If the order does not fill, click “Force / Refresh Limit Entry” to cancel the old pending limit and wait for the next 5-minute candle to close before setting a new one. Pending orders expire after 30 minutes and cancel if direction or structure invalidates. Paper only.</div>
+            <div class="demo-limit-note">Paper trading only.</div>
         </div>
 
         <div class="demo-limit-controls" id="demoRobotLimitControls">
@@ -4496,10 +4518,10 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 scanningEl.setAttribute('aria-label', `Paper limit entry pending at ${formatPrice(p.limitPrice)}`);
             } else if (state.forceLimitRequest) {
                 if (scanningIcon) scanningIcon.textContent = '🕯️';
-                if (scanningTitle) scanningTitle.textContent = 'WAITING FOR 5-MINUTE CLOSE';
-                if (scanningDetail) scanningDetail.textContent = 'The next completed 5-minute candle will set the refreshed limit entry price.';
+                if (scanningTitle) scanningTitle.textContent = 'SEARCHING FOR FORCED ENTRY';
+                if (scanningDetail) scanningDetail.textContent = 'Looking for a valid forced limit-entry opportunity…';
                 scanningEl.style.display = 'flex';
-                scanningEl.setAttribute('aria-label', 'Waiting for next closed five-minute candle to set force limit entry');
+                scanningEl.setAttribute('aria-label', 'Searching for a forced limit entry opportunity');
             } else if (state.enabled) {
                 if (scanningIcon) scanningIcon.textContent = '🔎';
                 if (scanningTitle) scanningTitle.textContent = 'SCANNING THE MARKET';
