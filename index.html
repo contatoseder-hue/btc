@@ -1005,6 +1005,17 @@
             <div class="demo-position-actions"><button id="demoRobotClosePosition" class="demo-position-close" type="button">Close Position at Current Mark</button></div>
         </div>
 
+        <div class="demo-limit-controls" id="demoRobotForceLimitControls">
+            <label class="demo-limit-toggle" for="demoRobotForceLimitMode">
+                <input id="demoRobotForceLimitMode" type="checkbox">
+                <span><strong>Force Limit Entry</strong><small>Alternative paper entry: LONG uses the previous closed 5-minute candle close as its limit; SHORT uses the same rule in reverse. Existing ECI/WMA agreement, support/resistance, SL and TP rules remain active.</small></span>
+            </label>
+            <div class="demo-robot-controls" style="margin-top:8px;">
+                <button id="demoRobotForceLimitRefresh" class="demo-robot-clear" type="button" disabled>Force / Refresh Limit Entry</button>
+            </div>
+            <div class="demo-limit-note">When first enabled, the latest closed 5-minute candle sets the entry price. If the order does not fill, click “Force / Refresh Limit Entry” to cancel the old pending limit and wait for the next 5-minute candle to close before setting a new one. Pending orders expire after 30 minutes and cancel if direction or structure invalidates. Paper only.</div>
+        </div>
+
         <div class="demo-limit-controls" id="demoRobotLimitControls">
             <label class="demo-limit-toggle" for="demoRobotLimitMode">
                 <input id="demoRobotLimitMode" type="checkbox">
@@ -1042,7 +1053,7 @@
             </table>
         </div>
         <div class="demo-robot-footnote">
-            Standard mode: ECI direction must match the 1-minute WMA trend, then a closed 1-minute rejection candle confirms the 15-minute swing level. Optional Paper Limit Entry mode skips the rejection-candle requirement and simulates a limit at the nearest confirmed support/resistance (or a nearby manual override); it is higher risk and expires after 30 minutes. Support/resistance stays fixed as price moves, changing only if crossed/invalidated or replaced by a newer confirmed, closer swing. Demo sizing respects both the configured maximum initial stop risk and the configured margin allocation at the 10× paper model; estimated margin is not an exchange simulation and liquidation is not modeled. USD PnL is an estimate and excludes fees, spread, slippage and instrument-specific contract sizing. TP1 is 2R; 50% exits there and the remaining 50% targets 3R, with the stop moved to entry after TP1. State, pending setup/order, levels, open position and trade history are saved locally and an active robot resumes on refresh. JavaScript cannot monitor trades while the browser/page is closed; it resumes only when the dashboard is open again. BTC open-position mark and floating PnL use a public mark-price WebSocket when available; entry decisions still require closed candles. Other market marks continue to use the existing polling feed. Paper trading only; no exchange orders are sent. Custom assets are not enabled in this test.
+            Standard mode: ECI direction must match the 1-minute WMA trend, then a closed 1-minute rejection candle confirms the 15-minute swing level. Optional Paper Limit Entry mode simulates a limit at confirmed support/resistance (or a nearby manual override). Force Limit Entry is a separate manual trigger using the previous fully closed 5-minute candle close as the limit (LONG) or the same reversed rule (SHORT); refresh waits for the next 5-minute candle to close. Both limit modes expire after 30 minutes and retain direction and structure invalidation checks. Support/resistance stays fixed as price moves, changing only if crossed/invalidated or replaced by a newer confirmed, closer swing. Demo sizing respects both the configured maximum initial stop risk and the configured margin allocation at the 10× paper model; estimated margin is not an exchange simulation and liquidation is not modeled. USD PnL is an estimate and excludes fees, spread, slippage and instrument-specific contract sizing. TP1 is 2R; 50% exits there and the remaining 50% targets 3R, with the stop moved to entry after TP1. State, pending setup/order, levels, open position and trade history are saved locally and an active robot resumes on refresh. JavaScript cannot monitor trades while the browser/page is closed; it resumes only when the dashboard is open again. BTC open-position mark and floating PnL use a public mark-price WebSocket when available; entry decisions still require closed candles. Other market marks continue to use the existing polling feed. Paper trading only; no exchange orders are sent. Custom assets are not enabled in this test.
         </div>
     </div>
 
@@ -4161,6 +4172,8 @@ setInterval(refreshMultiTimeframePanel, 60000);
         levelsMarket: null,
         limitMode: false,
         limitPriceOverride: '',
+        forceLimitMode: false,
+        forceLimitRequest: null,
         trend: null,
         logs: [],
         closedTrades: [],
@@ -4240,6 +4253,8 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 levelsMarket: state.levelsMarket,
                 limitMode: Boolean(state.limitMode),
                 limitPriceOverride: String(state.limitPriceOverride || ''),
+                forceLimitMode: Boolean(state.forceLimitMode),
+                forceLimitRequest: state.forceLimitRequest,
                 position: state.position,
                 closedTrades: state.closedTrades.slice(-MAX_SAVED_CLOSED_TRADES),
                 wins: state.wins,
@@ -4275,6 +4290,10 @@ setInterval(refreshMultiTimeframePanel, 60000);
             state.activeMarket = saved.activeMarket || null;
             state.limitMode = Boolean(saved.limitMode);
             state.limitPriceOverride = String(saved.limitPriceOverride || '');
+            state.forceLimitMode = Boolean(saved.forceLimitMode);
+            state.forceLimitRequest = saved.forceLimitRequest && typeof saved.forceLimitRequest === 'object'
+                ? { ...saved.forceLimitRequest, requestedAt: Number(saved.forceLimitRequest.requestedAt) || Date.now(), minCandleTime: Number.isFinite(Number(saved.forceLimitRequest.minCandleTime)) ? Number(saved.forceLimitRequest.minCandleTime) : null }
+                : null;
             if (saved.levels && typeof saved.levels === 'object') {
                 const validLevel = (level, side) => level && Number.isFinite(Number(level.price)) && Number(level.price) > 0 && (side === 'support' ? 'Support' : 'Resistance') === level.type
                     ? { price: Number(level.price), time: Number(level.time) || 0, type: level.type }
@@ -4468,6 +4487,19 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 if (scanningDetail) scanningDetail.textContent = `Paper entry confirmed at ${formatPrice(p.entry)}. Position is now being managed; no real order was placed.`;
                 scanningEl.style.display = 'flex';
                 scanningEl.setAttribute('aria-label', `Paper entry found: ${p.direction} at ${formatPrice(p.entry)}`);
+            } else if (state.pending && ['limit', 'force-limit'].includes(state.pending.kind)) {
+                const p = state.pending;
+                if (scanningIcon) scanningIcon.textContent = '⏳';
+                if (scanningTitle) scanningTitle.textContent = `LIMIT ENTRY PENDING · ${p.direction === 'long' ? 'LONG' : 'SHORT'}`;
+                if (scanningDetail) scanningDetail.textContent = `Current entry point: ${formatPrice(p.limitPrice)} · waiting for price to touch the limit. Paper order only.`;
+                scanningEl.style.display = 'flex';
+                scanningEl.setAttribute('aria-label', `Paper limit entry pending at ${formatPrice(p.limitPrice)}`);
+            } else if (state.forceLimitRequest) {
+                if (scanningIcon) scanningIcon.textContent = '🕯️';
+                if (scanningTitle) scanningTitle.textContent = 'WAITING FOR 5-MINUTE CLOSE';
+                if (scanningDetail) scanningDetail.textContent = 'The next completed 5-minute candle will set the refreshed limit entry price.';
+                scanningEl.style.display = 'flex';
+                scanningEl.setAttribute('aria-label', 'Waiting for next closed five-minute candle to set force limit entry');
             } else if (state.enabled) {
                 if (scanningIcon) scanningIcon.textContent = '🔎';
                 if (scanningTitle) scanningTitle.textContent = 'SCANNING THE MARKET';
@@ -4498,7 +4530,12 @@ setInterval(refreshMultiTimeframePanel, 60000);
         }
         const modeToggle = $('demoRobotLimitMode');
         const limitPriceInput = $('demoRobotLimitPrice');
+        const forceModeToggle = $('demoRobotForceLimitMode');
+        const forceRefreshButton = $('demoRobotForceLimitRefresh');
         if (modeToggle && modeToggle.checked !== state.limitMode) modeToggle.checked = state.limitMode;
+        if (forceModeToggle && forceModeToggle.checked !== state.forceLimitMode) forceModeToggle.checked = state.forceLimitMode;
+        if (forceModeToggle) forceModeToggle.disabled = Boolean(state.position || (state.pending && state.pending.kind !== 'force-limit') || state.limitMode);
+        if (forceRefreshButton) forceRefreshButton.disabled = !state.forceLimitMode || !state.enabled || Boolean(state.position);
         if (limitPriceInput && limitPriceInput.value !== state.limitPriceOverride) limitPriceInput.value = state.limitPriceOverride;
         if ($('demoRobotLeverageMode')) $('demoRobotLeverageMode').textContent = '10× (paper model)';
         const fundingInput = $('demoRobotFunding');
@@ -5123,9 +5160,60 @@ setInterval(refreshMultiTimeframePanel, 60000);
             const latestClosed = state.confirmClosed[state.confirmClosed.length - 1];
             const previousClosed = state.confirmClosed[state.confirmClosed.length - 2];
 
+            // Force Limit Entry: use the close of a fully closed 5-minute candle as the limit price.
+            // A refresh request waits for the next 5-minute candle to finish before recalculating.
+            if (state.forceLimitRequest && !state.position && !state.pending) {
+                const request = state.forceLimitRequest;
+                if (request.market !== market) {
+                    state.forceLimitRequest = null;
+                    setMessage('Force Limit Entry request cancelled because the selected market changed.');
+                } else if (Date.now() - request.requestedAt > MAX_LIMIT_PENDING_MINUTES * 60000) {
+                    state.forceLimitRequest = null;
+                    setMessage('Force Limit Entry request expired before a valid 5-minute candle was available. Click refresh to try again.');
+                } else if (!signalDirection || signalDirection !== trend.direction || (request.direction && request.direction !== signalDirection)) {
+                    state.forceLimitRequest = null;
+                    setMessage('Force Limit Entry cancelled: dashboard ECI and 1-minute WMA must agree in the same direction.');
+                    logEvent('Force Limit Entry request cancelled because ECI/WMA direction did not agree.');
+                } else if (request.minCandleTime !== null && request.minCandleTime !== undefined && Date.now() < request.minCandleTime + 300000) {
+                    setMessage('Force Limit Entry is waiting for the current 5-minute candle to close before setting the refreshed entry price.');
+                } else {
+                    const all5m = await fetchDemoBars(market, '5m', 5, CANDLE_LIMIT);
+                    const closed5m = all5m.filter(c => c[6] !== true);
+                    const candle5m = closed5m[closed5m.length - 1];
+                    const candleReady = candle5m && (request.minCandleTime === null || request.minCandleTime === undefined || candle5m[0] >= request.minCandleTime);
+                    if (!candleReady) {
+                        setMessage('Force Limit Entry is waiting for the next 5-minute candle to close before setting the refreshed entry price.');
+                    } else {
+                        const level = signalDirection === 'long' ? levels.support : levels.resistance;
+                        if (!level) {
+                            state.forceLimitRequest = null;
+                            setMessage(`Force Limit Entry cancelled: no confirmed ${signalDirection === 'long' ? 'support' : 'resistance'} is available for the existing stop logic.`);
+                        } else {
+                            const limitPrice = Number(candle5m[4]);
+                            const correctSide = Number.isFinite(limitPrice) && limitPrice > 0 && (signalDirection === 'long' ? limitPrice < price : limitPrice > price);
+                            if (!correctSide) {
+                                state.forceLimitRequest = null;
+                                setMessage(`Force Limit Entry not placed: the previous closed 5-minute candle close (${formatPrice(limitPrice)}) is not on the waiting side of current price (${formatPrice(price)}). Click refresh after another 5-minute candle closes.`);
+                                logEvent(`Force Limit Entry skipped: candle-close price ${formatPrice(limitPrice)} was already crossed or not a valid ${signalDirection.toUpperCase()} limit relative to ${formatPrice(price)}.`);
+                            } else {
+                                state.pending = {
+                                    kind: 'force-limit', market, direction: signalDirection, level,
+                                    limitPrice, tolerance, atr, startedAt: Date.now(),
+                                    triggerCandleTime: null, lastEvaluatedTime: null,
+                                    sourceCandleTime: candle5m[0]
+                                };
+                                state.forceLimitRequest = null;
+                                logEvent(`${marketName(market)} PAPER ${signalDirection.toUpperCase()} LIMIT pending at ${formatPrice(limitPrice)} using the previous closed 5-minute candle close. Structure reference remains ${level.type.toLowerCase()} ${formatPrice(level.price)}. Expires in ${MAX_LIMIT_PENDING_MINUTES} minutes unless signals change or the level invalidates.`);
+                                setMessage(`Paper ${signalDirection.toUpperCase()} Force Limit Entry pending at ${formatPrice(limitPrice)}, based on the previous closed 5-minute candle. Waiting for price to touch the limit.`);
+                            }
+                        }
+                    }
+                }
+            }
+
             if (state.pending) {
                 const pending = state.pending;
-                const isLimitOrder = pending.kind === 'limit';
+                const isLimitOrder = pending.kind === 'limit' || pending.kind === 'force-limit';
                 const maxAgeMinutes = isLimitOrder ? MAX_LIMIT_PENDING_MINUTES : MAX_PENDING_MINUTES;
                 if (pending.market !== market) {
                     resetPending('market changed');
@@ -5162,7 +5250,11 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 }
             } else {
                 const aligned = signalDirection && signalDirection === trend.direction;
-                if (Date.now() < state.cooldownUntil) {
+                if (state.forceLimitRequest) {
+                    setMessage('Force Limit Entry request is active. Waiting for a valid completed 5-minute candle and aligned direction.');
+                } else if (state.forceLimitMode) {
+                    setMessage('Force Limit Entry is enabled. Click “Force / Refresh Limit Entry” to set a limit from the previous closed 5-minute candle; no market entry will be chased.');
+                } else if (Date.now() < state.cooldownUntil) {
                     setMessage('Cooling down after the last paper trade. Waiting before looking for another setup.');
                 } else if (!signalDirection) {
                     setMessage('Waiting for an active Buy Long or Sell Short signal from the dashboard ECI.');
@@ -5190,8 +5282,8 @@ setInterval(refreshMultiTimeframePanel, 60000);
                                 limitPrice, tolerance, atr, startedAt: Date.now(),
                                 triggerCandleTime: null, lastEvaluatedTime: null
                             };
-                            logEvent(`${marketName(market)} PAPER ${signalDirection.toUpperCase()} LIMIT placed at ${formatPrice(limitPrice)} using ${level.type.toLowerCase()} ${formatPrice(level.price)}. Expires in ${MAX_LIMIT_PENDING_MINUTES} minutes unless signals change or level invalidates.`);
-                            setMessage(`Paper ${signalDirection.toUpperCase()} limit order placed at ${formatPrice(limitPrice)} (${overrideRaw ? 'manual override' : 'nearest confirmed level'}). Waiting for price to reach the limit.`);
+                            logEvent(`${marketName(market)} PAPER ${signalDirection.toUpperCase()} LIMIT pending at ${formatPrice(limitPrice)} using ${level.type.toLowerCase()} ${formatPrice(level.price)}. Expires in ${MAX_LIMIT_PENDING_MINUTES} minutes unless signals change or level invalidates.`);
+                            setMessage(`Paper ${signalDirection.toUpperCase()} limit order pending at ${formatPrice(limitPrice)} (${overrideRaw ? 'manual override' : 'nearest confirmed level'}). Waiting for price to touch the limit.`);
                         }
                     } else if (Math.abs(price - level.price) <= tolerance) {
                         const triggerTime = currentCandleStartTime();
@@ -5318,9 +5410,73 @@ setInterval(refreshMultiTimeframePanel, 60000);
         renderUi();
         logEvent(`Estimated trading fee assumption set to ${value.toFixed(3)}% per side. Confirm this against your exchange fee tier.`);
     });
+    const forceLimitModeInput = $('demoRobotForceLimitMode');
+    const forceLimitRefreshButton = $('demoRobotForceLimitRefresh');
+    function requestForceLimitEntry(waitForNextCandle) {
+        if (!state.forceLimitMode) {
+            setMessage('Enable Force Limit Entry first.'); renderUi(); return;
+        }
+        if (state.position) {
+            setMessage('Force Limit Entry is unavailable while a paper position is open. Manage or close the current position first.'); renderUi(); return;
+        }
+        if (state.pending && state.pending.kind !== 'force-limit') {
+            setMessage('Cancel or finish the existing pending setup before using Force Limit Entry.'); renderUi(); return;
+        }
+        if (state.pending?.kind === 'force-limit') resetPending('force limit entry refreshed by user');
+        const direction = directionFromSignal(lastScalpSignal);
+        if (!direction) {
+            setMessage('Force Limit Entry needs an active dashboard Buy Long or Sell Short signal.'); renderUi(); return;
+        }
+        const now = Date.now();
+        state.forceLimitRequest = {
+            market: selectedMarket,
+            direction,
+            requestedAt: now,
+            // For a refresh, wait for a candle whose start is at/after the currently forming 5m bucket.
+            minCandleTime: waitForNextCandle ? Math.floor(now / 300000) * 300000 : null
+        };
+        savePersistentState();
+        setMessage(waitForNextCandle
+            ? 'Refresh requested. Waiting for the current 5-minute candle to close before setting a new limit.'
+            : 'Force Limit Entry requested. Preparing a limit from the latest closed 5-minute candle.');
+        logEvent(waitForNextCandle
+            ? 'Force Limit Entry refresh requested; waiting for the next 5-minute candle close.'
+            : 'Force Limit Entry enabled; using the latest fully closed 5-minute candle for the first limit.');
+        renderUi();
+        cycle();
+    }
+    if (forceLimitModeInput) {
+        forceLimitModeInput.addEventListener('change', () => {
+            const enabled = Boolean(forceLimitModeInput.checked);
+            if (enabled && (!state.enabled || state.position || state.pending || state.limitMode)) {
+                forceLimitModeInput.checked = false;
+                setMessage(!state.enabled ? 'Start the Demo Robot before enabling Force Limit Entry.' : state.position ? 'Close the open paper position before enabling Force Limit Entry.' : state.pending ? 'Finish or cancel the existing pending setup before enabling Force Limit Entry.' : 'Turn off Optional Paper Limit Entry Mode before enabling Force Limit Entry.');
+                renderUi(); return;
+            }
+            state.forceLimitMode = enabled;
+            if (!enabled) {
+                state.forceLimitRequest = null;
+                if (state.pending?.kind === 'force-limit') resetPending('Force Limit Entry was switched off');
+                setMessage('Force Limit Entry disabled. The standard entry strategy is active.');
+                logEvent('Force Limit Entry disabled.');
+            } else {
+                logEvent('Force Limit Entry enabled.');
+                requestForceLimitEntry(false);
+                return;
+            }
+            savePersistentState(); renderUi();
+        });
+    }
+    if (forceLimitRefreshButton) forceLimitRefreshButton.addEventListener('click', () => requestForceLimitEntry(true));
+
     const limitModeInput = $('demoRobotLimitMode');
     if (limitModeInput) {
         limitModeInput.addEventListener('change', () => {
+            if (limitModeInput.checked && state.forceLimitMode) {
+                limitModeInput.checked = false;
+                setMessage('Turn off Force Limit Entry before enabling Optional Paper Limit Entry Mode.');
+                renderUi(); return;
+            }
             state.limitMode = Boolean(limitModeInput.checked);
             if (!state.limitMode && state.pending?.kind === 'limit') resetPending('paper limit-entry mode was switched off');
             logEvent(state.limitMode
