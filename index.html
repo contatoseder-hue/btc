@@ -862,7 +862,7 @@
 
             <div class="stat">
                 <div id="marketPriceLabel" class="label">
-                    <span id="marketPriceLabelText">Gold Live Price (Binance Spot PAXG/USDT)</span>
+                    <span id="marketPriceLabelText">Gold Live Price (BingX GOLD/XAU-USDT)</span>
                     <span id="marketPriceLive" class="live-indicator" style="margin-left:8px;">
                         <span class="live-dot"></span>
                         <span>LIVE</span>
@@ -1950,10 +1950,10 @@ function getMarketConfig() {
             label: "XAU/USD",
             name: "Gold",
             yahoo: GOLD_SYMBOL,
-            dataSymbol: "PAXGUSDT",
+            dataSymbol: "XAUUSD",
             bingxSymbol: "GOLD(XAU)-USDT",
-            binanceSymbol: "PAXGUSDT",
-            tradingView: "BINANCE:PAXGUSDT"
+            binanceSymbol: null,
+            tradingView: "BINGX:GOLDXAUUSDT.P"
         };
     }
 
@@ -1996,7 +1996,7 @@ function getMarketPriceSourceName(marketCode = selectedMarket) {
         if (asset && /(^|[^a-z])(oil|wti|brent|crude)([^a-z]|$)/i.test(String(asset.name || ""))) return "Yahoo Finance WTI Futures (CL=F)";
         return "Binance Spot";
     }
-    if (marketCode === "GOLD") return "Binance Spot PAXG/USDT";
+    if (marketCode === "GOLD") return "BingX GOLD(XAU)-USDT Perpetual";
     if (marketCode === "BTC") return "Binance Futures";
     return "BingX";
 }
@@ -2007,7 +2007,7 @@ function getMarketPriceSourceBadge(marketCode = selectedMarket) {
         if (asset && /(^|[^a-z])(oil|wti|brent|crude)([^a-z]|$)/i.test(String(asset.name || ""))) return "YAHOO FINANCE WTI FUTURES LAST PRICE";
         return "BINANCE SPOT LAST PRICE";
     }
-    if (marketCode === "GOLD") return "BINANCE SPOT PAXG/USDT LAST PRICE";
+    if (marketCode === "GOLD") return "BINGX GOLD(XAU)-USDT LAST PRICE";
     if (marketCode === "BTC") return "BINANCE FUTURES LAST PRICE";
     return "BINGX LAST PRICE";
 }
@@ -3228,8 +3228,8 @@ async function fetchMtfCandleHistory(marketCode, frame) {
 
     const request = (async () => {
         // MTF history is served by the Worker from the same source used for live price
-        // and ECI candles (Binance Spot PAXG/USDT for Gold; Binance Futures BTCUSDT for BTC;
-        // existing BingX feed paths for Silver/NASDAQ in this Worker version).
+        // and ECI candles (BingX GOLD(XAU)-USDT for Gold; Binance Futures BTCUSDT for BTC;
+        // existing BingX feed paths for Silver/NASDAQ).
         const params = new URLSearchParams({
             market: marketCode,
             candles: "1",
