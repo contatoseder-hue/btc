@@ -862,7 +862,7 @@
 
             <div class="stat">
                 <div id="marketPriceLabel" class="label">
-                    <span id="marketPriceLabelText">Gold Live Price (Binance Spot PAXG/USDT)</span>
+                    <span id="marketPriceLabelText">Gold Live Price (BingX GOLD/XAU-USDT)</span>
                     <span id="marketPriceLive" class="live-indicator" style="margin-left:8px;">
                         <span class="live-dot"></span>
                         <span>LIVE</span>
@@ -1025,6 +1025,14 @@
             </div>
             <div id="demoPositionPnlBreakdown" class="demo-position-note">Percentages update with the open position: ROI = floating PnL ÷ estimated remaining margin at 10×; account impact = floating PnL ÷ starting funding. Pre-TP1 protection estimates round-trip fees and moves the stop to cover those fees plus a small buffer. Paper only; no exchange order is placed.</div>
             <div class="demo-position-actions"><button id="demoRobotClosePosition" class="demo-position-close" type="button">Close Position at Current Mark</button></div>
+        </div>
+
+        <div class="demo-limit-controls" id="demoRobotAutoEntryControls">
+            <label class="demo-limit-toggle" for="demoRobotAutoEntry">
+                <input id="demoRobotAutoEntry" type="checkbox">
+                <span><strong>Auto Entry</strong><small>Automatically search for the next paper entry after a trade closes or a limit expires.</small></span>
+            </label>
+            <div class="demo-limit-note">When Force Limit Entry is enabled too, each new attempt uses the previous fully closed 5-minute candle close. Paper trading only.</div>
         </div>
 
         <div class="demo-limit-controls" id="demoRobotForceLimitControls">
@@ -1950,10 +1958,10 @@ function getMarketConfig() {
             label: "XAU/USD",
             name: "Gold",
             yahoo: GOLD_SYMBOL,
-            dataSymbol: "PAXGUSDT",
+            dataSymbol: "XAUUSD",
             bingxSymbol: "GOLD(XAU)-USDT",
-            binanceSymbol: "PAXGUSDT",
-            tradingView: "BINANCE:PAXGUSDT"
+            binanceSymbol: null,
+            tradingView: "BINGX:GOLDXAUUSDT.P"
         };
     }
 
@@ -1996,7 +2004,7 @@ function getMarketPriceSourceName(marketCode = selectedMarket) {
         if (asset && /(^|[^a-z])(oil|wti|brent|crude)([^a-z]|$)/i.test(String(asset.name || ""))) return "Yahoo Finance WTI Futures (CL=F)";
         return "Binance Spot";
     }
-    if (marketCode === "GOLD") return "Binance Spot PAXG/USDT";
+    if (marketCode === "GOLD") return "BingX GOLD(XAU)-USDT Perpetual";
     if (marketCode === "BTC") return "Binance Futures";
     return "BingX";
 }
@@ -2007,7 +2015,7 @@ function getMarketPriceSourceBadge(marketCode = selectedMarket) {
         if (asset && /(^|[^a-z])(oil|wti|brent|crude)([^a-z]|$)/i.test(String(asset.name || ""))) return "YAHOO FINANCE WTI FUTURES LAST PRICE";
         return "BINANCE SPOT LAST PRICE";
     }
-    if (marketCode === "GOLD") return "BINANCE SPOT PAXG/USDT LAST PRICE";
+    if (marketCode === "GOLD") return "BINGX GOLD(XAU)-USDT LAST PRICE";
     if (marketCode === "BTC") return "BINANCE FUTURES LAST PRICE";
     return "BINGX LAST PRICE";
 }
@@ -3228,8 +3236,8 @@ async function fetchMtfCandleHistory(marketCode, frame) {
 
     const request = (async () => {
         // MTF history is served by the Worker from the same source used for live price
-        // and ECI candles (Binance Spot PAXG/USDT for Gold; Binance Futures BTCUSDT for BTC;
-        // existing BingX feed paths for Silver/NASDAQ in this Worker version).
+        // and ECI candles (BingX GOLD(XAU)-USDT for Gold; Binance Futures BTCUSDT for BTC;
+        // existing BingX feed paths for Silver/NASDAQ).
         const params = new URLSearchParams({
             market: marketCode,
             candles: "1",
@@ -4195,6 +4203,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
         limitMode: false,
         limitPriceOverride: '',
         forceLimitMode: false,
+        autoEntry: false,
         forceLimitRequest: null,
         trend: null,
         logs: [],
@@ -4276,6 +4285,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 limitMode: Boolean(state.limitMode),
                 limitPriceOverride: String(state.limitPriceOverride || ''),
                 forceLimitMode: Boolean(state.forceLimitMode),
+                autoEntry: Boolean(state.autoEntry),
                 forceLimitRequest: state.forceLimitRequest,
                 position: state.position,
                 closedTrades: state.closedTrades.slice(-MAX_SAVED_CLOSED_TRADES),
@@ -4313,6 +4323,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
             state.limitMode = Boolean(saved.limitMode);
             state.limitPriceOverride = String(saved.limitPriceOverride || '');
             state.forceLimitMode = Boolean(saved.forceLimitMode);
+            state.autoEntry = Boolean(saved.autoEntry);
             state.forceLimitRequest = saved.forceLimitRequest && typeof saved.forceLimitRequest === 'object'
                 ? { ...saved.forceLimitRequest, requestedAt: Number(saved.forceLimitRequest.requestedAt) || Date.now(), minCandleTime: Number.isFinite(Number(saved.forceLimitRequest.minCandleTime)) ? Number(saved.forceLimitRequest.minCandleTime) : null }
                 : null;
@@ -4553,9 +4564,11 @@ setInterval(refreshMultiTimeframePanel, 60000);
         const modeToggle = $('demoRobotLimitMode');
         const limitPriceInput = $('demoRobotLimitPrice');
         const forceModeToggle = $('demoRobotForceLimitMode');
+        const autoEntryToggle = $('demoRobotAutoEntry');
         const forceRefreshButton = $('demoRobotForceLimitRefresh');
         if (modeToggle && modeToggle.checked !== state.limitMode) modeToggle.checked = state.limitMode;
         if (forceModeToggle && forceModeToggle.checked !== state.forceLimitMode) forceModeToggle.checked = state.forceLimitMode;
+        if (autoEntryToggle && autoEntryToggle.checked !== state.autoEntry) autoEntryToggle.checked = state.autoEntry;
         if (forceModeToggle) forceModeToggle.disabled = Boolean(state.position || (state.pending && state.pending.kind !== 'force-limit') || state.limitMode);
         if (forceRefreshButton) forceRefreshButton.disabled = !state.forceLimitMode || !state.enabled || Boolean(state.position);
         if (limitPriceInput && limitPriceInput.value !== state.limitPriceOverride) limitPriceInput.value = state.limitPriceOverride;
@@ -4919,8 +4932,8 @@ setInterval(refreshMultiTimeframePanel, 60000);
         state.position = null;
         state.positionStructureClosed = [];
         state.lastPositionStructureFetch = 0;
-        state.cooldownUntil = Date.now() + 60000;
-        setMessage(`Paper trade closed: ${reason}. Result ${fmtR(outcomeR)}. A one-minute cooldown is active.`);
+        state.cooldownUntil = state.autoEntry ? 0 : Date.now() + 60000;
+        setMessage(state.autoEntry ? `Paper trade closed: ${reason}. Result ${fmtR(outcomeR)}. Auto Entry is searching for the next valid setup.` : `Paper trade closed: ${reason}. Result ${fmtR(outcomeR)}. A one-minute cooldown is active.`);
         logEvent(`${marketName(p.market)} PAPER trade closed at ${formatPrice(markPrice)}: ${reason}, ${fmtR(outcomeR)}.`);
     }
 
@@ -4946,8 +4959,8 @@ setInterval(refreshMultiTimeframePanel, 60000);
         state.position = null;
         state.positionStructureClosed = [];
         state.lastPositionStructureFetch = 0;
-        state.cooldownUntil = Date.now() + 60000;
-        setMessage(`Paper position manually closed at ${formatPrice(mark)}. Realized PnL: ${fmtUsdPnl(cashPnlUsd)}. Added to cumulative closed PnL.`);
+        state.cooldownUntil = state.autoEntry ? 0 : Date.now() + 60000;
+        setMessage(state.autoEntry ? `Paper position manually closed at ${formatPrice(mark)}. Realized PnL: ${fmtUsdPnl(cashPnlUsd)}. Auto Entry is searching for the next valid setup.` : `Paper position manually closed at ${formatPrice(mark)}. Realized PnL: ${fmtUsdPnl(cashPnlUsd)}. Added to cumulative closed PnL.`);
         logEvent(`${marketName(p.market)} PAPER ${p.direction.toUpperCase()} manually closed at ${formatPrice(mark)}; realized ${fmtUsdPnl(cashPnlUsd)} (${fmtR(outcomeR)}).`);
         renderUi();
     }
@@ -5192,10 +5205,25 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 } else if (Date.now() - request.requestedAt > MAX_LIMIT_PENDING_MINUTES * 60000) {
                     state.forceLimitRequest = null;
                     setMessage('Force Limit Entry request expired before a valid 5-minute candle was available. Click refresh to try again.');
-                } else if (!signalDirection || signalDirection !== trend.direction || (request.direction && request.direction !== signalDirection)) {
-                    state.forceLimitRequest = null;
-                    setMessage('Force Limit Entry cancelled: dashboard ECI and 1-minute WMA must agree in the same direction.');
-                    logEvent('Force Limit Entry request cancelled because ECI/WMA direction did not agree.');
+                } else if (!signalDirection || signalDirection !== trend.direction) {
+                    if (state.autoEntry && state.forceLimitMode) {
+                        setMessage('Auto Entry is waiting for the dashboard ECI and 1-minute WMA to agree before setting a limit.');
+                    } else {
+                        state.forceLimitRequest = null;
+                        setMessage('Force Limit Entry cancelled: dashboard ECI and 1-minute WMA must agree in the same direction.');
+                        logEvent('Force Limit Entry request cancelled because ECI/WMA direction did not agree.');
+                    }
+                } else if (request.direction && request.direction !== signalDirection) {
+                    if (state.autoEntry && state.forceLimitMode) {
+                        request.direction = signalDirection;
+                        request.requestedAt = Date.now();
+                        request.minCandleTime = Math.floor(Date.now() / 300000) * 300000;
+                        setMessage('Auto Entry direction updated. Waiting for the next fully closed 5-minute candle.');
+                    } else {
+                        state.forceLimitRequest = null;
+                        setMessage('Force Limit Entry cancelled because the dashboard direction changed. Click refresh to try again.');
+                        logEvent('Force Limit Entry request cancelled after dashboard direction changed.');
+                    }
                 } else if (request.minCandleTime !== null && request.minCandleTime !== undefined && Date.now() < request.minCandleTime + 300000) {
                     setMessage('Force Limit Entry is waiting for the current 5-minute candle to close before setting the refreshed entry price.');
                 } else {
@@ -5214,8 +5242,17 @@ setInterval(refreshMultiTimeframePanel, 60000);
                             const limitPrice = Number(candle5m[4]);
                             const correctSide = Number.isFinite(limitPrice) && limitPrice > 0 && (signalDirection === 'long' ? limitPrice < price : limitPrice > price);
                             if (!correctSide) {
-                                state.forceLimitRequest = null;
-                                setMessage(`Force Limit Entry not placed: the previous closed 5-minute candle close (${formatPrice(limitPrice)}) is not on the waiting side of current price (${formatPrice(price)}). Click refresh after another 5-minute candle closes.`);
+                                if (state.autoEntry && state.forceLimitMode) {
+                                    state.forceLimitRequest = {
+                                        market, direction: signalDirection, requestedAt: Date.now(),
+                                        minCandleTime: Math.floor(Date.now() / 300000) * 300000,
+                                        automatic: true
+                                    };
+                                    setMessage(`The last closed 5-minute candle close (${formatPrice(limitPrice)}) is not a valid waiting-side limit at current price (${formatPrice(price)}). Auto Entry will retry after the next 5-minute candle closes.`);
+                                } else {
+                                    state.forceLimitRequest = null;
+                                    setMessage(`Force Limit Entry not placed: the previous closed 5-minute candle close (${formatPrice(limitPrice)}) is not on the waiting side of current price (${formatPrice(price)}). Click refresh after another 5-minute candle closes.`);
+                                }
                                 logEvent(`Force Limit Entry skipped: candle-close price ${formatPrice(limitPrice)} was already crossed or not a valid ${signalDirection.toUpperCase()} limit relative to ${formatPrice(price)}.`);
                             } else {
                                 state.pending = {
@@ -5240,7 +5277,17 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 if (pending.market !== market) {
                     resetPending('market changed');
                 } else if (Date.now() - pending.startedAt > maxAgeMinutes * 60000) {
+                    const expiredForceLimit = pending.kind === 'force-limit';
                     resetPending(isLimitOrder ? 'paper limit order expired after 30 minutes' : 'no confirmation within five minutes');
+                    if (expiredForceLimit && state.autoEntry && state.forceLimitMode) {
+                        state.forceLimitRequest = {
+                            market, direction: signalDirection || pending.direction, requestedAt: Date.now(),
+                            minCandleTime: Math.floor(Date.now() / 300000) * 300000,
+                            automatic: true
+                        };
+                        setMessage('Force limit expired without a fill. Auto Entry is waiting for the next fully closed 5-minute candle to set a new limit.');
+                        savePersistentState();
+                    }
                 } else if (signalDirection !== pending.direction) {
                     resetPending('dashboard ECI direction no longer matches the setup');
                 } else if (trend.direction !== pending.direction) {
@@ -5272,8 +5319,17 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 }
             } else {
                 const aligned = signalDirection && signalDirection === trend.direction;
+                if (state.autoEntry && state.forceLimitMode && !state.forceLimitRequest && !state.position) {
+                    state.forceLimitRequest = {
+                        market, direction: signalDirection || null, requestedAt: Date.now(),
+                        minCandleTime: null, automatic: true
+                    };
+                    savePersistentState();
+                }
                 if (state.forceLimitRequest) {
                     setMessage('Force Limit Entry request is active. Waiting for a valid completed 5-minute candle and aligned direction.');
+                } else if (state.forceLimitMode && state.autoEntry) {
+                    setMessage('Auto Entry is enabled. The bot is preparing a limit from the previous closed 5-minute candle and will retry after expiry.');
                 } else if (state.forceLimitMode) {
                     setMessage('Force Limit Entry is enabled. Click “Force / Refresh Limit Entry” to set a limit from the previous closed 5-minute candle; no market entry will be chased.');
                 } else if (Date.now() < state.cooldownUntil) {
@@ -5433,7 +5489,29 @@ setInterval(refreshMultiTimeframePanel, 60000);
         logEvent(`Estimated trading fee assumption set to ${value.toFixed(3)}% per side. Confirm this against your exchange fee tier.`);
     });
     const forceLimitModeInput = $('demoRobotForceLimitMode');
+    const autoEntryInput = $('demoRobotAutoEntry');
     const forceLimitRefreshButton = $('demoRobotForceLimitRefresh');
+    if (autoEntryInput) {
+        autoEntryInput.addEventListener('change', () => {
+            state.autoEntry = Boolean(autoEntryInput.checked);
+            if (!state.autoEntry && state.forceLimitRequest?.automatic) {
+                state.forceLimitRequest = null;
+                setMessage('Auto Entry disabled. Existing open positions and pending limits remain managed; no automatic retry will be started.');
+                logEvent('Auto Entry disabled; automatic limit retry cancelled.');
+            } else if (state.autoEntry) {
+                state.cooldownUntil = 0;
+                setMessage(state.forceLimitMode
+                    ? 'Auto Entry enabled. The bot will automatically create and refresh 5-minute-candle limit attempts.'
+                    : 'Auto Entry enabled. The bot will scan for the next valid setup after a trade closes.');
+                logEvent('Auto Entry enabled.');
+            } else {
+                setMessage('Auto Entry disabled. Existing paper-trading settings remain unchanged.');
+                logEvent('Auto Entry disabled.');
+            }
+            savePersistentState(); renderUi();
+            if (state.autoEntry && state.enabled) cycle();
+        });
+    }
     function requestForceLimitEntry(waitForNextCandle) {
         if (!state.forceLimitMode) {
             setMessage('Enable Force Limit Entry first.'); renderUi(); return;
