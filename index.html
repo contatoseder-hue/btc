@@ -575,7 +575,13 @@
 .demo-robot-stat .value { font-size:17px; overflow-wrap:anywhere; }
 .demo-robot-message { border-radius:10px; padding:12px; background:#101827; border:1px solid #263244; color:#d1d5db; font-size:13px; line-height:1.55; margin:12px 0; }
 .demo-robot-scanning { display:flex; align-items:center; gap:11px; border:1px solid rgba(96,165,250,.42); background:rgba(38,110,170,.10); color:#dbeafe; border-radius:10px; padding:12px 14px; margin:12px 0; }
-.demo-robot-scanning-icon { font-size:23px; line-height:1; }
+.demo-robot-scanning-icon { position:relative; display:block; flex:0 0 42px; width:42px; height:42px; border:1px solid rgba(74,222,128,.65); border-radius:50%; overflow:hidden; background:radial-gradient(circle,rgba(34,197,94,.18) 0 2px,transparent 3px),rgba(2,18,20,.8); box-shadow:0 0 12px rgba(34,197,94,.16),inset 0 0 10px rgba(34,197,94,.12); }
+.demo-robot-scanning-icon::before,.demo-robot-scanning-icon::after { content:""; position:absolute; border:1px solid rgba(74,222,128,.35); border-radius:50%; inset:7px; }
+.demo-robot-scanning-icon::after { inset:15px; }
+.demo-robot-scanning-icon .radar-sweep { position:absolute; inset:0; border-radius:50%; background:conic-gradient(from 0deg,transparent 0deg,transparent 285deg,rgba(34,197,94,.03) 300deg,rgba(74,222,128,.72) 355deg,transparent 360deg); animation:demoRadarSweep 1.8s linear infinite; }
+.demo-robot-scanning-icon .radar-sweep::after { content:""; position:absolute; width:3px; height:3px; border-radius:50%; background:#86efac; left:50%; top:50%; box-shadow:0 0 6px #4ade80; transform:translate(-50%,-50%); }
+@keyframes demoRadarSweep { to { transform:rotate(360deg); } }
+@media(prefers-reduced-motion:reduce){.demo-robot-scanning-icon .radar-sweep{animation:none;}}
 .demo-robot-scanning strong { display:block; font-size:13px; font-weight:800; }
 .demo-robot-scanning small { display:block; margin-top:3px; color:#aabbd0; font-size:11px; line-height:1.45; }
 .demo-robot-controls { display:flex; gap:9px; flex-wrap:wrap; margin:12px 0; }
@@ -1028,7 +1034,7 @@
             Demo robot is off. Start it to monitor market structure. It cannot place real orders.
         </div>
         <div id="demoRobotScanning" class="demo-robot-scanning" style="display:none;" role="status" aria-live="polite">
-            <span class="demo-robot-scanning-icon" aria-hidden="true">🔎</span>
+            <span class="demo-robot-scanning-icon" aria-hidden="true"><span class="radar-sweep"></span></span>
             <span><strong>Scanning the market</strong><small>Looking for the best valid entry point and direction…</small></span>
         </div>
 
@@ -4544,33 +4550,17 @@ setInterval(refreshMultiTimeframePanel, 60000);
         const positionEl = $('demoRobotPosition');
         const scanningEl = $('demoRobotScanning');
         if (scanningEl) {
-            const scanningIcon = scanningEl.querySelector('.demo-robot-scanning-icon');
-            const scanningTitle = scanningEl.querySelector('strong');
-            const scanningDetail = scanningEl.querySelector('small');
-            if (state.position) {
-                const p = state.position;
-                if (scanningIcon) scanningIcon.textContent = '✅';
-                if (scanningTitle) scanningTitle.textContent = `ENTRY FOUND · ${p.direction === 'long' ? 'LONG' : 'SHORT'}`;
-                if (scanningDetail) scanningDetail.textContent = `Paper entry confirmed at ${formatPrice(p.entry)}. Position is now being managed; no real order was placed.`;
-                scanningEl.style.display = 'flex';
-                scanningEl.setAttribute('aria-label', `Paper entry found: ${p.direction} at ${formatPrice(p.entry)}`);
-            } else if (state.pending && ['limit', 'force-limit'].includes(state.pending.kind)) {
-                const p = state.pending;
-                if (scanningIcon) scanningIcon.textContent = '⏳';
-                if (scanningTitle) scanningTitle.textContent = `LIMIT ENTRY PENDING · ${p.direction === 'long' ? 'LONG' : 'SHORT'}`;
-                if (scanningDetail) scanningDetail.textContent = `Current entry point: ${formatPrice(p.limitPrice)} · waiting for price to touch the limit. Paper order only.`;
-                scanningEl.style.display = 'flex';
-                scanningEl.setAttribute('aria-label', `Paper limit entry pending at ${formatPrice(p.limitPrice)}`);
-            } else if (state.forceLimitRequest) {
-                if (scanningIcon) scanningIcon.textContent = '🕯️';
-                if (scanningTitle) scanningTitle.textContent = 'SEARCHING FOR FORCED ENTRY';
-                if (scanningDetail) scanningDetail.textContent = 'Looking for a valid forced limit-entry opportunity…';
-                scanningEl.style.display = 'flex';
-                scanningEl.setAttribute('aria-label', 'Searching for a forced limit entry opportunity');
-            } else if (state.enabled) {
-                if (scanningIcon) scanningIcon.textContent = '🔎';
-                if (scanningTitle) scanningTitle.textContent = 'SCANNING THE MARKET';
-                if (scanningDetail) scanningDetail.textContent = 'Checking direction, support/resistance and entry confirmation…';
+            // The animated radar is visible only while the robot is actively searching.
+            // Hide it as soon as a setup becomes a pending limit or a position is opened.
+            const isLimitWaiting = state.pending && ['limit', 'force-limit'].includes(state.pending.kind);
+            const isSearching = state.enabled && !state.position && !isLimitWaiting;
+            if (isSearching) {
+                const scanningTitle = scanningEl.querySelector('strong');
+                const scanningDetail = scanningEl.querySelector('small');
+                if (scanningTitle) scanningTitle.textContent = state.forceLimitRequest ? 'SEARCHING FOR ENTRY' : 'SCANNING THE MARKET';
+                if (scanningDetail) scanningDetail.textContent = state.forceLimitRequest
+                    ? 'Checking for a valid completed 5-minute candle and aligned direction…'
+                    : 'Checking direction, support/resistance and entry confirmation…';
                 scanningEl.style.display = 'flex';
                 scanningEl.setAttribute('aria-label', 'Scanning the market for a valid paper entry');
             } else {
