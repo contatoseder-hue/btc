@@ -979,7 +979,7 @@
             <div>
                 <div class="section-title" style="margin-bottom:0;">Demo Robot · Support / Resistance Confirmation</div>
                 <div class="demo-robot-subtitle">
-                    Paper trading only. The robot preserves the existing ECI, 1-minute WMA 100/200, confirmed 15-minute support/resistance, and closed 1-minute rejection rules. Added filter: a completed 15-minute Volumatic VIDYA trend and BigBeluga Two-Pole momentum must also agree. Paper trading only.
+                    Paper trading only. The robot preserves the existing ECI, 1-minute WMA 100/200, confirmed 15-minute support/resistance, and closed 1-minute rejection rules. Added filter: a completed 5-minute Volumatic VIDYA trend and BigBeluga Two-Pole momentum must also agree. Paper trading only.
                 </div>
             </div>
             <span id="demoRobotBadge" class="demo-robot-badge">DEMO OFF</span>
@@ -1003,7 +1003,7 @@
                 <div id="demoRobotTrend" class="value">Waiting</div>
             </div>
             <div class="demo-robot-stat">
-                <div class="label">15m VIDYA + Two Pole</div>
+                <div class="label">5m VIDYA + Two Pole</div>
                 <div id="demoRobotMtfFilter" class="value">Waiting for closed candles</div>
                 <div id="demoRobotMtfFilterDetail" class="label" style="margin-top:4px;">Both signals must agree with the trade</div>
             </div>
@@ -4220,7 +4220,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
 
 <script>
 /* =========================================================
-   DEMO ROBOT — SIMULATION ONLY — 15m VIDYA + TWO-POLE ENTRY FILTER
+   DEMO ROBOT — SIMULATION ONLY — 5m VIDYA + TWO-POLE ENTRY FILTER
    This code makes read-only GET requests for candle/price data.
    It contains no trading credentials and sends no exchange orders.
 ========================================================= */
@@ -4235,8 +4235,10 @@ setInterval(refreshMultiTimeframePanel, 60000);
         confirmAll: [],
         confirmClosed: [],
         structureClosed: [],
+        filterClosed: [],
         lastConfirmFetch: 0,
         lastStructureFetch: 0,
+        lastFilterFetch: 0,
         // Keep structure candles for the open position's market separately.
         // The selected dashboard market can change while an existing paper trade is managed.
         positionStructureClosed: [],
@@ -4537,8 +4539,10 @@ setInterval(refreshMultiTimeframePanel, 60000);
         state.confirmAll = [];
         state.confirmClosed = [];
         state.structureClosed = [];
+        state.filterClosed = [];
         state.lastConfirmFetch = 0;
         state.lastStructureFetch = 0;
+        state.lastFilterFetch = 0;
         state.pending = null;
         state.levels = { support: null, resistance: null };
         state.levelsMarket = market;
@@ -4567,7 +4571,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 if (scanningTitle) scanningTitle.textContent = state.forceLimitRequest ? 'SEARCHING FOR ENTRY' : 'SCANNING THE MARKET';
                 if (scanningDetail) scanningDetail.textContent = state.forceLimitRequest
                     ? 'Checking for a valid completed 5-minute candle and aligned direction…'
-                    : 'Checking ECI, WMA, 15m VIDYA + Two Pole, support/resistance and candle confirmation…';
+                    : 'Checking ECI, WMA, 5m VIDYA + Two Pole, support/resistance and candle confirmation…';
                 scanningEl.style.display = 'flex';
                 scanningEl.setAttribute('aria-label', 'Scanning the market for a valid paper entry');
             } else {
@@ -4850,11 +4854,11 @@ setInterval(refreshMultiTimeframePanel, 60000);
     // 15-minute confirmation filter. Uses only fully closed candles.
     // VIDYA trend uses adaptive CMO weighting and ATR bands; Two-Pole uses
     // deviation-from-mean normalization followed by two cascaded smoothing poles.
-    function calcMtfEntryFilter(candles) {
+    function calcVolumaticTwoPoleFilter(candles) {
         const bars = (Array.isArray(candles) ? candles : []).filter(c => c && c[6] !== true &&
             [c[0], c[1], c[2], c[3], c[4], c[5]].every(v => Number.isFinite(Number(v))));
-        const waiting = { direction: 'neutral', label: 'Waiting for data', detail: 'Need enough closed 15-minute candles', valid: false, candleTime: bars.length ? bars[bars.length - 1][0] : null };
-        if (bars.length < 220) return { ...waiting, label: `Need 220 closed 15m candles (${bars.length} available)` };
+        const waiting = { direction: 'neutral', label: 'Waiting for data', detail: 'Need enough closed 5-minute candles', valid: false, candleTime: bars.length ? bars[bars.length - 1][0] : null };
+        if (bars.length < 220) return { ...waiting, label: `Need 220 closed 5m candles (${bars.length} available)` };
         const closes = bars.map(c => Number(c[4]));
         const highs = bars.map(c => Number(c[2]));
         const lows = bars.map(c => Number(c[3]));
@@ -4910,7 +4914,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
         const last = bars.length - 1;
         const osc = pole2[last], sig = signal[last];
         if (!Number.isFinite(smoothed[last]) || !Number.isFinite(atrs[last]) || !Number.isFinite(osc) || !Number.isFinite(sig)) {
-            return { ...waiting, label: 'Filter unavailable', detail: 'Not enough valid 15-minute indicator values' };
+            return { ...waiting, label: 'Filter unavailable', detail: 'Not enough valid 5-minute indicator values' };
         }
         const upper = smoothed[last] + 2 * atrs[last];
         const lower = smoothed[last] - 2 * atrs[last];
@@ -5288,7 +5292,15 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 state.structureClosed = all15m.filter(c => c[6] !== true);
                 state.lastStructureFetch = Date.now();
             }
-            state.mtfFilter = calcMtfEntryFilter(state.structureClosed);
+            // The test indicators use their own 5-minute closed-candle history.
+            // Do not reuse the 15-minute structure candles for this filter.
+            if (!state.filterClosed.length || Date.now() - state.lastFilterFetch >= 60000) {
+                const all5m = await fetchDemoBars(market, '5m', 5, CANDLE_LIMIT);
+                if (market !== selectedMarket) return;
+                state.filterClosed = all5m.filter(c => c[6] !== true);
+                state.lastFilterFetch = Date.now();
+            }
+            state.mtfFilter = calcVolumaticTwoPoleFilter(state.filterClosed);
 
             const price = selectedMarket === market && Number.isFinite(currentPrice) && currentPrice > 0
                 ? currentPrice
@@ -5320,7 +5332,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
             if (state.forceLimitRequest && !state.position && !state.pending) {
                 const request = state.forceLimitRequest;
                 if (!state.mtfFilter?.valid || state.mtfFilter.direction !== signalDirection) {
-                    setMessage(`Force Limit Entry waiting: 15m VIDYA + Two Pole must confirm ${String(signalDirection || 'a direction').toUpperCase()}. ${state.mtfFilter?.detail || ''}`);
+                    setMessage(`Force Limit Entry waiting: 5m VIDYA + Two Pole must confirm ${String(signalDirection || 'a direction').toUpperCase()}. ${state.mtfFilter?.detail || ''}`);
                 } else if (request.market !== market) {
                     state.forceLimitRequest = null;
                     setMessage('Force Limit Entry request cancelled because the selected market changed.');
@@ -5415,8 +5427,8 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 } else if (trend.direction !== pending.direction) {
                     resetPending('1-minute WMA trend no longer agrees or became neutral');
                 } else if (!state.mtfFilter?.valid || state.mtfFilter.direction !== pending.direction) {
-                    resetPending('15-minute Volumatic VIDYA + Two Pole confirmation no longer agrees');
-                    setMessage('Pending entry cancelled: the closed 15-minute VIDYA + Two Pole confirmation no longer agrees.');
+                    resetPending('5-minute Volumatic VIDYA + Two Pole confirmation no longer agrees');
+                    setMessage('Pending entry cancelled: the closed 5-minute VIDYA + Two Pole confirmation no longer agrees.');
                 } else if (isLimitOrder && latestClosed && ((pending.direction === 'long' && latestClosed[4] < pending.level.price - pending.tolerance) || (pending.direction === 'short' && latestClosed[4] > pending.level.price + pending.tolerance))) {
                     resetPending('the last closed 1-minute candle invalidated the support/resistance level');
                 } else if (!isLimitOrder && pending.direction === 'long' && price < pending.level.price - pending.tolerance * 1.5) {
@@ -5466,7 +5478,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 } else if (!aligned) {
                     setMessage(`No entry: dashboard ECI is ${lastScalpSignal}, but the 1-minute WMA trend is ${trend.label}. Direction must agree.`);
                 } else if (!state.mtfFilter?.valid || state.mtfFilter.direction !== signalDirection) {
-                    setMessage(`No entry: 15-minute Volumatic VIDYA + Two Pole has not confirmed ${signalDirection.toUpperCase()}. ${state.mtfFilter?.detail || 'Waiting for valid closed 15-minute candles.'}`);
+                    setMessage(`No entry: 5-minute Volumatic VIDYA + Two Pole has not confirmed ${signalDirection.toUpperCase()}. ${state.mtfFilter?.detail || 'Waiting for valid closed 5-minute candles.'}`);
                 } else {
                     const level = signalDirection === 'long' ? levels.support : levels.resistance;
                     if (!level) {
