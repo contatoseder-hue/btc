@@ -1063,7 +1063,7 @@
                 <div class="demo-position-stat"><div class="demo-position-stat-label">Leverage Used</div><div id="demoPositionLeverage" class="demo-position-stat-value demo-leverage-note">10× paper leverage</div></div>
                 <div class="demo-position-stat"><div class="demo-position-stat-label">Notional Exposure (remaining)</div><div id="demoPositionNotional" class="demo-position-stat-value">—</div></div>
             </div>
-            <div id="demoPositionPnlBreakdown" class="demo-position-note">Percentages update with the open position: ROI = floating PnL ÷ estimated remaining margin at 10×; account impact = floating PnL ÷ starting funding. Pre-TP1 protection estimates round-trip fees and moves the stop to cover those fees plus a small buffer. Paper only; no exchange order is placed.</div>
+            <div id="demoPositionPnlBreakdown" class="demo-position-note">Percentages update with the open position: ROI = floating PnL ÷ estimated remaining margin at 10×; account impact = floating PnL ÷ starting funding. Optional Auto Pre-TP1 Protection estimates round-trip fees and can move the stop to cover those fees plus a small buffer; it can be disabled with a warning. Paper only; no exchange order is placed.</div>
             <div class="demo-position-actions"><button id="demoRobotClosePosition" class="demo-position-close" type="button">Close Position at Current Mark</button></div>
         </div>
 
@@ -1073,6 +1073,14 @@
                 <span><strong>Auto Entry</strong><small>Automatically search for the next paper entry after a trade closes or a limit expires.</small></span>
             </label>
             <div class="demo-limit-note">When Force Limit Entry is enabled too, each new attempt uses the previous fully closed 5-minute candle close. Paper trading only.</div>
+        </div>
+
+        <div class="demo-limit-controls" id="demoRobotPreTp1ProtectionControls">
+            <label class="demo-limit-toggle" for="demoRobotAutoPreTp1Protection">
+                <input id="demoRobotAutoPreTp1Protection" type="checkbox" checked>
+                <span><strong>Auto Pre-TP1 Protection</strong><small>When enabled, move the stop to estimated fee coverage plus a small buffer after the trade has enough open profit. TP1 and the post-TP1 breakeven rule remain unchanged.</small></span>
+            </label>
+            <div class="demo-limit-note">Disabling this removes the automatic fee-covering stop before TP1. The original stop loss remains in place until TP1 or that stop is reached.</div>
         </div>
 
         <div class="demo-limit-controls" id="demoRobotForceLimitControls">
@@ -4236,6 +4244,8 @@ setInterval(refreshMultiTimeframePanel, 60000);
         limitPriceOverride: '',
         forceLimitMode: false,
         autoEntry: false,
+        autoPreTp1Protection: true,
+        autoEntryRescanRequested: false,
         forceLimitRequest: null,
         trend: null,
         logs: [],
@@ -4318,6 +4328,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 limitPriceOverride: String(state.limitPriceOverride || ''),
                 forceLimitMode: Boolean(state.forceLimitMode),
                 autoEntry: Boolean(state.autoEntry),
+                autoPreTp1Protection: Boolean(state.autoPreTp1Protection),
                 forceLimitRequest: state.forceLimitRequest,
                 position: state.position,
                 closedTrades: state.closedTrades.slice(-MAX_SAVED_CLOSED_TRADES),
@@ -4356,6 +4367,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
             state.limitPriceOverride = String(saved.limitPriceOverride || '');
             state.forceLimitMode = Boolean(saved.forceLimitMode);
             state.autoEntry = Boolean(saved.autoEntry);
+            state.autoPreTp1Protection = saved.autoPreTp1Protection === undefined ? true : Boolean(saved.autoPreTp1Protection);
             state.forceLimitRequest = saved.forceLimitRequest && typeof saved.forceLimitRequest === 'object'
                 ? { ...saved.forceLimitRequest, requestedAt: Number(saved.forceLimitRequest.requestedAt) || Date.now(), minCandleTime: Number.isFinite(Number(saved.forceLimitRequest.minCandleTime)) ? Number(saved.forceLimitRequest.minCandleTime) : null }
                 : null;
@@ -4581,10 +4593,12 @@ setInterval(refreshMultiTimeframePanel, 60000);
         const limitPriceInput = $('demoRobotLimitPrice');
         const forceModeToggle = $('demoRobotForceLimitMode');
         const autoEntryToggle = $('demoRobotAutoEntry');
+        const preTp1ProtectionToggle = $('demoRobotAutoPreTp1Protection');
         const forceRefreshButton = $('demoRobotForceLimitRefresh');
         if (modeToggle && modeToggle.checked !== state.limitMode) modeToggle.checked = state.limitMode;
         if (forceModeToggle && forceModeToggle.checked !== state.forceLimitMode) forceModeToggle.checked = state.forceLimitMode;
         if (autoEntryToggle && autoEntryToggle.checked !== state.autoEntry) autoEntryToggle.checked = state.autoEntry;
+        if (preTp1ProtectionToggle && preTp1ProtectionToggle.checked !== state.autoPreTp1Protection) preTp1ProtectionToggle.checked = state.autoPreTp1Protection;
         if (forceModeToggle) forceModeToggle.disabled = Boolean(state.position || (state.pending && state.pending.kind !== 'force-limit') || state.limitMode);
         if (forceRefreshButton) forceRefreshButton.disabled = !state.forceLimitMode || !state.enabled || Boolean(state.position);
         if (limitPriceInput && limitPriceInput.value !== state.limitPriceOverride) limitPriceInput.value = state.limitPriceOverride;
@@ -4682,7 +4696,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
                     const entryFeeEstimate = Math.abs(Number(p.entry) * Number(p.quantity)) * feeRate;
                     const exitFeeEstimate = Math.abs(mark * remainingQty) * feeRate;
                     const roundTripFeeEstimate = entryFeeEstimate + exitFeeEstimate;
-                    const protectionStatus = p.hitTP1 ? 'TP1 reached; runner stop uses the existing breakeven rule.' : (p.profitProtectionActive ? `Pre-TP1 fee-covering stop ACTIVE at ${formatPrice(p.activeStop)}; estimated round-trip fees $${roundTripFeeEstimate.toFixed(2)}.` : `Pre-TP1 fee protection waiting; estimated round-trip fees $${roundTripFeeEstimate.toFixed(2)} at ${(Number(state.assumedFeeRatePct) || 0).toFixed(3)}% per side.`);
+                    const protectionStatus = p.hitTP1 ? 'TP1 reached; runner stop uses the existing breakeven rule.' : (!state.autoPreTp1Protection ? 'Auto Pre-TP1 Protection is OFF; original stop loss remains active.' : (p.profitProtectionActive ? `Pre-TP1 fee-covering stop ACTIVE at ${formatPrice(p.activeStop)}; estimated round-trip fees $${roundTripFeeEstimate.toFixed(2)}.` : `Pre-TP1 fee protection waiting; estimated round-trip fees $${roundTripFeeEstimate.toFixed(2)} at ${(Number(state.assumedFeeRatePct) || 0).toFixed(3)}% per side.`));
                     $('demoPositionPnlBreakdown').textContent = `Assumed risk: $${p.riskUsd.toFixed(2)} at the initial stop · Simulated leverage: 10× · Estimated margin at 10×: $${estimatedMargin.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · Realized from partial exits: ${fmtUsdPnl(realized)} · Floating PnL on remaining quantity: ${fmtUsdPnl(floatingPnl)} · Remaining notional exposure: $${remainingNotional.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}. ${protectionStatus} Fee-covering stop uses estimated entry + exit fees and a small $0.05 minimum / 10% fee buffer. This is paper-only; PnL otherwise excludes fees, spread, slippage and exchange contract specifications.`;
                 }
                 positionEl.style.display = 'block';
@@ -4922,6 +4936,17 @@ setInterval(refreshMultiTimeframePanel, 60000);
         return true;
     }
 
+    function requestAutoEntryRescanAfterClose() {
+        if (!state.autoEntry || !state.enabled || state.position) return;
+        state.autoEntryRescanRequested = true;
+        if (!state.busy) {
+            state.autoEntryRescanRequested = false;
+            Promise.resolve().then(() => {
+                if (state.autoEntry && state.enabled && !state.position) cycle();
+            });
+        }
+    }
+
     function closePaperPosition(outcomeR, reason, markPrice) {
         const p = state.position;
         if (!p) return;
@@ -4949,8 +4974,9 @@ setInterval(refreshMultiTimeframePanel, 60000);
         state.positionStructureClosed = [];
         state.lastPositionStructureFetch = 0;
         state.cooldownUntil = state.autoEntry ? 0 : Date.now() + 60000;
-        setMessage(state.autoEntry ? `Paper trade closed: ${reason}. Result ${fmtR(outcomeR)}. Auto Entry is searching for the next valid setup.` : `Paper trade closed: ${reason}. Result ${fmtR(outcomeR)}. A one-minute cooldown is active.`);
+        setMessage(state.autoEntry ? `Paper trade closed: ${reason}. Result ${fmtR(outcomeR)}. Auto Entry remains enabled and is searching for the next valid setup.` : `Paper trade closed: ${reason}. Result ${fmtR(outcomeR)}. A one-minute cooldown is active.`);
         logEvent(`${marketName(p.market)} PAPER trade closed at ${formatPrice(markPrice)}: ${reason}, ${fmtR(outcomeR)}.`);
+        requestAutoEntryRescanAfterClose();
     }
 
     function manuallyClosePaperPosition() {
@@ -4976,8 +5002,9 @@ setInterval(refreshMultiTimeframePanel, 60000);
         state.positionStructureClosed = [];
         state.lastPositionStructureFetch = 0;
         state.cooldownUntil = state.autoEntry ? 0 : Date.now() + 60000;
-        setMessage(state.autoEntry ? `Paper position manually closed at ${formatPrice(mark)}. Realized PnL: ${fmtUsdPnl(cashPnlUsd)}. Auto Entry is searching for the next valid setup.` : `Paper position manually closed at ${formatPrice(mark)}. Realized PnL: ${fmtUsdPnl(cashPnlUsd)}. Added to cumulative closed PnL.`);
+        setMessage(state.autoEntry ? `Paper position manually closed at ${formatPrice(mark)}. Realized PnL: ${fmtUsdPnl(cashPnlUsd)}. Auto Entry remains enabled and is searching for the next valid setup.` : `Paper position manually closed at ${formatPrice(mark)}. Realized PnL: ${fmtUsdPnl(cashPnlUsd)}. Added to cumulative closed PnL.`);
         logEvent(`${marketName(p.market)} PAPER ${p.direction.toUpperCase()} manually closed at ${formatPrice(mark)}; realized ${fmtUsdPnl(cashPnlUsd)} (${fmtR(outcomeR)}).`);
+        requestAutoEntryRescanAfterClose();
         renderUi();
     }
 
@@ -5017,7 +5044,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
 
         // Before TP1, activate once the open gross profit can cover estimated entry + exit fees
         // and a small net buffer. The stop is placed to preserve that amount if revisited.
-        if (!p.hitTP1 && !p.profitProtectionActive) {
+        if (state.autoPreTp1Protection && !p.hitTP1 && !p.profitProtectionActive) {
             const qty = Number(p.quantity);
             const feeRate = Math.max(0, Math.min(1, Number(state.assumedFeeRatePct) || 0)) / 100;
             const grossOpenPnl = (p.direction === 'long' ? markPrice - p.entry : p.entry - markPrice) * qty;
@@ -5157,6 +5184,8 @@ setInterval(refreshMultiTimeframePanel, 60000);
                     }
                 }
                 if (state.position || !state.enabled) return;
+                // The position closed during this cycle; this pass can immediately resume Auto Entry.
+                state.autoEntryRescanRequested = false;
             }
 
             if (!state.enabled) return;
@@ -5399,8 +5428,15 @@ setInterval(refreshMultiTimeframePanel, 60000);
         } catch (error) {
             setMessage(`Demo data error: ${error?.message || String(error)} No real orders were sent.`);
         } finally {
+            const shouldRescanAfterClose = state.autoEntryRescanRequested;
+            state.autoEntryRescanRequested = false;
             state.busy = false;
             renderUi();
+            if (shouldRescanAfterClose && state.autoEntry && state.enabled && !state.position) {
+                Promise.resolve().then(() => {
+                    if (state.autoEntry && state.enabled && !state.position) cycle();
+                });
+            }
         }
     }
 
@@ -5528,6 +5564,36 @@ setInterval(refreshMultiTimeframePanel, 60000);
             if (state.autoEntry && state.enabled) cycle();
         });
     }
+    const preTp1ProtectionInput = $('demoRobotAutoPreTp1Protection');
+    if (preTp1ProtectionInput) {
+        preTp1ProtectionInput.addEventListener('change', () => {
+            const enabling = Boolean(preTp1ProtectionInput.checked);
+            if (!enabling) {
+                const warning = 'WARNING: You are about to disable automatic pre-TP1 profit protection.\n\nThe bot will no longer move the stop to cover estimated round-trip fees plus a small buffer before TP1. If protection is already active on the open paper trade, its stop will return to the original stop loss, so ordinary price movement will not trigger the tighter fee-covering stop. This also means open profit can be given back and the trade may reach its original stop loss.\n\nTP1 and the post-TP1 breakeven rule are unchanged. This affects paper-trading logic only.\n\nDisable Auto Pre-TP1 Protection?';
+                if (!window.confirm(warning)) {
+                    preTp1ProtectionInput.checked = true;
+                    return;
+                }
+            }
+            state.autoPreTp1Protection = enabling;
+            if (!enabling && state.position && !state.position.hitTP1 && state.position.profitProtectionActive) {
+                state.position.activeStop = Number(state.position.initialStop);
+                state.position.profitProtectionActive = false;
+                state.position.profitProtectionStop = null;
+                logEvent('Auto Pre-TP1 Protection disabled by user; active stop returned to the original stop loss for the open paper position.');
+                setMessage('Auto Pre-TP1 Protection is OFF. The open paper trade is back to its original stop loss until TP1 or the original stop is reached.');
+            } else if (enabling) {
+                logEvent('Auto Pre-TP1 Protection enabled.');
+                setMessage('Auto Pre-TP1 Protection is ON. It may activate before TP1 when open profit covers estimated fees plus a small buffer.');
+            } else {
+                logEvent('Auto Pre-TP1 Protection disabled by user.');
+                setMessage('Auto Pre-TP1 Protection is OFF for the current and future pre-TP1 paper trade management.');
+            }
+            savePersistentState();
+            renderUi();
+        });
+    }
+
     function requestForceLimitEntry(waitForNextCandle) {
         if (!state.forceLimitMode) {
             setMessage('Enable Force Limit Entry first.'); renderUi(); return;
