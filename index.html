@@ -219,7 +219,7 @@
         color: #facc15;
     }
 
-    /* RSI visual only. It does NOT affect ECI signals. */
+    /* RSI visual only. It does NOT affect paper-robot entry decisions. */
     .rsi-panel {
         margin-top: 10px;
     }
@@ -979,7 +979,7 @@
             <div>
                 <div class="section-title" style="margin-bottom:0;">Demo Robot · Support / Resistance Confirmation</div>
                 <div class="demo-robot-subtitle">
-                    Paper trading only. The robot preserves the existing ECI, 1-minute WMA 100/200, confirmed 15-minute support/resistance, and closed 1-minute rejection rules. Added filter: a completed 5-minute Volumatic VIDYA trend and BigBeluga Two-Pole momentum must also agree. Paper trading only.
+                    Paper trading only. Primary direction comes from completed 15-minute Volumatic VIDYA + BigBeluga Two-Pole agreement. The 1-minute WMA 100/200 remains a safety filter; confirmed 15-minute support/resistance and closed 1-minute rejection rules remain required. RSI remains visual only.
                 </div>
             </div>
             <span id="demoRobotBadge" class="demo-robot-badge">DEMO OFF</span>
@@ -1003,9 +1003,9 @@
                 <div id="demoRobotTrend" class="value">Waiting</div>
             </div>
             <div class="demo-robot-stat">
-                <div class="label">5m VIDYA + Two Pole</div>
+                <div class="label">15m VIDYA + Two Pole</div>
                 <div id="demoRobotMtfFilter" class="value">Waiting for closed candles</div>
-                <div id="demoRobotMtfFilterDetail" class="label" style="margin-top:4px;">Both signals must agree with the trade</div>
+                <div id="demoRobotMtfFilterDetail" class="label" style="margin-top:4px;">15m VIDYA and Two Pole must agree</div>
             </div>
             <div class="demo-robot-stat">
                 <div class="label">Closed Demo Trades</div>
@@ -1128,7 +1128,7 @@
             </table>
         </div>
         <div class="demo-robot-footnote">
-            Standard mode: ECI direction must match the 1-minute WMA trend, then a closed 1-minute rejection candle confirms the 15-minute swing level. Optional Paper Limit Entry mode simulates a limit at confirmed support/resistance (or a nearby manual override). Force Limit Entry is a separate manual trigger using the previous fully closed 5-minute candle close as the limit (LONG) or the same reversed rule (SHORT); refresh waits for the next 5-minute candle to close. Both limit modes expire after 30 minutes and retain direction and structure invalidation checks. Support/resistance stays fixed as price moves, changing only if crossed/invalidated or replaced by a newer confirmed, closer swing. Demo sizing respects both the configured maximum initial stop risk and the configured margin allocation at the 10× paper model; estimated margin is not an exchange simulation and liquidation is not modeled. USD PnL is an estimate and excludes fees, spread, slippage and instrument-specific contract sizing. TP1 is 2R; 50% exits there and the remaining 50% targets 3R, with the stop moved to entry after TP1. State, pending setup/order, levels, open position and trade history are saved locally and an active robot resumes on refresh. JavaScript cannot monitor trades while the browser/page is closed; it resumes only when the dashboard is open again. BTC open-position mark and floating PnL use a public mark-price WebSocket when available; entry decisions still require closed candles. Other market marks continue to use the existing polling feed. Paper trading only; no exchange orders are sent. Custom assets are not enabled in this test.
+            Standard mode: closed 15-minute Volumatic VIDYA + Two-Pole agreement determines LONG/SHORT direction. The 1-minute WMA 100/200 remains a safety filter; a closed 1-minute rejection candle must confirm the 15-minute swing level. Optional Paper Limit Entry mode simulates a limit at confirmed support/resistance (or a nearby manual override). Force Limit Entry is a separate manual trigger using the previous fully closed 5-minute candle close as the limit (LONG) or the same reversed rule (SHORT); refresh waits for the next 5-minute candle to close. Both limit modes expire after 30 minutes and retain direction and structure invalidation checks. Support/resistance stays fixed as price moves, changing only if crossed/invalidated or replaced by a newer confirmed, closer swing. Demo sizing respects both the configured maximum initial stop risk and the configured margin allocation at the 10× paper model; estimated margin is not an exchange simulation and liquidation is not modeled. USD PnL is an estimate and excludes fees, spread, slippage and instrument-specific contract sizing. TP1 is 2R; 50% exits there and the remaining 50% targets 3R, with the stop moved to entry after TP1. State, pending setup/order, levels, open position and trade history are saved locally and an active robot resumes on refresh. JavaScript cannot monitor trades while the browser/page is closed; it resumes only when the dashboard is open again. BTC open-position mark and floating PnL use a public mark-price WebSocket when available; entry decisions still require closed candles. Other market marks continue to use the existing polling feed. Paper trading only; no exchange orders are sent. Custom assets are not enabled in this test.
         </div>
     </div>
 
@@ -4220,7 +4220,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
 
 <script>
 /* =========================================================
-   DEMO ROBOT — SIMULATION ONLY — 5m VIDYA + TWO-POLE ENTRY FILTER
+   DEMO ROBOT — SIMULATION ONLY — 15m VIDYA + TWO-POLE DIRECTION
    This code makes read-only GET requests for candle/price data.
    It contains no trading credentials and sends no exchange orders.
 ========================================================= */
@@ -4253,7 +4253,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
         autoEntry: false,
         forceLimitRequest: null,
         trend: null,
-        mtfFilter: { direction: 'neutral', label: 'Waiting for closed candles', detail: 'Both signals must agree with the trade', valid: false, candleTime: null },
+        mtfFilter: { direction: 'neutral', label: 'Waiting for closed candles', detail: '15m VIDYA and Two Pole must agree', valid: false, candleTime: null },
         logs: [],
         closedTrades: [],
         wins: 0,
@@ -4547,7 +4547,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
         state.levels = { support: null, resistance: null };
         state.levelsMarket = market;
         state.trend = null;
-        state.mtfFilter = { direction: 'neutral', label: 'Waiting for closed candles', detail: 'Both signals must agree with the trade', valid: false, candleTime: null };
+        state.mtfFilter = { direction: 'neutral', label: 'Waiting for closed candles', detail: '15m VIDYA and Two Pole must agree', valid: false, candleTime: null };
     }
 
     function setMessage(message) {
@@ -4570,8 +4570,8 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 const scanningDetail = scanningEl.querySelector('small');
                 if (scanningTitle) scanningTitle.textContent = state.forceLimitRequest ? 'SEARCHING FOR ENTRY' : 'SCANNING THE MARKET';
                 if (scanningDetail) scanningDetail.textContent = state.forceLimitRequest
-                    ? 'Checking for a valid completed 5-minute candle and aligned direction…'
-                    : 'Checking ECI, WMA, 5m VIDYA + Two Pole, support/resistance and candle confirmation…';
+                    ? 'Checking for a valid completed 15-minute VIDYA + Two-Pole confirmation and aligned direction…'
+                    : 'Checking 15m VIDYA + Two-Pole direction, 1m WMA safety filter, support/resistance and candle confirmation…';
                 scanningEl.style.display = 'flex';
                 scanningEl.setAttribute('aria-label', 'Scanning the market for a valid paper entry');
             } else {
@@ -4633,7 +4633,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
         const marginEl = $('demoRobotMargin'); if (marginEl) marginEl.textContent = `$${Number(state.tradeAllocationUsd).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}`;
         if ($('demoRobotTrend')) $('demoRobotTrend').textContent = state.trend ? state.trend.label : 'Unavailable';
         if ($('demoRobotMtfFilter')) { $('demoRobotMtfFilter').textContent = state.mtfFilter?.label || 'Unavailable'; $('demoRobotMtfFilter').style.color = state.mtfFilter?.direction === 'long' ? '#22c55e' : (state.mtfFilter?.direction === 'short' ? '#ef4444' : '#facc15'); }
-        if ($('demoRobotMtfFilterDetail')) $('demoRobotMtfFilterDetail').textContent = state.mtfFilter?.detail || 'Waiting for valid 15-minute data';
+        if ($('demoRobotMtfFilterDetail')) $('demoRobotMtfFilterDetail').textContent = state.mtfFilter?.detail || 'Waiting for valid closed 15-minute candles';
         if ($('demoRobotClosed')) $('demoRobotClosed').textContent = String(state.closedTrades.length);
         if ($('demoRobotNetR')) {
             $('demoRobotNetR').textContent = fmtR(state.netR);
@@ -4851,14 +4851,14 @@ setInterval(refreshMultiTimeframePanel, 60000);
         throw new Error(`${intervalKey} candle feed failed after ${maxAttempts} attempts: ${details}`);
     }
 
-    // 15-minute confirmation filter. Uses only fully closed candles.
+    // 15-minute primary directional filter. Uses only fully closed candles.
     // VIDYA trend uses adaptive CMO weighting and ATR bands; Two-Pole uses
     // deviation-from-mean normalization followed by two cascaded smoothing poles.
     function calcVolumaticTwoPoleFilter(candles) {
         const bars = (Array.isArray(candles) ? candles : []).filter(c => c && c[6] !== true &&
             [c[0], c[1], c[2], c[3], c[4], c[5]].every(v => Number.isFinite(Number(v))));
-        const waiting = { direction: 'neutral', label: 'Waiting for data', detail: 'Need enough closed 5-minute candles', valid: false, candleTime: bars.length ? bars[bars.length - 1][0] : null };
-        if (bars.length < 220) return { ...waiting, label: `Need 220 closed 5m candles (${bars.length} available)` };
+        const waiting = { direction: 'neutral', label: 'Waiting for data', detail: 'Need enough closed 15-minute candles', valid: false, candleTime: bars.length ? bars[bars.length - 1][0] : null };
+        if (bars.length < 220) return { ...waiting, label: `Need 220 closed 15m candles (${bars.length} available)` };
         const closes = bars.map(c => Number(c[4]));
         const highs = bars.map(c => Number(c[2]));
         const lows = bars.map(c => Number(c[3]));
@@ -4914,7 +4914,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
         const last = bars.length - 1;
         const osc = pole2[last], sig = signal[last];
         if (!Number.isFinite(smoothed[last]) || !Number.isFinite(atrs[last]) || !Number.isFinite(osc) || !Number.isFinite(sig)) {
-            return { ...waiting, label: 'Filter unavailable', detail: 'Not enough valid 5-minute indicator values' };
+            return { ...waiting, label: 'Filter unavailable', detail: 'Not enough valid 15-minute indicator values' };
         }
         const upper = smoothed[last] + 2 * atrs[last];
         const lower = smoothed[last] - 2 * atrs[last];
@@ -5255,12 +5255,12 @@ setInterval(refreshMultiTimeframePanel, 60000);
                     // Only one position is allowed, and no new entry is scanned until it closes.
                     if (state.position) {
                         const openDirection = state.position.direction;
-                        const currentSignalDirection = directionFromSignal(lastScalpSignal);
+                        const currentSignalDirection = state.mtfFilter?.valid ? state.mtfFilter.direction : null;
                         const oppositeSignal = currentSignalDirection && currentSignalDirection !== openDirection;
                         const trendLabel = state.trend ? state.trend.label : 'Unavailable';
                         setMessage(oppositeSignal
-                            ? `Managing existing PAPER ${openDirection.toUpperCase()} opened at ${formatPrice(state.position.entry)}. Current dashboard ECI is ${lastScalpSignal}, opposite to this position; signals do not auto-close or reverse an open trade. No new entry will be considered until this position closes. 1m WMA: ${trendLabel}.`
-                            : `Managing existing PAPER ${openDirection.toUpperCase()} opened at ${formatPrice(state.position.entry)}. Current dashboard ECI: ${lastScalpSignal || 'No active signal'}. 1m WMA: ${trendLabel}. The position remains subject to its simulated stop/targets; no second position is opened.`);
+                            ? `Managing existing PAPER ${openDirection.toUpperCase()} opened at ${formatPrice(state.position.entry)}. Current 15-minute VIDYA + Two-Pole direction is ${state.mtfFilter?.direction || 'neutral'}; signals do not auto-close or reverse an open trade. No new entry will be considered until this position closes. 1m WMA: ${trendLabel}.`
+                            : `Managing existing PAPER ${openDirection.toUpperCase()} opened at ${formatPrice(state.position.entry)}. Current 15-minute VIDYA + Two-Pole direction: ${state.mtfFilter?.direction || 'Waiting for agreement'}. 1m WMA: ${trendLabel}. The position remains subject to its simulated stop/targets; no second position is opened.`);
                     }
                 }
                 if (state.position || !state.enabled) return;
@@ -5292,12 +5292,12 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 state.structureClosed = all15m.filter(c => c[6] !== true);
                 state.lastStructureFetch = Date.now();
             }
-            // The test indicators use their own 5-minute closed-candle history.
-            // Do not reuse the 15-minute structure candles for this filter.
+            // The primary direction indicators use their own 15-minute closed-candle history.
+            // Keep this separate from the 1-minute WMA/rejection candles.
             if (!state.filterClosed.length || Date.now() - state.lastFilterFetch >= 60000) {
-                const all5m = await fetchDemoBars(market, '5m', 5, CANDLE_LIMIT);
+                const all15mFilter = await fetchDemoBars(market, '15m', 15, CANDLE_LIMIT);
                 if (market !== selectedMarket) return;
-                state.filterClosed = all5m.filter(c => c[6] !== true);
+                state.filterClosed = all15mFilter.filter(c => c[6] !== true);
                 state.lastFilterFetch = Date.now();
             }
             state.mtfFilter = calcVolumaticTwoPoleFilter(state.filterClosed);
@@ -5323,7 +5323,9 @@ setInterval(refreshMultiTimeframePanel, 60000);
             state.levels = levels;
             state.levelsMarket = market;
 
-            const signalDirection = directionFromSignal(lastScalpSignal);
+            // The closed 15-minute VIDYA + Two-Pole agreement now determines trade direction.
+            // ECI remains displayed for context but no longer chooses LONG vs SHORT.
+            const signalDirection = state.mtfFilter?.valid ? state.mtfFilter.direction : null;
             const latestClosed = state.confirmClosed[state.confirmClosed.length - 1];
             const previousClosed = state.confirmClosed[state.confirmClosed.length - 2];
 
@@ -5332,7 +5334,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
             if (state.forceLimitRequest && !state.position && !state.pending) {
                 const request = state.forceLimitRequest;
                 if (!state.mtfFilter?.valid || state.mtfFilter.direction !== signalDirection) {
-                    setMessage(`Force Limit Entry waiting: 5m VIDYA + Two Pole must confirm ${String(signalDirection || 'a direction').toUpperCase()}. ${state.mtfFilter?.detail || ''}`);
+                    setMessage(`Force Limit Entry waiting: 15m VIDYA + Two Pole must agree on direction. Current status: ${state.mtfFilter?.label || 'waiting'}. ${state.mtfFilter?.detail || ''}`);
                 } else if (request.market !== market) {
                     state.forceLimitRequest = null;
                     setMessage('Force Limit Entry request cancelled because the selected market changed.');
@@ -5341,7 +5343,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
                     setMessage('Force Limit Entry request expired before a valid 5-minute candle was available. Click refresh to try again.');
                 } else if (!signalDirection || signalDirection !== trend.direction) {
                     if (state.autoEntry && state.forceLimitMode) {
-                        setMessage('Auto Entry is waiting for the dashboard ECI and 1-minute WMA to agree before setting a limit.');
+                        setMessage('Auto Entry is waiting for 15-minute VIDYA + Two-Pole direction and 1-minute WMA safety alignment before setting a limit.');
                     } else {
                         state.forceLimitRequest = null;
                         setMessage('Force Limit Entry cancelled: dashboard ECI and 1-minute WMA must agree in the same direction.');
@@ -5423,12 +5425,12 @@ setInterval(refreshMultiTimeframePanel, 60000);
                         savePersistentState();
                     }
                 } else if (signalDirection !== pending.direction) {
-                    resetPending('dashboard ECI direction no longer matches the setup');
+                    resetPending('15-minute VIDYA + Two-Pole direction no longer matches the setup');
                 } else if (trend.direction !== pending.direction) {
                     resetPending('1-minute WMA trend no longer agrees or became neutral');
                 } else if (!state.mtfFilter?.valid || state.mtfFilter.direction !== pending.direction) {
-                    resetPending('5-minute Volumatic VIDYA + Two Pole confirmation no longer agrees');
-                    setMessage('Pending entry cancelled: the closed 5-minute VIDYA + Two Pole confirmation no longer agrees.');
+                    resetPending('15-minute Volumatic VIDYA + Two Pole confirmation no longer agrees');
+                    setMessage('Pending entry cancelled: the closed 15-minute VIDYA + Two Pole confirmation no longer agrees.');
                 } else if (isLimitOrder && latestClosed && ((pending.direction === 'long' && latestClosed[4] < pending.level.price - pending.tolerance) || (pending.direction === 'short' && latestClosed[4] > pending.level.price + pending.tolerance))) {
                     resetPending('the last closed 1-minute candle invalidated the support/resistance level');
                 } else if (!isLimitOrder && pending.direction === 'long' && price < pending.level.price - pending.tolerance * 1.5) {
@@ -5464,21 +5466,21 @@ setInterval(refreshMultiTimeframePanel, 60000);
                     savePersistentState();
                 }
                 if (state.forceLimitRequest) {
-                    setMessage('Force Limit Entry request is active. Waiting for a valid completed 5-minute candle and aligned direction.');
+                    setMessage('Force Limit Entry request is active. Waiting for a valid completed 15-minute VIDYA + Two-Pole confirmation and aligned direction.');
                 } else if (state.forceLimitMode && state.autoEntry) {
-                    setMessage('Auto Entry is enabled. The bot is preparing a limit from the previous closed 5-minute candle and will retry after expiry.');
+                    setMessage('Auto Entry is enabled. The bot is preparing a limit from the previous closed 5-minute candle using the 15-minute VIDYA + Two-Pole direction and will retry after expiry.');
                 } else if (state.forceLimitMode) {
                     setMessage('Force Limit Entry is enabled. Click “Force / Refresh Limit Entry” to set a limit from the previous closed 5-minute candle; no market entry will be chased.');
                 } else if (Date.now() < state.cooldownUntil) {
                     setMessage('Cooling down after the last paper trade. Waiting before looking for another setup.');
                 } else if (!signalDirection) {
-                    setMessage('Waiting for an active Buy Long or Sell Short signal from the dashboard ECI.');
+                    setMessage('Waiting for closed 15-minute Volumatic VIDYA + Two-Pole agreement to establish direction.');
                 } else if (trend.direction === 'neutral') {
                     setMessage('Waiting for a clear 1-minute WMA 100/200 trend.');
                 } else if (!aligned) {
-                    setMessage(`No entry: dashboard ECI is ${lastScalpSignal}, but the 1-minute WMA trend is ${trend.label}. Direction must agree.`);
+                    setMessage(`No entry: 15-minute VIDYA + Two Pole is ${signalDirection.toUpperCase()}, but the 1-minute WMA safety filter is ${trend.label}. Wait for alignment.`);
                 } else if (!state.mtfFilter?.valid || state.mtfFilter.direction !== signalDirection) {
-                    setMessage(`No entry: 5-minute Volumatic VIDYA + Two Pole has not confirmed ${signalDirection.toUpperCase()}. ${state.mtfFilter?.detail || 'Waiting for valid closed 5-minute candles.'}`);
+                    setMessage(`Waiting for 15-minute Volumatic VIDYA + Two-Pole agreement. ${state.mtfFilter?.detail || 'Waiting for valid closed 15-minute candles.'}`);
                 } else {
                     const level = signalDirection === 'long' ? levels.support : levels.resistance;
                     if (!level) {
@@ -5662,9 +5664,9 @@ setInterval(refreshMultiTimeframePanel, 60000);
             setMessage('Cancel or finish the existing pending setup before using Force Limit Entry.'); renderUi(); return;
         }
         if (state.pending?.kind === 'force-limit') resetPending('force limit entry refreshed by user');
-        const direction = directionFromSignal(lastScalpSignal);
+        const direction = state.mtfFilter?.valid ? state.mtfFilter.direction : null;
         if (!direction) {
-            setMessage('Force Limit Entry needs an active dashboard Buy Long or Sell Short signal.'); renderUi(); return;
+            setMessage('Force Limit Entry needs aligned Volumatic VIDYA + Two-Pole signals on closed 15-minute candles.'); renderUi(); return;
         }
         const now = Date.now();
         state.forceLimitRequest = {
