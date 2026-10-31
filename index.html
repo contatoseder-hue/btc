@@ -712,6 +712,47 @@
 }
 #demoRobotAutoEntryControls .demo-limit-note { overflow-wrap: anywhere; }
 
+/* Auto Pre-TP1 Protection layout fix: keep the description below its heading
+   and inside the same panel instead of allowing inherited label styles to
+   push it into a right-side column. */
+#demoRobotPreTp1ProtectionControls,
+#demoRobotPreTp1ProtectionControls * { box-sizing: border-box; }
+#demoRobotPreTp1ProtectionControls { display: block; width: 100%; min-width: 0; }
+#demoRobotPreTp1ProtectionControls .demo-limit-toggle {
+    display: grid;
+    grid-template-columns: 18px minmax(0, 1fr);
+    align-items: start;
+    gap: 10px;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+}
+#demoRobotPreTp1ProtectionControls .demo-limit-toggle input {
+    position: static;
+    display: block;
+    width: 14px;
+    height: 14px;
+    margin: 3px 0 0;
+}
+#demoRobotPreTp1ProtectionControls .demo-limit-toggle > span {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+#demoRobotPreTp1ProtectionControls .demo-limit-toggle strong,
+#demoRobotPreTp1ProtectionControls .demo-limit-toggle small {
+    display: block;
+    width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+#demoRobotPreTp1ProtectionControls .demo-limit-note {
+    width: 100%;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
 /* Force Limit Entry panel layout: keep copy and action aligned within the panel. */
 #demoRobotForceLimitControls,
 #demoRobotForceLimitControls * { box-sizing: border-box; }
