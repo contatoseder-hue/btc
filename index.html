@@ -729,6 +729,11 @@
 .trading-mode-title{font-size:15px;font-weight:800;color:#e5e7eb;margin:0 0 5px}
 .trading-mode-copy{font-size:12px;line-height:1.5;color:#9ca3af;margin:0}
 .trading-mode-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px}
+.live-sizing-controls{display:grid;grid-template-columns:repeat(2,minmax(180px,260px));gap:12px;margin-top:14px;max-width:560px}
+.live-sizing-controls label{display:flex;flex-direction:column;gap:6px;color:#e5e7eb;font-size:12px;font-weight:700}
+.live-sizing-controls input{width:100%;box-sizing:border-box;border:1px solid #475569;border-radius:7px;padding:9px 10px;background:#0b1220;color:#fff;font-size:14px}
+.live-sizing-note{grid-column:1/-1}
+@media(max-width:560px){.live-sizing-controls{grid-template-columns:1fr}}
 .trading-mode-option{display:flex;align-items:center;gap:8px;color:#e5e7eb;font-size:13px;font-weight:700}
 .trading-mode-option input{width:18px;height:18px;accent-color:#16a34a}
 .trading-mode-status{font-size:12px;color:#4ade80;font-weight:800}
@@ -982,6 +987,15 @@
           Enable real-money BingX trading
         </label>
         <button id="checkLiveTradingStatus" type="button">Check live-trading readiness</button>
+      </div>
+      <div class="live-sizing-controls" aria-label="Live BTC trade sizing">
+        <label>Live margin allocation (USDT)
+          <input id="liveAllocationUsd" type="number" min="10" max="100" step="5" value="50" inputmode="decimal" />
+        </label>
+        <label>Maximum stop-loss risk per trade (USDT)
+          <input id="liveRiskUsd" type="number" min="0.5" max="5" step="0.5" value="5" inputmode="decimal" />
+        </label>
+        <p class="trading-mode-copy live-sizing-note">These controls affect real BTC-USDT orders only. Paper settings are unchanged. At the current 10× live sizing model, margin is converted to position notional; the server caps notional at $1,000 and initial stop risk at $5 per trade.</p>
       </div>
       <div id="tradingModeMessage" class="trading-mode-copy" role="status" aria-live="polite" style="margin-top:10px">Live trading is disabled. No real orders will be sent.</div>
     </section>
@@ -5493,6 +5507,8 @@ setInterval(refreshMultiTimeframePanel, 60000);
     finally { setBusy(false); }
   });
   const liveToggle = document.getElementById("enableLiveTrading");
+  const liveAllocationInput = document.getElementById("liveAllocationUsd");
+  const liveRiskInput = document.getElementById("liveRiskUsd");
   const liveCheckBtn = document.getElementById("checkLiveTradingStatus");
   const liveBadge = document.getElementById("tradingModeBadge");
   const liveMessage = document.getElementById("tradingModeMessage");
@@ -5509,10 +5525,18 @@ setInterval(refreshMultiTimeframePanel, 60000);
     }
     const stopDistance = Math.abs(Number(position.entry) - Number(position.initialStop));
     if (!Number.isFinite(stopDistance) || stopDistance <= 0) throw new Error("Live order blocked: invalid stop distance.");
-    // Independent live sizing: cap risk at $5 and notional at $1,000 even if
-    // the paper account uses different settings. BTC-USDT quantity precision is
-    // rounded down to avoid exceeding the risk cap.
-    const liveQuantity = Math.floor(Math.min(Number(position.quantity), 5 / stopDistance, 1000 / Number(position.entry)) * 10000) / 10000;
+    // Live sizing is independent of the paper account allocation and quantity.
+    // Worker still enforces its own hard caps of $5 stop risk and $1,000 notional.
+    const liveAllocationUsd = Number(liveAllocationInput.value);
+    const liveRiskUsd = Number(liveRiskInput.value);
+    if (!Number.isFinite(liveAllocationUsd) || liveAllocationUsd < 10 || liveAllocationUsd > 100) {
+      throw new Error("Live order blocked: margin allocation must be between $10 and $100 USDT.");
+    }
+    if (!Number.isFinite(liveRiskUsd) || liveRiskUsd < 0.5 || liveRiskUsd > 5) {
+      throw new Error("Live order blocked: stop-loss risk must be between $0.50 and $5 per trade.");
+    }
+    const liveNotionalUsd = Math.min(liveAllocationUsd * 10, 1000);
+    const liveQuantity = Math.floor(Math.min(liveRiskUsd / stopDistance, liveNotionalUsd / Number(position.entry), 5 / stopDistance) * 10000) / 10000;
     if (!Number.isFinite(liveQuantity) || liveQuantity <= 0) throw new Error("Live order blocked: calculated BTC quantity is below the supported minimum.");
     const response = await fetch(WORKER_AUTH_URL.replace("?auth=supabase", "?live=order"), {
       method: "POST", cache: "no-store",
