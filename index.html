@@ -36,6 +36,7 @@
     .header {
         text-align: center;
         padding: 18px;
+        position: relative;
     }
 
     .bias-line {
@@ -748,11 +749,11 @@
 .supabase-auth-actions button:disabled{opacity:.55;cursor:wait}
 #supabaseAuthStatus{font-size:13px;margin-top:10px;color:#fbbf24;overflow-wrap:anywhere}
 #supabaseAuthStatus.ok{color:#4ade80} #supabaseAuthStatus.error{color:#f87171}
-.supabase-connected-badge{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin:0 0 12px;padding:0;border:0;border-radius:0;background:transparent;color:#4ade80;font-size:12px;font-weight:700;overflow-wrap:anywhere;position:static;max-width:100%;width:100%;box-sizing:border-box}
+.supabase-connected-badge{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin:0;padding:0;border:0;border-radius:0;background:transparent;color:#4ade80;font-size:12px;font-weight:700;white-space:nowrap;overflow-wrap:normal;position:absolute;top:12px;right:16px;max-width:calc(100% - 32px);width:max-content;box-sizing:border-box;z-index:2}
 .supabase-connected-badge[hidden]{display:none!important}
 .supabase-connected-badge button{flex-shrink:0;border:0;border-radius:0;padding:0;background:transparent;color:#cbd5e1;text-decoration:underline;cursor:pointer;font:inherit}
 .supabase-connected-badge button:hover{color:#fff}
-@media(max-width:600px){.supabase-auth-grid{grid-template-columns:1fr}.supabase-connected-badge{justify-content:flex-end;margin:0 0 8px;max-width:100%;padding:0}}
+@media(max-width:600px){.supabase-auth-grid{grid-template-columns:1fr}.supabase-connected-badge{top:8px;right:10px;gap:7px;font-size:10px;max-width:calc(100% - 20px)}}
 
 </style>
 </head>
