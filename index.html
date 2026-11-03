@@ -746,27 +746,19 @@
     <!-- Supabase sign-in and Cloudflare token verification -->
     <section class="supabase-auth-card" id="supabaseAuthCard" aria-labelledby="supabaseAuthTitle">
       <h2 id="supabaseAuthTitle">Account Authentication</h2>
-      <p class="supabase-auth-note">Sign in with your Supabase account. After sign-in, this dashboard sends the session token to the Cloudflare Worker for server-side verification. This does not enable live trading.</p>
+      <p class="supabase-auth-note">Sign in with GitHub. After Supabase returns you to this dashboard, your session is verified by the Cloudflare Worker. This does not enable live trading. GitHub must first be enabled under Supabase Authentication → Sign In / Providers.</p>
       <div class="supabase-auth-grid">
         <div>
           <label for="supabasePublishableKey">Supabase publishable key</label>
           <input id="supabasePublishableKey" type="password" autocomplete="off" placeholder="sb_publishable_…" />
         </div>
-        <div>
-          <label for="supabaseEmail">Email</label>
-          <input id="supabaseEmail" type="email" autocomplete="username" placeholder="you@example.com" />
-        </div>
-        <div>
-          <label for="supabasePassword">Password</label>
-          <input id="supabasePassword" type="password" autocomplete="current-password" placeholder="Supabase account password" />
-        </div>
       </div>
       <div class="supabase-auth-actions">
-        <button class="primary" id="supabaseSignInBtn" type="button">Sign in and verify</button>
+        <button class="primary" id="supabaseSignInBtn" type="button">Sign in with GitHub</button>
         <button id="supabaseVerifyBtn" type="button">Verify current session</button>
         <button id="supabaseSignOutBtn" type="button">Sign out</button>
       </div>
-      <div id="supabaseAuthStatus" role="status" aria-live="polite">Not signed in. Enter your Supabase publishable key and account credentials.</div>
+      <div id="supabaseAuthStatus" role="status" aria-live="polite">Enter the Supabase publishable key, then sign in with GitHub.</div>
     </section>
 
 
@@ -5350,6 +5342,119 @@ setInterval(refreshMultiTimeframePanel, 60000);
 
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(() => {
+  "use strict";
+  const SUPABASE_URL = "https://gzboixmsmnqgfohqkuxs.supabase.co";
+  const WORKER_AUTH_URL = "https://gold-eci-api.contatoseder.workers.dev/?auth=supabase";
+  const KEY_STORAGE = "dashboard_supabase_publishable_key_v1";
+  const statusEl = document.getElementById("supabaseAuthStatus");
+  const keyEl = document.getElementById("supabasePublishableKey");
+  const signInBtn = document.getElementById("supabaseSignInBtn");
+  const verifyBtn = document.getElementById("supabaseVerifyBtn");
+  const signOutBtn = document.getElementById("supabaseSignOutBtn");
+  let supabaseClient = null;
+  let activeKey = null;
+  let verifiedUserId = null;
+
+  function setStatus(message, kind) {
+    statusEl.textContent = message;
+    statusEl.className = kind || "";
+  }
+  function setBusy(busy) {
+    [signInBtn, verifyBtn, signOutBtn].forEach(button => button.disabled = busy);
+  }
+  function getClient() {
+    if (!window.supabase || !window.supabase.createClient) {
+      throw new Error("Supabase client library did not load. Check your connection or content blocker.");
+    }
+    const key = keyEl.value.trim();
+    if (!key) throw new Error("Enter the Supabase publishable key from your project's API settings.");
+    try { localStorage.setItem(KEY_STORAGE, key); } catch (_) {}
+    if (!supabaseClient || activeKey !== key) {
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, key, {
+        auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: "pkce" }
+      });
+      activeKey = key;
+    }
+    return supabaseClient;
+  }
+  async function verifySession() {
+    const client = getClient();
+    const { data, error } = await client.auth.getSession();
+    if (error) throw error;
+    const session = data && data.session;
+    if (!session || !session.access_token) {
+      verifiedUserId = null;
+      setStatus("No active Supabase session. Choose Sign in with GitHub first.", "error");
+      return false;
+    }
+    setStatus("GitHub sign-in returned. Verifying your Supabase session with Cloudflare…", "");
+    const response = await fetch(WORKER_AUTH_URL, {
+      method: "GET", cache: "no-store",
+      headers: { "Accept": "application/json", "Authorization": "Bearer " + session.access_token }
+    });
+    const bodyText = await response.text();
+    let body;
+    try { body = bodyText ? JSON.parse(bodyText) : {}; }
+    catch (_) { body = { error: bodyText || "Worker returned an empty response." }; }
+    if (!response.ok || body.authenticated !== true || !body.user || !body.user.id) {
+      verifiedUserId = null;
+      throw new Error((body && body.error) || ("Worker verification failed (HTTP " + response.status + ")."));
+    }
+    verifiedUserId = body.user.id;
+    setStatus("Signed in and verified • " + (body.user.email || body.user.id), "ok");
+    return true;
+  }
+  signInBtn.addEventListener("click", async () => {
+    setBusy(true);
+    try {
+      const client = getClient();
+      setStatus("Redirecting to GitHub for sign-in…", "");
+      const { error } = await client.auth.signInWithOAuth({
+        provider: "github",
+        options: { redirectTo: window.location.origin + window.location.pathname }
+      });
+      if (error) throw error;
+    } catch (error) {
+      setStatus((error && error.message ? error.message : "GitHub sign-in could not start.") + " Confirm GitHub is enabled in Supabase Authentication → Sign In / Providers and the dashboard URL is allowed under URL Configuration.", "error");
+      setBusy(false);
+    }
+  });
+  verifyBtn.addEventListener("click", async () => {
+    setBusy(true);
+    try { await verifySession(); }
+    catch (error) { setStatus(error && error.message ? error.message : "Verification failed.", "error"); }
+    finally { setBusy(false); }
+  });
+  signOutBtn.addEventListener("click", async () => {
+    setBusy(true);
+    try {
+      const client = getClient();
+      const { error } = await client.auth.signOut();
+      if (error) throw error;
+      verifiedUserId = null;
+      setStatus("Signed out. No verified Supabase session is active.", "");
+    } catch (error) { setStatus(error && error.message ? error.message : "Sign-out failed.", "error"); }
+    finally { setBusy(false); }
+  });
+  try {
+    const savedKey = localStorage.getItem(KEY_STORAGE);
+    if (savedKey) keyEl.value = savedKey;
+  } catch (_) {}
+  // OAuth returns to this page; verify only after Supabase restores the session.
+  if (keyEl.value.trim()) {
+    try {
+      const client = getClient();
+      client.auth.getSession().then(({ data, error }) => {
+        if (error) { setStatus(error.message, "error"); return; }
+        if (data && data.session) verifySession().catch(error => setStatus(error.message || "Session verification failed.", "error"));
+        else setStatus("Ready. Sign in with GitHub to authenticate.", "");
+      });
+    } catch (error) { setStatus(error.message || "Ready to configure Supabase.", ""); }
+  }
+})();
+</script>
 <script>
 (() => {
   "use strict";
