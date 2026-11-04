@@ -36,7 +36,6 @@
     .header {
         text-align: center;
         padding: 18px;
-        position: relative;
     }
 
     .bias-line {
@@ -749,11 +748,10 @@
 .supabase-auth-actions button:disabled{opacity:.55;cursor:wait}
 #supabaseAuthStatus{font-size:13px;margin-top:10px;color:#fbbf24;overflow-wrap:anywhere}
 #supabaseAuthStatus.ok{color:#4ade80} #supabaseAuthStatus.error{color:#f87171}
-.supabase-connected-badge{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin:0;padding:0;border:0;border-radius:0;background:transparent;color:#4ade80;font-size:12px;font-weight:700;white-space:nowrap;overflow-wrap:normal;position:absolute;top:12px;right:16px;max-width:calc(100% - 32px);width:max-content;box-sizing:border-box;z-index:2}
+.supabase-connected-badge{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 14px;padding:10px 13px;border:1px solid #166534;border-radius:9px;background:#052e16;color:#4ade80;font-size:13px;font-weight:800;overflow-wrap:anywhere}
 .supabase-connected-badge[hidden]{display:none!important}
-.supabase-connected-badge button{flex-shrink:0;border:0;border-radius:0;padding:0;background:transparent;color:#cbd5e1;text-decoration:underline;cursor:pointer;font:inherit}
-.supabase-connected-badge button:hover{color:#fff}
-@media(max-width:600px){.supabase-auth-grid{grid-template-columns:1fr}.supabase-connected-badge{top:8px;right:10px;gap:7px;font-size:10px;max-width:calc(100% - 20px)}}
+.supabase-connected-badge button{flex-shrink:0;border:1px solid #166534;border-radius:6px;padding:6px 10px;background:#14532d;color:#dcfce7;cursor:pointer;font-weight:700}
+@media(max-width:600px){.supabase-auth-grid{grid-template-columns:1fr}.supabase-connected-badge{align-items:flex-start;flex-direction:column}.supabase-connected-badge button{width:100%}}
 
 </style>
 </head>
@@ -761,6 +759,12 @@
 <body>
 
 <div class="container">
+
+    <!-- Compact status shown only after Supabase session is verified by the Worker -->
+    <div id="supabaseConnectedBadge" class="supabase-connected-badge" role="status" aria-live="polite" hidden>
+      <span id="supabaseConnectedText">● Connected</span>
+      <button id="supabaseConnectedSignOutBtn" type="button">Sign out</button>
+    </div>
 
     <!-- Supabase sign-in and Cloudflare token verification -->
     <section class="supabase-auth-card" id="supabaseAuthCard" aria-labelledby="supabaseAuthTitle">
@@ -783,11 +787,6 @@
 
     <!-- HEADER -->
     <div class="card header">
-        <!-- Compact account status stays inside the dashboard header and never creates a separate panel -->
-        <div id="supabaseConnectedBadge" class="supabase-connected-badge" role="status" aria-live="polite" hidden>
-          <span id="supabaseConnectedText">● Connected</span>
-          <button id="supabaseConnectedSignOutBtn" type="button">Sign out</button>
-        </div>
         <div style="max-width:420px;margin:0 auto 16px;">
             <div class="label" style="text-align:left;">Select Market</div>
             <select id="marketSelect" onchange="switchMarket(this.value)">
@@ -982,10 +981,8 @@
           Enable real-money BingX trading
         </label>
         <button id="checkLiveTradingStatus" type="button">Check live-trading readiness</button>
-        <button id="testBingXOrderPath" type="button">Test BingX connection (no order)</button>
       </div>
       <div id="tradingModeMessage" class="trading-mode-copy" role="status" aria-live="polite" style="margin-top:10px">Live trading is disabled. No real orders will be sent.</div>
-      <div id="bingxTestMessage" class="trading-mode-copy" role="status" aria-live="polite" style="margin-top:6px">The test checks authenticated API connectivity only and does not create an exchange order. Live orders are submitted only after the robot opens a qualifying BTC paper position.</div>
     </section>
 
     <!-- DEMO ROBOT: PAPER-TRADING ONLY -->
@@ -5498,8 +5495,6 @@ setInterval(refreshMultiTimeframePanel, 60000);
   const liveCheckBtn = document.getElementById("checkLiveTradingStatus");
   const liveBadge = document.getElementById("tradingModeBadge");
   const liveMessage = document.getElementById("tradingModeMessage");
-  const testBingXOrderPathBtn = document.getElementById("testBingXOrderPath");
-  const bingxTestMessage = document.getElementById("bingxTestMessage");
   let liveModeExplicitlyEnabled = false;
   async function submitLiveOrderForPosition(position) {
     if (!liveModeExplicitlyEnabled || !liveToggle.checked || !position) return;
@@ -5579,54 +5574,13 @@ setInterval(refreshMultiTimeframePanel, 60000);
     }
   }
   liveCheckBtn.addEventListener("click", checkLiveReadiness);
-  testBingXOrderPathBtn.addEventListener("click", async () => {
-    testBingXOrderPathBtn.disabled = true;
-    bingxTestMessage.textContent = "Testing authenticated BingX order parameters. No real order will be created…";
-    bingxTestMessage.className = "trading-mode-copy";
-    try {
-      const client = getClient();
-      const { data, error } = await client.auth.getSession();
-      if (error) throw error;
-      const session = data && data.session;
-      if (!session?.access_token) throw new Error("Sign in and verify your session before testing BingX.");
-      if (String(selectedMarket).toUpperCase() !== "BTC") throw new Error("Select BTC first so the test uses the supported BTC-USDT contract.");
-      const price = Number(currentPrice);
-      if (!Number.isFinite(price) || price <= 0) throw new Error("A valid current BTC price is not available yet. Wait for the BTC price to load and try again.");
-      const quantity = Math.floor((100 / price) * 10000) / 10000;
-      if (quantity <= 0) throw new Error("BTC test quantity is below the supported precision.");
-      const direction = "long";
-      const response = await fetch(WORKER_AUTH_URL.replace("?auth=supabase", "?live=test-order"), {
-        method: "POST", cache: "no-store",
-        headers: { "Accept": "application/json", "Content-Type": "application/json", "Authorization": "Bearer " + session.access_token },
-        body: JSON.stringify({
-          confirmLive: true, symbol: "BTC-USDT", direction, quantity,
-          entryPrice: price, stopLoss: price * 0.99, takeProfit: price * 1.02,
-          signalTimestamp: Date.now()
-        })
-      });
-      const raw = await response.text();
-      let body;
-      try { body = raw ? JSON.parse(raw) : {}; } catch (_) { body = { error: raw || "Worker returned an invalid response." }; }
-      if (!response.ok || body.ok !== true || body.testOnly !== true) throw new Error(body.error || "BingX test request did not receive a confirmed test-only response.");
-      bingxTestMessage.textContent = "TEST PASSED: BingX accepted the test-order parameters. No real order was created. You can now review any remaining live readiness issue separately.";
-      bingxTestMessage.className = "trading-mode-copy live-success";
-      logEvent("BINGX TEST-ORDER PASSED. Exchange accepted test parameters; no real order was created.");
-    } catch (error) {
-      const message = error && error.message ? error.message : "BingX test request failed.";
-      bingxTestMessage.textContent = "TEST FAILED: " + message;
-      bingxTestMessage.className = "trading-mode-copy";
-      logEvent("BINGX TEST-ORDER FAILED: " + message);
-    } finally {
-      testBingXOrderPathBtn.disabled = false;
-    }
-  });
   liveToggle.addEventListener("change", async () => {
     if (!liveToggle.checked) {
       liveModeExplicitlyEnabled = false;
       setLiveModeOff("New live entries are disabled. Any existing BingX position remains open and must be managed or closed in BingX.");
       return;
     }
-    // Fail closed: the Worker must confirm the authenticated live-order route is ready.
+    // Fail closed: this Worker currently advertises orderSubmissionAvailable=false.
     const ready = await checkLiveReadiness();
     if (!ready) {
       liveModeExplicitlyEnabled = false;
