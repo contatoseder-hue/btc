@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -574,16 +573,6 @@
 .demo-robot-stat .label { margin-bottom:7px; }
 .demo-robot-stat .value { font-size:17px; overflow-wrap:anywhere; }
 .demo-robot-message { border-radius:10px; padding:12px; background:#101827; border:1px solid #263244; color:#d1d5db; font-size:13px; line-height:1.55; margin:12px 0; }
-.demo-robot-scanning { display:flex; align-items:center; gap:11px; border:1px solid rgba(96,165,250,.42); background:rgba(38,110,170,.10); color:#dbeafe; border-radius:10px; padding:12px 14px; margin:12px 0; }
-.demo-robot-scanning-icon { position:relative; display:block; flex:0 0 42px; width:42px; height:42px; border:1px solid rgba(74,222,128,.65); border-radius:50%; overflow:hidden; background:radial-gradient(circle,rgba(34,197,94,.18) 0 2px,transparent 3px),rgba(2,18,20,.8); box-shadow:0 0 12px rgba(34,197,94,.16),inset 0 0 10px rgba(34,197,94,.12); }
-.demo-robot-scanning-icon::before,.demo-robot-scanning-icon::after { content:""; position:absolute; border:1px solid rgba(74,222,128,.35); border-radius:50%; inset:7px; }
-.demo-robot-scanning-icon::after { inset:15px; }
-.demo-robot-scanning-icon .radar-sweep { position:absolute; inset:0; border-radius:50%; background:conic-gradient(from 0deg,transparent 0deg,transparent 285deg,rgba(34,197,94,.03) 300deg,rgba(74,222,128,.72) 355deg,transparent 360deg); animation:demoRadarSweep 1.8s linear infinite; }
-.demo-robot-scanning-icon .radar-sweep::after { content:""; position:absolute; width:3px; height:3px; border-radius:50%; background:#86efac; left:50%; top:50%; box-shadow:0 0 6px #4ade80; transform:translate(-50%,-50%); }
-@keyframes demoRadarSweep { to { transform:rotate(360deg); } }
-@media(prefers-reduced-motion:reduce){.demo-robot-scanning-icon .radar-sweep{animation:none;}}
-.demo-robot-scanning strong { display:block; font-size:13px; font-weight:800; }
-.demo-robot-scanning small { display:block; margin-top:3px; color:#aabbd0; font-size:11px; line-height:1.45; }
 .demo-robot-controls { display:flex; gap:9px; flex-wrap:wrap; margin:12px 0; }
 .demo-robot-controls button { width:auto; margin:0; }
 .demo-robot-start { background:#166534 !important; }
@@ -595,237 +584,11 @@
 .demo-robot-log-time { color:#9ca3af; min-width:72px; font-variant-numeric:tabular-nums; }
 .demo-robot-log-message { color:#e5e7eb; overflow-wrap:anywhere; }
 .demo-robot-footnote { color:#9ca3af; font-size:11px; line-height:1.5; margin-top:10px; }
-.demo-position-card { display:none; margin:12px 0; padding:15px; border:1px solid #344256; border-radius:12px; background:linear-gradient(145deg,rgba(15,23,42,.96),rgba(17,24,39,.96)); }
-.demo-position-header { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
-.demo-position-title { font-size:14px; font-weight:900; letter-spacing:.04em; color:#f3f4f6; }
-.demo-position-subtitle { margin-top:5px; color:#9ca3af; font-size:12px; }
-.demo-position-pnl-wrap { text-align:right; margin-left:auto; }
-.demo-position-pnl-label { color:#9ca3af; font-size:11px; margin-bottom:4px; }
-.demo-position-pnl { font-size:25px; font-weight:900; font-variant-numeric:tabular-nums; line-height:1.15; }
-.demo-position-pnl.positive { color:#22c55e; }
-.demo-position-pnl.negative { color:#ef4444; }
-.demo-position-pnl.neutral { color:#d1d5db; }
-.demo-position-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; }
-.demo-position-stat { min-width:0; padding:10px; background:rgba(2,6,23,.5); border:1px solid #263244; border-radius:9px; }
-.demo-position-stat-label { color:#9ca3af; font-size:11px; margin-bottom:6px; }
-.demo-position-stat-value { color:#f3f4f6; font-size:15px; font-weight:800; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
-.demo-position-note { margin-top:10px; color:#9ca3af; font-size:11px; line-height:1.45; }
-.demo-position-side.long { color:#4ade80; }
-.demo-position-side.short { color:#f87171; }
 @media (max-width:640px) {
   .demo-robot-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .demo-robot-stat .value { font-size:15px; }
   .demo-robot-controls button { flex:1 1 150px; }
-  .demo-position-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
-  .demo-position-pnl { font-size:22px; }
 }
-.demo-history-wrap { max-height:660px; overflow:auto; margin-top:10px; border:1px solid #263244; border-radius:10px; }
-.demo-history-table { width:100%; min-width:1040px; border-collapse:separate; border-spacing:0; font-size:12px; }
-.demo-history-table th, .demo-history-table td { padding:7px 10px; line-height:16px; border-bottom:1px solid #263244; text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums; }
-.demo-history-table th { position:sticky; top:0; z-index:2; color:#9ca3af; background:#101827; font-weight:800; }
-.demo-history-table th:first-child, .demo-history-table td:first-child,
-.demo-history-table th:nth-child(2), .demo-history-table td:nth-child(2),
-.demo-history-table th:nth-child(3), .demo-history-table td:nth-child(3),
-.demo-history-table th:last-child, .demo-history-table td:last-child { text-align:left; }
-.demo-history-positive { color:#22c55e; font-weight:800; }
-.demo-history-negative { color:#ef4444; font-weight:800; }
-.demo-history-empty { padding:14px; color:#9ca3af; font-size:12px; }
-.demo-history-status { color:#9ca3af; font-size:11px; margin-top:5px; }
-.demo-leverage-note { color:#fbbf24; }
-
-/* Public beta notice displayed immediately below the demo robot. */
-.public-beta-notice {
-    margin: 12px 0 18px;
-    padding: 15px 17px;
-    border: 1px solid rgba(245, 158, 11, .42);
-    border-left: 4px solid #f59e0b;
-    border-radius: 10px;
-    background: rgba(120, 83, 16, .12);
-    color: #d1d5db;
-}
-.public-beta-notice-title {
-    margin: 0 0 7px;
-    color: #fbbf24;
-    font-size: 13px;
-    line-height: 1.4;
-    font-weight: 900;
-    letter-spacing: .035em;
-}
-.public-beta-notice p {
-    margin: 0;
-    color: #cbd5e1;
-    font-size: 12px;
-    line-height: 1.6;
-}
-@media (max-width: 640px) {
-    .public-beta-notice { padding: 13px 14px; }
-    .public-beta-notice-title { font-size: 12px; }
-}
-
-
-/* Optional paper-only limit-entry controls */
-.demo-limit-controls { margin: 12px 0 14px; padding: 12px; border: 1px solid #334155; border-radius: 10px; background: rgba(15,23,42,.48); }
-.demo-limit-toggle { display:flex; align-items:flex-start; gap:10px; color:#e5e7eb; cursor:pointer; font-size:13px; line-height:1.45; }
-.demo-limit-toggle input { margin-top:3px; accent-color:#60a5fa; flex:0 0 auto; }
-.demo-limit-toggle span { display:block; }
-.demo-limit-toggle strong, .demo-limit-toggle small { display:block; }
-.demo-limit-toggle small { color:#9ca3af; font-size:12px; margin-top:3px; }
-.demo-limit-price-row { display:flex; gap:9px; align-items:flex-end; flex-wrap:wrap; margin-top:12px; }
-.demo-limit-price-field { flex:1 1 220px; min-width:0; }
-.demo-limit-price-field label { display:block; color:#cbd5e1; font-size:12px; margin-bottom:5px; }
-.demo-limit-price-field input { width:100%; box-sizing:border-box; min-height:38px; color:#f8fafc; background:#0b1220; border:1px solid #475569; border-radius:7px; padding:8px 10px; }
-.demo-limit-price-row button { width:auto; margin:0; }
-.demo-limit-note { color:#9ca3af; font-size:11px; line-height:1.5; margin-top:9px; }
-@media (max-width: 600px) { .demo-limit-price-field { flex-basis:100%; } .demo-limit-price-row button { flex:1 1 100%; } }
-
-/* Auto Entry panel layout: keep checkbox and explanatory text together inside the panel. */
-#demoRobotAutoEntryControls,
-#demoRobotAutoEntryControls * { box-sizing: border-box; }
-#demoRobotAutoEntryControls { display: block; width: 100%; min-width: 0; }
-#demoRobotAutoEntryControls .demo-limit-toggle {
-    display: grid;
-    grid-template-columns: 18px minmax(0, 1fr);
-    align-items: start;
-    gap: 10px;
-    width: 100%;
-    min-width: 0;
-    margin: 0;
-}
-#demoRobotAutoEntryControls .demo-limit-toggle input {
-    position: static;
-    display: block;
-    width: 14px;
-    height: 14px;
-    margin: 3px 0 0;
-}
-#demoRobotAutoEntryControls .demo-limit-toggle > span {
-    display: block;
-    width: 100%;
-    min-width: 0;
-    overflow-wrap: anywhere;
-}
-#demoRobotAutoEntryControls .demo-limit-toggle strong,
-#demoRobotAutoEntryControls .demo-limit-toggle small {
-    display: block;
-    white-space: normal;
-    overflow-wrap: anywhere;
-}
-#demoRobotAutoEntryControls .demo-limit-note { overflow-wrap: anywhere; }
-
-/* Auto Pre-TP1 Protection layout fix: keep the description below its heading
-   and inside the same panel instead of allowing inherited label styles to
-   push it into a right-side column. */
-#demoRobotPreTp1ProtectionControls,
-#demoRobotPreTp1ProtectionControls * { box-sizing: border-box; }
-#demoRobotPreTp1ProtectionControls { display: block; width: 100%; min-width: 0; }
-#demoRobotPreTp1ProtectionControls .demo-limit-toggle {
-    display: grid;
-    grid-template-columns: 18px minmax(0, 1fr);
-    align-items: start;
-    gap: 10px;
-    width: 100%;
-    min-width: 0;
-    margin: 0;
-}
-#demoRobotPreTp1ProtectionControls .demo-limit-toggle input {
-    position: static;
-    display: block;
-    width: 14px;
-    height: 14px;
-    margin: 3px 0 0;
-}
-#demoRobotPreTp1ProtectionControls .demo-limit-toggle > span {
-    display: block;
-    width: 100%;
-    min-width: 0;
-    overflow-wrap: anywhere;
-}
-#demoRobotPreTp1ProtectionControls .demo-limit-toggle strong,
-#demoRobotPreTp1ProtectionControls .demo-limit-toggle small {
-    display: block;
-    width: 100%;
-    white-space: normal;
-    overflow-wrap: anywhere;
-}
-#demoRobotPreTp1ProtectionControls .demo-limit-note {
-    width: 100%;
-    min-width: 0;
-    overflow-wrap: anywhere;
-}
-
-/* Force Limit Entry panel layout: keep copy and action aligned within the panel. */
-#demoRobotForceLimitControls,
-#demoRobotForceLimitControls * { box-sizing: border-box; }
-#demoRobotForceLimitControls { width: 100%; min-width: 0; }
-#demoRobotForceLimitControls .demo-limit-toggle {
-    display: grid;
-    grid-template-columns: 18px minmax(0, 1fr);
-    align-items: start;
-    gap: 10px;
-    width: 100%;
-    min-width: 0;
-    margin: 0;
-}
-#demoRobotForceLimitControls .demo-limit-toggle input { position: static; display: block; width: 14px; height: 14px; margin: 3px 0 0; }
-#demoRobotForceLimitControls .demo-limit-toggle > span { display: block; width: 100%; min-width: 0; overflow-wrap: anywhere; }
-#demoRobotForceLimitControls .demo-limit-toggle strong,
-#demoRobotForceLimitControls .demo-limit-toggle small { display: block; white-space: normal; overflow-wrap: anywhere; }
-#demoRobotForceLimitControls .demo-robot-controls { justify-content: flex-start; width: 100%; min-width: 0; }
-#demoRobotForceLimitControls .demo-robot-controls button { flex: 0 1 auto; max-width: 100%; white-space: normal; }
-#demoRobotForceLimitControls .demo-limit-note { overflow-wrap: anywhere; }
-@media (max-width: 600px) { #demoRobotForceLimitControls .demo-robot-controls button { flex: 1 1 100%; width: 100%; } }
-
-/* Layout hardening: keep the limit toggle and its copy inside the panel. */
-#demoRobotLimitControls,
-#demoRobotLimitControls * { box-sizing: border-box; }
-#demoRobotLimitControls { width: 100%; min-width: 0; }
-#demoRobotLimitControls .demo-limit-toggle {
-    display: grid;
-    grid-template-columns: 18px minmax(0, 1fr);
-    align-items: start;
-    gap: 10px;
-    width: 100%;
-    min-width: 0;
-    margin: 0;
-}
-#demoRobotLimitControls .demo-limit-toggle input {
-    position: static;
-    display: block;
-    width: 14px;
-    height: 14px;
-    margin: 3px 0 0;
-}
-#demoRobotLimitControls .demo-limit-toggle > span {
-    display: block;
-    width: 100%;
-    min-width: 0;
-    overflow-wrap: anywhere;
-}
-#demoRobotLimitControls .demo-limit-toggle strong,
-#demoRobotLimitControls .demo-limit-toggle small {
-    white-space: normal;
-    overflow-wrap: anywhere;
-}
-#demoRobotLimitControls .demo-limit-price-row { width: 100%; min-width: 0; }
-#demoRobotLimitControls .demo-limit-price-field { flex: 1 1 260px; min-width: 0; }
-#demoRobotLimitControls .demo-limit-price-row button { flex: 0 0 auto; max-width: 100%; }
-#demoRobotLimitControls .demo-limit-note { overflow-wrap: anywhere; }
-@media (max-width: 600px) {
-    #demoRobotLimitControls .demo-limit-price-field { flex: 1 1 100%; }
-    #demoRobotLimitControls .demo-limit-price-row button { flex: 1 1 100%; }
-}
-
-/* Paper robot account controls and manual close */
-.demo-account-controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:14px 0;padding:14px;background:#0d131a;border:1px solid #26313c;border-radius:10px}
-.demo-account-field{min-width:0;display:flex;flex-direction:column;gap:7px}
-.demo-account-field label{font-size:12px;color:#aab6c2;font-weight:700}
-.demo-account-field input{width:100%;min-width:0;background:#080d12;color:#fff;border:1px solid #354454;border-radius:7px;padding:10px;font-size:15px}
-.demo-account-stat{font-size:12px;color:#aab6c2;grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}
-.demo-account-stat strong{color:#fff}
-.demo-position-actions{display:flex;justify-content:flex-end;margin-top:12px}
-.demo-position-close{background:#7f1d1d;color:#fff;border:1px solid #ef4444;border-radius:8px;padding:10px 16px;font-weight:800;cursor:pointer}
-.demo-position-close:hover{background:#991b1b}
-@media(max-width:650px){.demo-account-controls{grid-template-columns:1fr}.demo-account-stat{grid-column:auto}.demo-position-actions{justify-content:stretch}.demo-position-close{width:100%}}
 
 </style>
 </head>
@@ -943,7 +706,7 @@
 
             <div class="stat">
                 <div id="marketPriceLabel" class="label">
-                    <span id="marketPriceLabelText">Gold Live Price (BingX GOLD/XAU-USDT)</span>
+                    <span id="marketPriceLabelText">Gold Live Price (Binance Spot PAXG/USDT)</span>
                     <span id="marketPriceLive" class="live-indicator" style="margin-left:8px;">
                         <span class="live-dot"></span>
                         <span>LIVE</span>
@@ -1020,7 +783,7 @@
             <div>
                 <div class="section-title" style="margin-bottom:0;">Demo Robot · Support / Resistance Confirmation</div>
                 <div class="demo-robot-subtitle">
-                    Paper trading only. The robot uses the dashboard’s shared market feed, waits for ECI direction and the 1-minute WMA 100/200 trend to agree, watches a confirmed 15-minute swing level on the correct side of price, then requires a closed 1-minute rejection candle before recording a simulated entry.
+                    Paper trading only. The robot waits for the dashboard ECI direction and the 1-minute WMA 100/200 trend to agree, watches a confirmed 15-minute swing level, then requires a closed 1-minute rejection candle before recording a simulated entry.
                 </div>
             </div>
             <span id="demoRobotBadge" class="demo-robot-badge">DEMO OFF</span>
@@ -1051,104 +814,12 @@
                 <div class="label">Net Result</div>
                 <div id="demoRobotNetR" class="value">0.00R</div>
             </div>
-            <div class="demo-robot-stat">
-                <div class="label">Closed PnL (USD)</div>
-                <div id="demoRobotNetPnl" class="value">$0.00</div>
-                <div class="label" style="margin-top:4px;">Realized return</div>
-                <div id="demoRobotNetPnlPct" class="value" style="font-size:0.95rem;">0.00%</div>
-            </div>
-            <div class="demo-robot-stat">
-                <div class="label">Leverage Used</div>
-                <div id="demoRobotLeverageMode" class="value demo-leverage-note">10× paper leverage</div>
-            </div>
-        </div>
-
-        <div class="demo-account-controls" id="demoRobotAccountControls">
-            <div class="demo-account-field"><label for="demoRobotFunding">Starting Account Funding (USD)</label><input id="demoRobotFunding" type="number" min="1" step="any" value="1000"></div>
-            <div class="demo-account-field"><label for="demoRobotAllocation">Trade Allocation / Margin (USD)</label><input id="demoRobotAllocation" type="number" min="1" step="any" value="100"></div>
-            <div class="demo-account-field"><label for="demoRobotRisk">Max Initial Stop Risk (USD)</label><input id="demoRobotRisk" type="number" min="0.01" step="any" value="10"></div>
-            <div class="demo-account-field"><label for="demoRobotFeeRate">Estimated Trading Fee per Side (%)</label><input id="demoRobotFeeRate" type="number" min="0" max="1" step="0.001" value="0.05"><small style="display:block;color:#9ca3af;font-size:11px;margin-top:4px;">Default 0.05% per side; adjust to your actual fee tier.</small></div>
-            <div class="demo-account-stat"><span>Current Demo Equity: <strong id="demoRobotEquity">$1,000.00</strong></span><span>Estimated margin per trade: <strong id="demoRobotMargin">$100.00</strong></span><span>Leverage model: <strong>10×</strong></span></div>
         </div>
 
         <div id="demoRobotMessage" class="demo-robot-message" aria-live="polite">
             Demo robot is off. Start it to monitor market structure. It cannot place real orders.
         </div>
-        <div id="demoRobotScanning" class="demo-robot-scanning" style="display:none;" role="status" aria-live="polite">
-            <img class="demo-robot-scanning-icon" src="https://media.tenor.com/ZNYv-XVE6e0AAAAM/radar-scanner.gif" alt="Animated radar scanning" width="56" height="56" loading="eager" style="width:56px;height:56px;flex:0 0 56px;object-fit:contain;border:0;border-radius:8px;background:transparent;box-shadow:none;" />
-            <span><strong>Scanning the market</strong><small>Looking for the best valid entry point and direction…</small></span>
-        </div>
-
-        <div id="demoRobotPosition" class="demo-position-card" style="display:none;" aria-live="polite">
-            <div class="demo-position-header">
-                <div>
-                    <div id="demoPositionTitle" class="demo-position-title">OPEN PAPER POSITION</div>
-                    <div id="demoPositionSubtitle" class="demo-position-subtitle">Waiting for simulated position data…</div>
-                </div>
-                <div class="demo-position-pnl-wrap">
-                    <div class="demo-position-pnl-label">Total Open PnL · USD</div>
-                    <div id="demoPositionPnl" class="demo-position-pnl neutral">$0.00</div>
-                    <div class="demo-position-subtitle" style="margin-top:5px;line-height:1.65;">
-                        Position ROI: <strong id="demoPositionRoi">0.00%</strong><br>
-                        Account impact: <strong id="demoPositionAccountImpact">0.00%</strong>
-                    </div>
-                </div>
-            </div>
-            <div class="demo-position-grid">
-                <div class="demo-position-stat"><div class="demo-position-stat-label">Current Mark</div><div id="demoPositionMark" class="demo-position-stat-value">—</div></div>
-                <div class="demo-position-stat"><div class="demo-position-stat-label">Entry Price</div><div id="demoPositionEntry" class="demo-position-stat-value">—</div></div>
-                <div class="demo-position-stat"><div class="demo-position-stat-label">Simulated Quantity</div><div id="demoPositionQty" class="demo-position-stat-value">—</div></div>
-                <div class="demo-position-stat"><div class="demo-position-stat-label">Active Stop Loss</div><div id="demoPositionStop" class="demo-position-stat-value">—</div></div>
-                <div class="demo-position-stat"><div class="demo-position-stat-label">Take Profit 1</div><div id="demoPositionTp1" class="demo-position-stat-value">—</div></div>
-                <div class="demo-position-stat"><div class="demo-position-stat-label">Take Profit 2</div><div id="demoPositionTp2" class="demo-position-stat-value">—</div></div>
-                <div class="demo-position-stat"><div class="demo-position-stat-label">Leverage Used</div><div id="demoPositionLeverage" class="demo-position-stat-value demo-leverage-note">10× paper leverage</div></div>
-                <div class="demo-position-stat"><div class="demo-position-stat-label">Notional Exposure (remaining)</div><div id="demoPositionNotional" class="demo-position-stat-value">—</div></div>
-            </div>
-            <div id="demoPositionPnlBreakdown" class="demo-position-note">Percentages update with the open position: ROI = floating PnL ÷ estimated remaining margin at 10×; account impact = floating PnL ÷ starting funding. Optional Auto Pre-TP1 Protection estimates round-trip fees and can move the stop to cover those fees plus a small buffer; it can be disabled with a warning. Paper only; no exchange order is placed.</div>
-            <div class="demo-position-actions"><button id="demoRobotClosePosition" class="demo-position-close" type="button">Close Position at Current Mark</button></div>
-        </div>
-
-        <div class="demo-limit-controls" id="demoRobotAutoEntryControls">
-            <label class="demo-limit-toggle" for="demoRobotAutoEntry">
-                <input id="demoRobotAutoEntry" type="checkbox">
-                <span><strong>Auto Entry</strong><small>Automatically search for the next paper entry after a trade closes or a limit expires.</small></span>
-            </label>
-            <div class="demo-limit-note">When Force Limit Entry is enabled too, each new attempt uses the previous fully closed 5-minute candle close. Paper trading only.</div>
-        </div>
-
-        <div class="demo-limit-controls" id="demoRobotPreTp1ProtectionControls">
-            <label class="demo-limit-toggle" for="demoRobotAutoPreTp1Protection">
-                <input id="demoRobotAutoPreTp1Protection" type="checkbox" checked>
-                <span><strong>Auto Pre-TP1 Protection</strong><small>When enabled, move the stop to estimated fee coverage plus a small buffer after the trade has enough open profit. TP1 and the post-TP1 breakeven rule remain unchanged.</small></span>
-            </label>
-            <div class="demo-limit-note">Disabling this removes the automatic fee-covering stop before TP1. The original stop loss remains in place until TP1 or that stop is reached.</div>
-        </div>
-
-        <div class="demo-limit-controls" id="demoRobotForceLimitControls">
-            <label class="demo-limit-toggle" for="demoRobotForceLimitMode">
-                <input id="demoRobotForceLimitMode" type="checkbox">
-                <span><strong>Force Limit Entry</strong><small>Search for a forced entry opportunity when enabled.</small></span>
-            </label>
-            <div class="demo-robot-controls" style="margin-top:8px;">
-                <button id="demoRobotForceLimitRefresh" class="demo-robot-clear" type="button" disabled>Force / Refresh Limit Entry</button>
-            </div>
-            <div class="demo-limit-note">Paper trading only.</div>
-        </div>
-
-        <div class="demo-limit-controls" id="demoRobotLimitControls">
-            <label class="demo-limit-toggle" for="demoRobotLimitMode">
-                <input id="demoRobotLimitMode" type="checkbox">
-                <span><strong>Optional Paper Limit Entry Mode</strong><small>OFF by default. When enabled, place a simulated limit at the nearest confirmed support (LONG) or resistance (SHORT), without waiting for the rejection-candle entry.</small></span>
-            </label>
-            <div class="demo-limit-price-row">
-                <div class="demo-limit-price-field">
-                    <label for="demoRobotLimitPrice">Limit Price Override (optional)</label>
-                    <input id="demoRobotLimitPrice" type="number" inputmode="decimal" step="any" placeholder="Auto: nearest confirmed level" autocomplete="off">
-                </div>
-                <button id="demoRobotUseNearest" class="demo-robot-clear" type="button">Use Nearest Level</button>
-            </div>
-            <div class="demo-limit-note">Limit orders can fill during a breakout and are riskier than confirmed entries. This is paper simulation only. Pending limit orders expire after 30 minutes and are cancelled if ECI/WMA direction changes or the level is invalidated.</div>
-        </div>
+        <div id="demoRobotPosition" class="demo-robot-message" style="display:none;"></div>
 
         <div class="demo-robot-controls">
             <button id="demoRobotToggle" class="demo-robot-start" type="button">Start Demo Robot</button>
@@ -1159,30 +830,10 @@
         <ul id="demoRobotLog" class="demo-robot-log">
             <li><span class="demo-robot-log-time">Ready</span><span class="demo-robot-log-message">No trades have been simulated.</span></li>
         </ul>
-
-        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:18px; flex-wrap:wrap;">
-            <div class="section-title" style="font-size:14px; margin:0;">Closed Trade History</div>
-            <button id="demoRobotExportHistory" class="demo-robot-clear" type="button" style="width:auto; margin:0;">Export CSV</button>
-        </div>
-        <div id="demoRobotHistorySummary" class="demo-history-status">History will be saved automatically in this browser.</div>
-        <div class="demo-history-wrap">
-            <table class="demo-history-table">
-                <thead><tr><th>Closed</th><th>Market</th><th>Side</th><th>Entry</th><th>Exit</th><th>Entry Notional</th><th>Leverage Model</th><th>Result</th><th>Net PnL</th><th>Reason</th></tr></thead>
-                <tbody id="demoRobotHistoryBody"><tr><td colspan="10" class="demo-history-empty">No closed demo trades recorded yet.</td></tr></tbody>
-            </table>
-        </div>
         <div class="demo-robot-footnote">
-            Standard mode: ECI direction must match the 1-minute WMA trend, then a closed 1-minute rejection candle confirms the 15-minute swing level. Optional Paper Limit Entry mode simulates a limit at confirmed support/resistance (or a nearby manual override). Force Limit Entry is a separate manual trigger using the previous fully closed 5-minute candle close as the limit (LONG) or the same reversed rule (SHORT); refresh waits for the next 5-minute candle to close. Both limit modes expire after 30 minutes and retain direction and structure invalidation checks. Support/resistance stays fixed as price moves, changing only if crossed/invalidated or replaced by a newer confirmed, closer swing. Demo sizing respects both the configured maximum initial stop risk and the configured margin allocation at the 10× paper model; estimated margin is not an exchange simulation and liquidation is not modeled. USD PnL is an estimate and excludes fees, spread, slippage and instrument-specific contract sizing. TP1 is 2R; 50% exits there and the remaining 50% targets 3R, with the stop moved to entry after TP1. State, pending setup/order, levels, open position and trade history are saved locally and an active robot resumes on refresh. JavaScript cannot monitor trades while the browser/page is closed; it resumes only when the dashboard is open again. BTC open-position mark and floating PnL use a public mark-price WebSocket when available; entry decisions still require closed candles. Other market marks continue to use the existing polling feed. Paper trading only; no exchange orders are sent. Custom assets are not enabled in this test.
+            Entry rules: ECI direction must match trend; support/resistance comes from closed 15-minute swing candles; confirmation uses a closed 1-minute candle that touches the level and closes in the reversal direction beyond the previous candle. Demo target model: 50% exits at 2R; the remaining 50% targets 3R with the stop moved to entry after TP1. Quotes are polled, so this is a strategy test harness, not tick-by-tick execution or financial advice. Custom assets are not enabled in this first test.
         </div>
     </div>
-
-    <!-- PUBLIC BETA NOTICE: positioned directly below the demo robot -->
-    <section class="card public-beta-notice" aria-label="Public beta notice">
-        <div class="public-beta-notice-title">⚠️ PUBLIC BETA · UNDER DEVELOPMENT</div>
-        <p>
-            This dashboard is actively being developed. Signals and market-structure levels are experimental and may be inaccurate, delayed, or temporarily unavailable. The demo robot currently supports paper trading only and does not place real orders.
-        </p>
-    </section>
 
     <!-- LIVE ECI SIGNAL ACCURACY -->
     <div class="card accuracy-card">
@@ -2047,10 +1698,10 @@ function getMarketConfig() {
             label: "XAU/USD",
             name: "Gold",
             yahoo: GOLD_SYMBOL,
-            dataSymbol: "XAUUSD",
+            dataSymbol: "PAXGUSDT",
             bingxSymbol: "GOLD(XAU)-USDT",
-            binanceSymbol: null,
-            tradingView: "BINGX:GOLDXAUUSDT.P"
+            binanceSymbol: "PAXGUSDT",
+            tradingView: "BINANCE:PAXGUSDT"
         };
     }
 
@@ -2093,7 +1744,7 @@ function getMarketPriceSourceName(marketCode = selectedMarket) {
         if (asset && /(^|[^a-z])(oil|wti|brent|crude)([^a-z]|$)/i.test(String(asset.name || ""))) return "Yahoo Finance WTI Futures (CL=F)";
         return "Binance Spot";
     }
-    if (marketCode === "GOLD") return "BingX GOLD(XAU)-USDT Perpetual";
+    if (marketCode === "GOLD") return "Binance Spot PAXG/USDT";
     if (marketCode === "BTC") return "Binance Futures";
     return "BingX";
 }
@@ -2104,7 +1755,7 @@ function getMarketPriceSourceBadge(marketCode = selectedMarket) {
         if (asset && /(^|[^a-z])(oil|wti|brent|crude)([^a-z]|$)/i.test(String(asset.name || ""))) return "YAHOO FINANCE WTI FUTURES LAST PRICE";
         return "BINANCE SPOT LAST PRICE";
     }
-    if (marketCode === "GOLD") return "BINGX GOLD(XAU)-USDT LAST PRICE";
+    if (marketCode === "GOLD") return "BINANCE SPOT PAXG/USDT LAST PRICE";
     if (marketCode === "BTC") return "BINANCE FUTURES LAST PRICE";
     return "BINGX LAST PRICE";
 }
@@ -3266,174 +2917,62 @@ function getMtfTargetCandles(sourceCandles, frame) {
         : sourceCandles;
 }
 
-// Direct, read-only fallback for BTC candles. The primary source is the Worker;
-// if it is unavailable, try Kraken public BTC/USD spot OHLC instead of Binance
-// Futures, which returned HTTP 451 in this browser environment. This fallback
-// is paper-dashboard data only and never places orders.
-async function fetchDirectBtcCandlePayload(frame) {
-    const intervalMap = { "1m": 1, "5m": 5, "15m": 15, "30m": 30, "1h": 60, "2h": 60, "4h": 240, "1d": 1440 };
-    const krakenInterval = intervalMap[String(frame.interval)];
-    if (!krakenInterval) throw new Error(`Unsupported Kraken fallback interval: ${frame.interval}`);
-    const params = new URLSearchParams({ pair: "XBTUSD", interval: String(krakenInterval) });
-    const url = `https://api.kraken.com/0/public/OHLC?${params.toString()}`;
-    const response = await fetch(url, { cache: "no-store", headers: { "Accept": "application/json" } });
-    const payload = await response.json().catch(() => null);
-    if (!response.ok) throw new Error(`Kraken public OHLC returned HTTP ${response.status}`);
-    if (payload?.error?.length) throw new Error(`Kraken public OHLC error: ${payload.error.join("; ")}`);
-    const result = payload?.result || {};
-    const resultKey = Object.keys(result).find(key => key !== "last");
-    const rows = resultKey ? result[resultKey] : null;
-    if (!Array.isArray(rows) || !rows.length) throw new Error("Kraken returned no BTC/USD candles.");
-    let bars = rows.map(row => {
-        const openTime = Number(row?.[0]) * 1000;
-        const open = Number(row?.[1]), high = Number(row?.[2]), low = Number(row?.[3]), close = Number(row?.[4]);
-        const volume = Number(row?.[6]) || 0;
-        if (!Number.isFinite(openTime) || ![open, high, low, close].every(Number.isFinite) ||
-            [open, high, low, close].some(value => value <= 0) || high < low) return null;
-        return { openTime, open, high, low, close, volume, isOpen: openTime + krakenInterval * 60000 > Date.now() + 5000 };
-    }).filter(Boolean).sort((a, b) => a.openTime - b.openTime);
-    if (frame.interval === "2h") {
-        const asArrays = bars.map(bar => [bar.openTime, bar.open, bar.high, bar.low, bar.close, bar.volume, bar.isOpen]);
-        bars = aggregateCandles(asArrays, 120).map(c => ({ openTime: c[0], open: c[1], high: c[2], low: c[3], close: c[4], volume: c[5], isOpen: c[6] }));
-    }
-    if (!bars.length) throw new Error("Kraken BTC/USD candles failed OHLC validation.");
-    return { bars: bars.slice(-500), source: "Kraken public OHLC direct fallback (XBTUSD spot; read-only)" };
-}
-
-// Share identical candle requests between the dashboard's MTF panel and demo robot.
-// A brief cache reduces duplicate calls without making the chart meaningfully stale.
-const mtfHistoryInFlight = new Map();
-const mtfHistoryCache = new Map();
-const MTF_HISTORY_CACHE_MS = 5000;
-
 async function fetchMtfCandleHistory(marketCode, frame) {
-    const cacheKey = `${marketCode}|${frame.interval}`;
-    const now = Date.now();
-    const cached = mtfHistoryCache.get(cacheKey);
-    if (cached && now - cached.savedAt < MTF_HISTORY_CACHE_MS) {
-        return cached.value;
+    // MTF history is served by the Worker from the same source used for live price
+    // and ECI candles (Binance Spot PAXG/USDT for Gold; Binance Futures BTCUSDT for BTC;
+    // existing BingX feed paths for Silver/NASDAQ in this Worker version).
+    const params = new URLSearchParams({
+        market: marketCode,
+        candles: "1",
+        interval: frame.interval,
+        t: String(Date.now())
+    });
+    const response = await fetch(`${CLOUDFLARE_API}?${params.toString()}`, {
+        cache: "no-store",
+        headers: { "Accept": "application/json" }
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+        throw new Error(
+            `Cloudflare MTF history request failed (${response.status}): ` +
+            `${payload?.message || payload?.error || "no error details"}`
+        );
     }
-    const pending = mtfHistoryInFlight.get(cacheKey);
-    if (pending) return pending;
 
-    const request = (async () => {
-        // MTF candle history is served by the Worker. BTC history uses Kraken BTC/USD
-        // spot candles; this is explicitly a spot proxy, not BTCUSDT perpetual futures.
-        const params = new URLSearchParams({
-            market: marketCode,
-            candles: "1",
-            interval: frame.interval,
-            t: String(Date.now())
-        });
-        const url = `${CLOUDFLARE_API}?${params.toString()}`;
-        let payload = null;
-        let workerFailure = null;
-        try {
-            const response = await fetch(url, {
-                cache: "no-store",
-                headers: { "Accept": "application/json" }
-            });
-            payload = await response.json().catch(() => ({}));
-            if (!response.ok) {
-                throw new Error(
-                    `Cloudflare MTF history request failed (${response.status}): ` +
-                    `${payload?.message || payload?.error || "no error details"}`
-                );
-            }
-            if (!Array.isArray(payload?.bars) || !payload.bars.length) {
-                throw new Error(
-                    `Cloudflare returned no ${frame.interval} candles: ` +
-                    `${payload?.message || payload?.error || "empty bars array"}`
-                );
-            }
-        } catch (error) {
-            workerFailure = error;
-            if (marketCode !== "BTC") {
-                const detail = error?.message || String(error);
-                if (/failed to fetch|networkerror|load failed/i.test(detail)) {
-                    const pageOrigin = window.location && window.location.origin ? window.location.origin : "unknown";
-                    console.error("[Dashboard candle feed] Browser fetch failed", {
-                        pageOrigin, url, market: marketCode, interval: frame.interval, error: detail
-                    });
-                    throw new Error(
-                        `Browser could not reach the Cloudflare candle feed for ${marketCode} ${frame.interval}. ` +
-                        `Page origin: ${pageOrigin}. Check the browser Console for a CORS block or verify that the Worker is responding. ` +
-                        `(${detail})`
-                    );
-                }
-                throw error;
-            }
-
-            // The direct fallback uses Kraken BTC/USD spot because Binance Futures
-            // returned HTTP 451 from this browser environment. It is not futures data.
-            try {
-                payload = await fetchDirectBtcCandlePayload(frame);
-                console.warn(
-                    `[Dashboard candle feed] Cloudflare failed for BTC ${frame.interval}; using direct Kraken spot fallback.`,
-                    workerFailure?.message || String(workerFailure)
-                );
-            } catch (fallbackError) {
-                console.error("[Dashboard candle feed] Cloudflare and Kraken BTC fallback both failed", {
-                    market: marketCode, interval: frame.interval,
-                    workerError: workerFailure?.message || String(workerFailure),
-                    fallbackError: fallbackError?.message || String(fallbackError)
-                });
-                throw new Error(
-                    `BTC ${frame.interval} candles unavailable. Cloudflare feed failed (${workerFailure?.message || String(workerFailure)}); ` +
-                    `direct Kraken BTC/USD spot fallback also failed (${fallbackError?.message || String(fallbackError)}). ` +
-                    `No real orders were sent.`
-                );
-            }
-        }
-
-        const bars = Array.isArray(payload?.bars) ? payload.bars : [];
-        if (!bars.length) {
-            throw new Error(
-                `No ${frame.interval} candles returned by the configured feed: ` +
-                `${payload?.message || payload?.error || "empty bars array"}`
-            );
-        }
-
-        // Defensive frontend validation: providers may return null/empty OHLC fields
-        // for intervals without usable prices. Number(null) becomes zero, so reject
-        // zero/invalid-price rows before WMA calculations even if the Worker filtered them.
-        const usableBars = bars.filter(bar => {
-            const raw = [bar?.open ?? bar?.o, bar?.high ?? bar?.h, bar?.low ?? bar?.l, bar?.close ?? bar?.c];
-            if (raw.some(value => value === null || value === undefined || value === "")) return false;
-            const values = raw.map(Number);
-            return values.every(value => Number.isFinite(value) && value > 0) && values[1] >= values[2];
-        });
-        if (!usableBars.length) {
-            throw new Error(`Historical response had ${bars.length} rows but none had valid positive OHLC prices`);
-        }
-
-        const candles = marketBarsToCandles(usableBars, frame.minutes)
-            .sort((a, b) => a[0] - b[0]);
-        if (!candles.length) throw new Error("Historical response contained no valid OHLC candles");
-
-        const normalizedCandles = mergeMtfCandles([], candles);
-        return {
-            candles: normalizedCandles,
-            referenceCandles: getMtfReferenceCandles(normalizedCandles),
-            sourceBars: usableBars.length,
-            rejectedBars: bars.length - usableBars.length,
-            source: payload?.source || `${getMarketPriceSourceName()} OHLC`
-        };
-    })();
-
-    mtfHistoryInFlight.set(cacheKey, request);
-    try {
-        const value = await request;
-        mtfHistoryCache.set(cacheKey, { savedAt: Date.now(), value });
-        // Keep the tiny in-memory cache bounded if custom market selection changes.
-        while (mtfHistoryCache.size > 40) {
-            const oldestKey = mtfHistoryCache.keys().next().value;
-            mtfHistoryCache.delete(oldestKey);
-        }
-        return value;
-    } finally {
-        if (mtfHistoryInFlight.get(cacheKey) === request) mtfHistoryInFlight.delete(cacheKey);
+    const bars = Array.isArray(payload?.bars) ? payload.bars : [];
+    if (!bars.length) {
+        throw new Error(
+            `Cloudflare returned no ${frame.interval} candles: ` +
+            `${payload?.message || payload?.error || "empty bars array"}`
+        );
     }
+
+    // Defensive frontend validation: providers may return null/empty OHLC fields
+    // for intervals without usable prices. Number(null) becomes zero, so reject
+    // zero/invalid-price rows before WMA calculations even if the Worker filtered them.
+    const usableBars = bars.filter(bar => {
+        const raw = [bar?.open ?? bar?.o, bar?.high ?? bar?.h, bar?.low ?? bar?.l, bar?.close ?? bar?.c];
+        if (raw.some(value => value === null || value === undefined || value === "")) return false;
+        const values = raw.map(Number);
+        return values.every(value => Number.isFinite(value) && value > 0) && values[1] >= values[2];
+    });
+    if (!usableBars.length) {
+        throw new Error(`Historical response had ${bars.length} rows but none had valid positive OHLC prices`);
+    }
+
+    const candles = marketBarsToCandles(usableBars, frame.minutes)
+        .sort((a, b) => a[0] - b[0]);
+    if (!candles.length) throw new Error("Historical response contained no valid OHLC candles");
+
+    const normalizedCandles = mergeMtfCandles([], candles);
+    return {
+        candles: normalizedCandles,
+        referenceCandles: getMtfReferenceCandles(normalizedCandles),
+        sourceBars: usableBars.length,
+        rejectedBars: bars.length - usableBars.length,
+        source: payload?.source || `${getMarketPriceSourceName()} OHLC`
+    };
 }
 
 function trendArrowSvg(state) {
@@ -4273,50 +3812,26 @@ setInterval(refreshMultiTimeframePanel, 60000);
         structureClosed: [],
         lastConfirmFetch: 0,
         lastStructureFetch: 0,
-        // Keep structure candles for the open position's market separately.
-        // The selected dashboard market can change while an existing paper trade is managed.
-        positionStructureClosed: [],
-        lastPositionStructureFetch: 0,
         pending: null,
         position: null,
         levels: { support: null, resistance: null },
-        levelsMarket: null,
-        limitMode: false,
-        limitPriceOverride: '',
-        forceLimitMode: false,
-        autoEntry: false,
-        autoPreTp1Protection: true,
-        autoEntryRescanRequested: false,
-        forceLimitRequest: null,
         trend: null,
         logs: [],
         closedTrades: [],
         wins: 0,
         losses: 0,
         netR: 0,
-        netPnlUsd: 0,
-        startingFundingUsd: 1000,
-        tradeAllocationUsd: 100,
-        maxRiskUsd: 10,
-        assumedFeeRatePct: 0.05,
         cooldownUntil: 0
     };
 
-    const STORAGE_KEY = 'goldEciDemoRobotState_v2';
-    const MAX_SAVED_CLOSED_TRADES = 1000;
-    const MAX_SAVED_LOG_EVENTS = 100;
     const CONFIRM_INTERVAL_MINUTES = 1;
     const STRUCTURE_INTERVAL_MINUTES = 15;
     const CANDLE_LIMIT = 260;
     const SWING_STRENGTH = 2;
     const MAX_PENDING_MINUTES = 5;
-    const MAX_LIMIT_PENDING_MINUTES = 30;
     const CONFIRM_REFRESH_MS = 12000;
     const STRUCTURE_REFRESH_MS = 60000;
     const ROBOT_POLL_MS = 15000;
-    // Transparent paper-sizing assumption: approximate $10 loss if the initial stop is hit.
-    // This is simulated linear USD PnL, not exchange-specific contract sizing.
-    const DEMO_RISK_USD = 10;
 
     const $ = (id) => document.getElementById(id);
 
@@ -4336,161 +3851,10 @@ setInterval(refreshMultiTimeframePanel, 60000);
         return `${n > 0 ? '+' : ''}${n.toFixed(2)}R`;
     }
 
-    function fmtUsdPnl(value) {
-        const n = Number(value);
-        if (!Number.isFinite(n)) return '—';
-        const sign = n > 0 ? '+' : (n < 0 ? '−' : '');
-        return `${sign}$${Math.abs(n).toFixed(2)}`;
-    }
-
-    function fmtQuantity(value) {
-        const n = Number(value);
-        if (!Number.isFinite(n)) return '—';
-        return n.toLocaleString(undefined, { maximumFractionDigits: 8 });
-    }
-
-    function parseDate(value, fallback = new Date()) {
-        const date = value instanceof Date ? value : new Date(value);
-        return Number.isNaN(date.getTime()) ? fallback : date;
-    }
-
-    function savePersistentState() {
-        try {
-            const toSave = {
-                version: 3,
-                savedAt: new Date().toISOString(),
-                // Resume only if the user had left the paper robot running before refresh.
-                enabled: Boolean(state.enabled),
-                activeMarket: state.activeMarket,
-                pending: state.pending,
-                levels: state.levels,
-                levelsMarket: state.levelsMarket,
-                limitMode: Boolean(state.limitMode),
-                limitPriceOverride: String(state.limitPriceOverride || ''),
-                forceLimitMode: Boolean(state.forceLimitMode),
-                autoEntry: Boolean(state.autoEntry),
-                autoPreTp1Protection: Boolean(state.autoPreTp1Protection),
-                forceLimitRequest: state.forceLimitRequest,
-                position: state.position,
-                closedTrades: state.closedTrades.slice(-MAX_SAVED_CLOSED_TRADES),
-                wins: state.wins,
-                losses: state.losses,
-                netR: state.netR,
-                netPnlUsd: state.netPnlUsd,
-                startingFundingUsd: state.startingFundingUsd,
-                tradeAllocationUsd: state.tradeAllocationUsd,
-                maxRiskUsd: state.maxRiskUsd,
-                assumedFeeRatePct: state.assumedFeeRatePct,
-                cooldownUntil: state.cooldownUntil,
-                logs: state.logs.slice(0, MAX_SAVED_LOG_EVENTS)
-            };
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
-            const status = $('demoRobotHistorySummary');
-            if (status) status.textContent = `Auto-saved locally · ${state.closedTrades.length} closed trades · cumulative ${fmtUsdPnl(state.netPnlUsd)} (${fmtR(state.netR)}). Saved history is specific to this browser and site origin.`;
-            return true;
-        } catch (error) {
-            const status = $('demoRobotHistorySummary');
-            if (status) status.textContent = 'Local saving is unavailable in this browser. Keep this page open and export or record results before closing it.';
-            return false;
-        }
-    }
-
-    function restorePersistentState() {
-        try {
-            const raw = localStorage.getItem(STORAGE_KEY);
-            if (!raw) return;
-            const saved = JSON.parse(raw);
-            if (!saved || ![2, 3].includes(saved.version)) return;
-
-            state.enabled = saved.version >= 3 && Boolean(saved.enabled);
-            state.activeMarket = saved.activeMarket || null;
-            state.limitMode = Boolean(saved.limitMode);
-            state.limitPriceOverride = String(saved.limitPriceOverride || '');
-            state.forceLimitMode = Boolean(saved.forceLimitMode);
-            state.autoEntry = Boolean(saved.autoEntry);
-            state.autoPreTp1Protection = saved.autoPreTp1Protection === undefined ? true : Boolean(saved.autoPreTp1Protection);
-            state.forceLimitRequest = saved.forceLimitRequest && typeof saved.forceLimitRequest === 'object'
-                ? { ...saved.forceLimitRequest, requestedAt: Number(saved.forceLimitRequest.requestedAt) || Date.now(), minCandleTime: Number.isFinite(Number(saved.forceLimitRequest.minCandleTime)) ? Number(saved.forceLimitRequest.minCandleTime) : null }
-                : null;
-            if (saved.levels && typeof saved.levels === 'object') {
-                const validLevel = (level, side) => level && Number.isFinite(Number(level.price)) && Number(level.price) > 0 && (side === 'support' ? 'Support' : 'Resistance') === level.type
-                    ? { price: Number(level.price), time: Number(level.time) || 0, type: level.type }
-                    : null;
-                state.levels = {
-                    support: validLevel(saved.levels.support, 'support'),
-                    resistance: validLevel(saved.levels.resistance, 'resistance')
-                };
-                state.levelsMarket = saved.levelsMarket || saved.activeMarket || null;
-            }
-            if (saved.pending && ['long', 'short'].includes(saved.pending.direction) && Number(saved.pending.level?.price) > 0) {
-                state.pending = {
-                    ...saved.pending,
-                    startedAt: Number(saved.pending.startedAt) || Date.now(),
-                    tolerance: Number(saved.pending.tolerance) > 0 ? Number(saved.pending.tolerance) : 0,
-                    atr: Number(saved.pending.atr) || null,
-                    limitPrice: Number(saved.pending.limitPrice) > 0 ? Number(saved.pending.limitPrice) : null,
-                    triggerCandleTime: Number(saved.pending.triggerCandleTime) || null,
-                    lastEvaluatedTime: Number(saved.pending.lastEvaluatedTime) || null,
-                    level: { ...saved.pending.level, price: Number(saved.pending.level.price), time: Number(saved.pending.level.time) || 0 }
-                };
-            }
-
-            state.closedTrades = Array.isArray(saved.closedTrades)
-                ? saved.closedTrades.slice(-MAX_SAVED_CLOSED_TRADES).map(trade => ({
-                    ...trade,
-                    openedAt: parseDate(trade.openedAt),
-                    closedAt: parseDate(trade.closedAt)
-                }))
-                : [];
-            state.wins = Number.isFinite(Number(saved.wins)) ? Number(saved.wins) : state.closedTrades.filter(t => Number(t.outcomeR) > 0).length;
-            state.losses = Number.isFinite(Number(saved.losses)) ? Number(saved.losses) : state.closedTrades.filter(t => Number(t.outcomeR) < 0).length;
-            state.netR = Number.isFinite(Number(saved.netR)) ? Number(saved.netR) : state.closedTrades.reduce((sum, t) => sum + (Number(t.outcomeR) || 0), 0);
-            state.netPnlUsd = Number.isFinite(Number(saved.netPnlUsd)) ? Number(saved.netPnlUsd) : state.closedTrades.reduce((sum, t) => sum + (Number(t.cashPnlUsd) || 0), 0);
-            state.startingFundingUsd = Number(saved.startingFundingUsd) > 0 ? Number(saved.startingFundingUsd) : 1000;
-            state.tradeAllocationUsd = Number(saved.tradeAllocationUsd) > 0 ? Number(saved.tradeAllocationUsd) : 100;
-            state.maxRiskUsd = Number(saved.maxRiskUsd) > 0 ? Number(saved.maxRiskUsd) : 10;
-            state.assumedFeeRatePct = Number.isFinite(Number(saved.assumedFeeRatePct)) && Number(saved.assumedFeeRatePct) >= 0 && Number(saved.assumedFeeRatePct) <= 1 ? Number(saved.assumedFeeRatePct) : 0.05;
-            state.cooldownUntil = Number(saved.cooldownUntil) || 0;
-            state.logs = Array.isArray(saved.logs) ? saved.logs.slice(0, 12).map(item => ({
-                time: parseDate(item.time),
-                message: String(item.message || '')
-            })) : [];
-
-            const p = saved.position;
-            if (p && ['long', 'short'].includes(p.direction) && Number.isFinite(Number(p.entry)) && Number(p.entry) > 0 && Number.isFinite(Number(p.quantity)) && Number(p.quantity) > 0) {
-                state.position = {
-                    ...p,
-                    openedAt: parseDate(p.openedAt),
-                    entry: Number(p.entry),
-                    markPrice: Number(p.markPrice) > 0 ? Number(p.markPrice) : Number(p.entry),
-                    activeStop: Number(p.activeStop),
-                    initialStop: Number(p.initialStop),
-                    quantity: Number(p.quantity),
-                    remainingQuantity: Number.isFinite(Number(p.remainingQuantity)) ? Number(p.remainingQuantity) : Number(p.quantity),
-                    realizedPnlUsd: Number(p.realizedPnlUsd) || 0,
-                    riskUsd: Number(p.riskUsd) || DEMO_RISK_USD,
-                    hitTP1: Boolean(p.hitTP1),
-                    profitProtectionActive: Boolean(p.profitProtectionActive),
-                    profitProtectionStop: Number(p.profitProtectionStop) > 0 ? Number(p.profitProtectionStop) : null
-                };
-                state.positionStructureClosed = [];
-                state.lastPositionStructureFetch = 0;
-                state.message = state.enabled
-                    ? 'Restored active paper robot after refresh. Monitoring the saved position and setup; no exchange orders are sent.'
-                    : 'Restored saved paper position. New entries remain paused; the open paper position will continue to be monitored.';
-            } else if (state.enabled) {
-                state.message = 'Restored active paper robot after refresh. Resuming market monitoring; no exchange orders are sent.';
-            }
-        } catch (error) {
-            console.warn('Could not restore the saved demo history:', error);
-        }
-    }
-
     function logEvent(message) {
         state.logs.unshift({ time: new Date(), message: String(message) });
         state.logs = state.logs.slice(0, 12);
         renderLog();
-        savePersistentState();
     }
 
     function renderLog() {
@@ -4522,55 +3886,6 @@ setInterval(refreshMultiTimeframePanel, 60000);
         }
     }
 
-    function renderHistory() {
-        const body = $('demoRobotHistoryBody');
-        if (!body) return;
-        body.replaceChildren();
-        const trades = state.closedTrades.slice(-30).reverse();
-        if (!trades.length) {
-            const row = document.createElement('tr');
-            const cell = document.createElement('td');
-            cell.colSpan = 10;
-            cell.className = 'demo-history-empty';
-            cell.textContent = 'No closed demo trades recorded yet.';
-            row.append(cell);
-            body.append(row);
-        } else {
-            for (const trade of trades) {
-                const row = document.createElement('tr');
-                const closed = parseDate(trade.closedAt);
-                const entryNotional = Number(trade.notionalExposureAtEntry);
-                const values = [
-                    closed.toLocaleString([], { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-                    marketName(trade.market),
-                    String(trade.direction || '').toUpperCase(),
-                    formatPrice(Number(trade.entry)),
-                    formatPrice(Number(trade.exit)),
-                    Number.isFinite(entryNotional) && entryNotional > 0 ? `$${entryNotional.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—',
-                    '10× (paper model)',
-                    fmtR(Number(trade.outcomeR)),
-                    fmtUsdPnl(Number(trade.cashPnlUsd)),
-                    String(trade.reason || '')
-                ];
-                values.forEach((value, index) => {
-                    const cell = document.createElement('td');
-                    cell.textContent = value;
-                    if (index === 7 || index === 8) {
-                        const pnl = index === 7 ? Number(trade.outcomeR) : Number(trade.cashPnlUsd);
-                        cell.className = pnl > 0 ? 'demo-history-positive' : (pnl < 0 ? 'demo-history-negative' : '');
-                    }
-                    row.append(cell);
-                });
-                body.append(row);
-            }
-        }
-        const status = $('demoRobotHistorySummary');
-        if (status) {
-            const total = state.closedTrades.length;
-            status.textContent = `Showing up to the latest 30 of ${total} saved closed trades · cumulative net ${fmtUsdPnl(state.netPnlUsd)} (${fmtR(state.netR)}) · auto-saves locally in this browser/site origin.`;
-        }
-    }
-
     function resetMarketCaches(market) {
         state.activeMarket = market;
         state.confirmAll = [];
@@ -4580,7 +3895,6 @@ setInterval(refreshMultiTimeframePanel, 60000);
         state.lastStructureFetch = 0;
         state.pending = null;
         state.levels = { support: null, resistance: null };
-        state.levelsMarket = market;
         state.trend = null;
     }
 
@@ -4593,25 +3907,6 @@ setInterval(refreshMultiTimeframePanel, 60000);
         const toggle = $('demoRobotToggle');
         const message = $('demoRobotMessage');
         const positionEl = $('demoRobotPosition');
-        const scanningEl = $('demoRobotScanning');
-        if (scanningEl) {
-            // The animated radar is visible only while the robot is actively searching.
-            // Hide it as soon as a setup becomes a pending limit or a position is opened.
-            const isLimitWaiting = state.pending && ['limit', 'force-limit'].includes(state.pending.kind);
-            const isSearching = state.enabled && !state.position && !isLimitWaiting;
-            if (isSearching) {
-                const scanningTitle = scanningEl.querySelector('strong');
-                const scanningDetail = scanningEl.querySelector('small');
-                if (scanningTitle) scanningTitle.textContent = state.forceLimitRequest ? 'SEARCHING FOR ENTRY' : 'SCANNING THE MARKET';
-                if (scanningDetail) scanningDetail.textContent = state.forceLimitRequest
-                    ? 'Checking for a valid completed 5-minute candle and aligned direction…'
-                    : 'Checking direction, support/resistance and entry confirmation…';
-                scanningEl.style.display = 'flex';
-                scanningEl.setAttribute('aria-label', 'Scanning the market for a valid paper entry');
-            } else {
-                scanningEl.style.display = 'none';
-            }
-        }
         if (badge) {
             badge.className = 'demo-robot-badge' + (state.enabled ? ' active' : (state.position ? ' managing' : ''));
             badge.textContent = state.enabled ? 'DEMO ON · NO ORDERS' : (state.position ? 'MANAGING PAPER TRADE' : 'DEMO OFF');
@@ -4624,49 +3919,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
 
         if ($('demoRobotSupport')) $('demoRobotSupport').textContent = state.levels.support ? formatPrice(state.levels.support.price) : '—';
         if ($('demoRobotResistance')) $('demoRobotResistance').textContent = state.levels.resistance ? formatPrice(state.levels.resistance.price) : '—';
-        if ($('demoRobotEci')) {
-            const eci = $('demoRobotEci');
-            eci.textContent = lastScalpSignal || 'No active signal';
-            eci.style.color = lastScalpSignal === 'Sell Short' ? '#ef4444' : (lastScalpSignal === 'Buy Long' ? '#22c55e' : '#9ca3af');
-            eci.style.fontWeight = lastScalpSignal ? '800' : '500';
-        }
-        const modeToggle = $('demoRobotLimitMode');
-        const limitPriceInput = $('demoRobotLimitPrice');
-        const forceModeToggle = $('demoRobotForceLimitMode');
-        const autoEntryToggle = $('demoRobotAutoEntry');
-        const preTp1ProtectionToggle = $('demoRobotAutoPreTp1Protection');
-        const forceRefreshButton = $('demoRobotForceLimitRefresh');
-        if (modeToggle && modeToggle.checked !== state.limitMode) modeToggle.checked = state.limitMode;
-        if (forceModeToggle && forceModeToggle.checked !== state.forceLimitMode) forceModeToggle.checked = state.forceLimitMode;
-        if (autoEntryToggle && autoEntryToggle.checked !== state.autoEntry) autoEntryToggle.checked = state.autoEntry;
-        if (preTp1ProtectionToggle && preTp1ProtectionToggle.checked !== state.autoPreTp1Protection) preTp1ProtectionToggle.checked = state.autoPreTp1Protection;
-        if (forceModeToggle) forceModeToggle.disabled = Boolean(state.position || (state.pending && state.pending.kind !== 'force-limit') || state.limitMode);
-        if (forceRefreshButton) forceRefreshButton.disabled = !state.forceLimitMode || !state.enabled || Boolean(state.position);
-        if (limitPriceInput && limitPriceInput.value !== state.limitPriceOverride) limitPriceInput.value = state.limitPriceOverride;
-        if ($('demoRobotLeverageMode')) $('demoRobotLeverageMode').textContent = '10× (paper model)';
-        const fundingInput = $('demoRobotFunding');
-        const allocationInput = $('demoRobotAllocation');
-        const riskInput = $('demoRobotRisk');
-        const feeRateInput = $('demoRobotFeeRate');
-        if (fundingInput && document.activeElement !== fundingInput) fundingInput.value = String(state.startingFundingUsd);
-        if (allocationInput && document.activeElement !== allocationInput) allocationInput.value = String(state.tradeAllocationUsd);
-        if (riskInput && document.activeElement !== riskInput) riskInput.value = String(state.maxRiskUsd);
-        if (feeRateInput && document.activeElement !== feeRateInput) feeRateInput.value = String(state.assumedFeeRatePct);
-        const equityEl = $('demoRobotEquity');
-        if (equityEl) {
-            let openPositionPnl = 0;
-            if (state.position) {
-                const pos = state.position;
-                const mark = Number(pos.markPrice) || Number(pos.entry);
-                const qty = Number.isFinite(pos.remainingQuantity) ? pos.remainingQuantity : pos.quantity;
-                const floating = (pos.direction === 'long' ? mark - Number(pos.entry) : Number(pos.entry) - mark) * qty;
-                openPositionPnl = (Number(pos.realizedPnlUsd) || 0) + floating;
-            }
-            const equity = state.startingFundingUsd + state.netPnlUsd + openPositionPnl;
-            equityEl.textContent = `$${equity.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}`;
-            equityEl.style.color = equity >= state.startingFundingUsd ? '#22c55e' : '#ef4444';
-        }
-        const marginEl = $('demoRobotMargin'); if (marginEl) marginEl.textContent = `$${Number(state.tradeAllocationUsd).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+        if ($('demoRobotEci')) $('demoRobotEci').textContent = lastScalpSignal || 'No active signal';
         if ($('demoRobotTrend')) $('demoRobotTrend').textContent = state.trend ? state.trend.label : 'Unavailable';
         if ($('demoRobotClosed')) $('demoRobotClosed').textContent = String(state.closedTrades.length);
         if ($('demoRobotNetR')) {
@@ -4674,77 +3927,18 @@ setInterval(refreshMultiTimeframePanel, 60000);
             $('demoRobotNetR').style.color = state.netR > 0 ? '#22c55e' : (state.netR < 0 ? '#ef4444' : '');
         }
 
-        const closedPnlEl = $('demoRobotNetPnl');
-        if (closedPnlEl) {
-            closedPnlEl.textContent = fmtUsdPnl(state.netPnlUsd);
-            closedPnlEl.style.color = state.netPnlUsd > 0 ? '#22c55e' : (state.netPnlUsd < 0 ? '#ef4444' : '');
-        }
-        const realizedPct = state.startingFundingUsd > 0 ? (state.netPnlUsd / state.startingFundingUsd) * 100 : 0;
-        const realizedPctEl = $('demoRobotNetPnlPct');
-        if (realizedPctEl) {
-            realizedPctEl.textContent = `${realizedPct > 0 ? '+' : ''}${realizedPct.toFixed(2)}%`;
-            realizedPctEl.style.color = realizedPct > 0 ? '#22c55e' : (realizedPct < 0 ? '#ef4444' : '');
-        }
-
         if (positionEl) {
             if (!state.position) {
                 positionEl.style.display = 'none';
+                positionEl.textContent = '';
             } else {
                 const p = state.position;
-                const mark = Number.isFinite(p.markPrice) && p.markPrice > 0 ? p.markPrice : p.entry;
-                const remainingQty = Number.isFinite(p.remainingQuantity) ? p.remainingQuantity : p.quantity;
-                const floatingPnl = (p.direction === 'long' ? mark - p.entry : p.entry - mark) * remainingQty;
-                const totalOpenPnl = (Number(p.realizedPnlUsd) || 0) + floatingPnl;
-                const pnlEl = $('demoPositionPnl');
-                const titleEl = $('demoPositionTitle');
-                const subtitleEl = $('demoPositionSubtitle');
-                if (titleEl) {
-                    titleEl.textContent = p.direction === 'long' ? 'OPEN PAPER POSITION · LONG' : 'OPEN PAPER POSITION · SHORT';
-                    titleEl.className = 'demo-position-title demo-position-side ' + p.direction;
-                }
-                if (subtitleEl) subtitleEl.textContent = `${marketName(p.market)} · ${p.hitTP1 ? 'TP1 reached · 50% closed' : 'Position open'} · Live BTC mark when WebSocket is available; other feeds use polling`;
-                if (pnlEl) {
-                    pnlEl.textContent = fmtUsdPnl(totalOpenPnl);
-                    pnlEl.className = 'demo-position-pnl ' + (totalOpenPnl > 0 ? 'positive' : (totalOpenPnl < 0 ? 'negative' : 'neutral'));
-                }
-                const remainingNotionalForRoi = Math.abs(mark * remainingQty);
-                const estimatedMarginForRoi = remainingNotionalForRoi / 10;
-                const positionRoi = estimatedMarginForRoi > 0 ? (floatingPnl / estimatedMarginForRoi) * 100 : 0;
-                const accountImpact = state.startingFundingUsd > 0 ? (floatingPnl / state.startingFundingUsd) * 100 : 0;
-                const positionRoiEl = $('demoPositionRoi');
-                if (positionRoiEl) {
-                    positionRoiEl.textContent = `${positionRoi > 0 ? '+' : ''}${positionRoi.toFixed(2)}%`;
-                    positionRoiEl.style.color = positionRoi > 0 ? '#22c55e' : (positionRoi < 0 ? '#ef4444' : '');
-                }
-                const accountImpactEl = $('demoPositionAccountImpact');
-                if (accountImpactEl) {
-                    accountImpactEl.textContent = `${accountImpact > 0 ? '+' : ''}${accountImpact.toFixed(2)}%`;
-                    accountImpactEl.style.color = accountImpact > 0 ? '#22c55e' : (accountImpact < 0 ? '#ef4444' : '');
-                }
-                if ($('demoPositionMark')) $('demoPositionMark').textContent = formatPrice(mark);
-                if ($('demoPositionEntry')) $('demoPositionEntry').textContent = formatPrice(p.entry);
-                if ($('demoPositionQty')) $('demoPositionQty').textContent = fmtQuantity(remainingQty) + (p.hitTP1 ? ' left' : '');
-                if ($('demoPositionStop')) $('demoPositionStop').textContent = formatPrice(p.activeStop);
-                if ($('demoPositionTp1')) $('demoPositionTp1').textContent = p.hitTP1 ? 'HIT ✓' : formatPrice(p.tp1);
-                if ($('demoPositionTp2')) $('demoPositionTp2').textContent = formatPrice(p.tp2);
-                if ($('demoPositionLeverage')) $('demoPositionLeverage').textContent = '10× (paper model)';
-                if ($('demoPositionNotional')) $('demoPositionNotional').textContent = fmtUsdPnl(Math.abs(mark * remainingQty)).replace(/^\+/, '');
-                if ($('demoPositionPnlBreakdown')) {
-                    const realized = Number(p.realizedPnlUsd) || 0;
-                    const remainingNotional = Math.abs(mark * remainingQty);
-                    const estimatedMargin = remainingNotional / 10;
-                    const feeRate = Math.max(0, Number(state.assumedFeeRatePct) || 0) / 100;
-                    const entryFeeEstimate = Math.abs(Number(p.entry) * Number(p.quantity)) * feeRate;
-                    const exitFeeEstimate = Math.abs(mark * remainingQty) * feeRate;
-                    const roundTripFeeEstimate = entryFeeEstimate + exitFeeEstimate;
-                    const protectionStatus = p.hitTP1 ? 'TP1 reached; runner stop uses the existing breakeven rule.' : (!state.autoPreTp1Protection ? 'Auto Pre-TP1 Protection is OFF; original stop loss remains active.' : (p.profitProtectionActive ? `Pre-TP1 fee-covering stop ACTIVE at ${formatPrice(p.activeStop)}; estimated round-trip fees $${roundTripFeeEstimate.toFixed(2)}.` : `Pre-TP1 fee protection waiting; estimated round-trip fees $${roundTripFeeEstimate.toFixed(2)} at ${(Number(state.assumedFeeRatePct) || 0).toFixed(3)}% per side.`));
-                    $('demoPositionPnlBreakdown').textContent = `Assumed risk: $${p.riskUsd.toFixed(2)} at the initial stop · Simulated leverage: 10× · Estimated margin at 10×: $${estimatedMargin.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · Realized from partial exits: ${fmtUsdPnl(realized)} · Floating PnL on remaining quantity: ${fmtUsdPnl(floatingPnl)} · Remaining notional exposure: $${remainingNotional.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}. ${protectionStatus} Fee-covering stop uses estimated entry + exit fees and a small $0.05 minimum / 10% fee buffer. This is paper-only; PnL otherwise excludes fees, spread, slippage and exchange contract specifications.`;
-                }
                 positionEl.style.display = 'block';
+                const side = p.direction === 'long' ? 'PAPER LONG' : 'PAPER SHORT';
+                const runner = p.hitTP1 ? `TP1 reached; runner stop: ${formatPrice(p.activeStop)}` : `Stop: ${formatPrice(p.activeStop)}`;
+                positionEl.textContent = `${side} · ${marketName(p.market)} · Entry ${formatPrice(p.entry)} · ${runner} · TP1 ${formatPrice(p.tp1)} · TP2 ${formatPrice(p.tp2)}`;
             }
         }
-        renderHistory();
-        savePersistentState();
     }
 
     async function fetchPriceForMarket(market) {
@@ -4795,9 +3989,6 @@ setInterval(refreshMultiTimeframePanel, 60000);
             return { support: null, resistance: null };
         }
 
-        // Only confirmed swing points from CLOSED candles are passed in here.
-        // Support must be strictly below the current price; resistance must be
-        // strictly above it. A tolerance must never reverse those relationships.
         for (let i = strength; i < closedCandles.length - strength; i++) {
             const c = closedCandles[i];
             let isSwingLow = true;
@@ -4806,83 +3997,37 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 if (c[3] >= closedCandles[i - j][3] || c[3] >= closedCandles[i + j][3]) isSwingLow = false;
                 if (c[2] <= closedCandles[i - j][2] || c[2] <= closedCandles[i + j][2]) isSwingHigh = false;
             }
-            if (isSwingLow && Number.isFinite(c[3]) && c[3] < price) {
-                supports.push({ price: c[3], time: c[0], type: 'Support' });
-            }
-            if (isSwingHigh && Number.isFinite(c[2]) && c[2] > price) {
-                resistances.push({ price: c[2], time: c[0], type: 'Resistance' });
-            }
+            if (isSwingLow && c[3] <= price + tolerance) supports.push({ price: c[3], time: c[0], type: 'Support' });
+            if (isSwingHigh && c[2] >= price - tolerance) resistances.push({ price: c[2], time: c[0], type: 'Resistance' });
         }
-        supports.sort((a, b) => (price - a.price) - (price - b.price));
-        resistances.sort((a, b) => (a.price - price) - (b.price - price));
-
-        const support = supports[0] || null;
-        const resistance = resistances[0] || null;
-        // Defensive invariant: never display inverted levels even if provider data
-        // contains malformed OHLC rows or a future edit changes the selection logic.
-        return {
-            support: support && support.price < price ? support : null,
-            resistance: resistance && resistance.price > price ? resistance : null
-        };
-    }
-
-    function chooseStableLevel(previous, candidate, price, side) {
-        const isCorrectSide = level => level && (side === 'support' ? level.price < price : level.price > price);
-        if (!isCorrectSide(previous)) return candidate || null;
-        if (!isCorrectSide(candidate)) return previous;
-        const previousDistance = Math.abs(price - previous.price);
-        const candidateDistance = Math.abs(price - candidate.price);
-        const newerConfirmedSwing = Number(candidate.time) > Number(previous.time);
-        // Price fluctuations alone do not move the displayed level. Replace it only
-        // when a newer confirmed swing is objectively closer and on the correct side.
-        return newerConfirmedSwing && candidateDistance < previousDistance ? candidate : previous;
-    }
-
-    function findStableSwingLevels(closedCandles, price, tolerance, previous, previousMarket, market) {
-        const candidates = findSwingLevels(closedCandles, price, tolerance);
-        if (previousMarket !== market) return candidates;
-        return {
-            support: chooseStableLevel(previous?.support, candidates.support, price, 'support'),
-            resistance: chooseStableLevel(previous?.resistance, candidates.resistance, price, 'resistance')
-        };
+        supports.sort((a, b) => Math.abs(price - a.price) - Math.abs(price - b.price));
+        resistances.sort((a, b) => Math.abs(a.price - price) - Math.abs(b.price - price));
+        return { support: supports[0] || null, resistance: resistances[0] || null };
     }
 
     async function fetchDemoBars(market, intervalKey, intervalMinutes, limit) {
-        // Reuse the same validated market-feed function as the dashboard's MTF panel.
-        // This avoids a separate request format or a second source of candle parsing.
-        // Only read-only candle requests are made; no order endpoint exists in this robot.
-        const frame = mtfFrames.find(item => item.key === intervalKey);
-        if (!frame || frame.minutes !== intervalMinutes) {
-            throw new Error(`Unsupported demo interval: ${intervalKey}`);
+        // The Worker expects interval keys such as "1m" and "15m", not bare
+        // minute counts such as "1" and "15". Keep minutes separately for candle normalization.
+        // This is a read-only GET request; the demo robot has no order endpoint.
+        const params = new URLSearchParams({
+            market,
+            candles: '1',
+            interval: intervalKey,
+            limit: String(limit),
+            t: String(Date.now())
+        });
+        const response = await fetch(`${CLOUDFLARE_API}?${params.toString()}`, {
+            cache: 'no-store',
+            headers: { 'Accept': 'application/json' }
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload?.error) {
+            throw new Error(payload?.message || payload?.error || `Candle request failed (${response.status})`);
         }
-
-        let lastError = null;
-        const maxAttempts = 3;
-        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-            try {
-                const history = await fetchMtfCandleHistory(market, frame);
-                const candles = Array.isArray(history?.candles) ? history.candles : [];
-                if (!candles.length) throw new Error(`No validated ${intervalKey} candles were returned.`);
-                const recent = candles.slice(-Math.max(200, limit || CANDLE_LIMIT));
-                if (recent.length < 200 && intervalKey === '1m') {
-                    throw new Error(`Only ${recent.length} ${intervalKey} candles were returned; at least 200 are required for WMA 100/200.`);
-                }
-                return recent;
-            } catch (error) {
-                lastError = error;
-                if (attempt < maxAttempts) {
-                    // Brief retry for transient fetch/network failures. If CORS or
-                    // Worker configuration is wrong, the final error remains visible.
-                    await new Promise(resolve => setTimeout(resolve, 350 * attempt));
-                }
-            }
+        if (!Array.isArray(payload?.bars) || !payload.bars.length) {
+            throw new Error(`No ${intervalKey} candles were returned.`);
         }
-
-        const details = lastError?.message || String(lastError || 'Unknown feed error');
-        if (/failed to fetch|networkerror|load failed|browser could not reach the cloudflare candle feed/i.test(details)) {
-            throw new Error(`The shared Cloudflare candle feed could not be reached after ${maxAttempts} attempts. This is a browser/network-layer failure, commonly caused by a Worker outage, CORS origin mismatch, or opening the HTML outside the hosted HTTPS page. Check the browser Console. (${details})`);
-        }
-        throw new Error(`${intervalKey} candle feed failed after ${maxAttempts} attempts: ${details}`);
+        return payload.bars;
     }
 
     function resetPending(reason) {
@@ -4890,19 +4035,18 @@ setInterval(refreshMultiTimeframePanel, 60000);
         state.pending = null;
     }
 
-    function openPaperPosition(direction, level, confirmCandle, atr, tolerance, entryPrice, market, options = {}) {
+    function openPaperPosition(direction, level, confirmCandle, atr, tolerance, entryPrice, market) {
         if (!Number.isFinite(entryPrice) || entryPrice <= 0) {
-            setMessage('Entry price is unavailable; no demo entry recorded.');
+            setMessage('Live price is unavailable; no demo entry recorded.');
             return false;
         }
-        const isLimitFill = options.mode === 'limit';
         const maxChase = tolerance * 2.5;
-        if (!isLimitFill && direction === 'long' && (entryPrice < level.price || entryPrice - level.price > maxChase)) {
+        if (direction === 'long' && (entryPrice < level.price || entryPrice - level.price > maxChase)) {
             setMessage('Confirmation candle appeared, but price moved too far from support. No chasing; waiting for another setup.');
             logEvent('No entry: confirmation was valid, but price had moved too far from support.');
             return false;
         }
-        if (!isLimitFill && direction === 'short' && (entryPrice > level.price || level.price - entryPrice > maxChase)) {
+        if (direction === 'short' && (entryPrice > level.price || level.price - entryPrice > maxChase)) {
             setMessage('Confirmation candle appeared, but price moved too far from resistance. No chasing; waiting for another setup.');
             logEvent('No entry: confirmation was valid, but price had moved too far from resistance.');
             return false;
@@ -4927,147 +4071,60 @@ setInterval(refreshMultiTimeframePanel, 60000);
         }
 
         const sign = direction === 'long' ? 1 : -1;
-        const riskUsd = Math.max(0.01, Number(state.maxRiskUsd) || DEMO_RISK_USD);
-        const riskSizedQuantity = riskUsd / risk;
-        const maxNotional = Math.max(1, Number(state.tradeAllocationUsd) || 100) * 10;
-        const allocationSizedQuantity = maxNotional / entryPrice;
-        // Respect both the user's allocation (margin × 10 leverage) and the configured stop-risk cap.
-        const quantity = Math.min(riskSizedQuantity, allocationSizedQuantity);
-        const actualRiskUsd = quantity * risk;
-        if (!Number.isFinite(quantity) || quantity <= 0) {
-            setMessage('Simulated position size could not be calculated. No demo entry recorded.');
-            logEvent('No entry: simulated quantity was invalid for the calculated stop distance.');
-            return false;
-        }
         const position = {
             market,
             direction,
             entry: entryPrice,
-            markPrice: entryPrice,
             initialStop: stop,
             activeStop: stop,
             risk,
-            riskUsd: actualRiskUsd,
-            riskCapUsd: riskUsd,
-            quantity,
-            remainingQuantity: quantity,
-            notionalExposureAtEntry: Math.abs(entryPrice * quantity),
-            leverageModel: '10x_paper_model',
-            realizedPnlUsd: 0,
             tp1: entryPrice + sign * risk * 2,
             tp2: entryPrice + sign * risk * 3,
             hitTP1: false,
             realizedR: 0,
-            profitProtectionActive: false,
-            profitProtectionStop: null,
             openedAt: new Date(),
             level: level.price,
-            entryMode: isLimitFill ? 'paper_limit' : 'confirmed_rejection',
-            confirmTime: confirmCandle?.[0] || Date.now()
+            confirmTime: confirmCandle[0]
         };
         state.position = position;
-        state.positionStructureClosed = Array.isArray(state.structureClosed) ? state.structureClosed.slice() : [];
-        state.lastPositionStructureFetch = 0; // refresh from the position market at the next cycle
         state.pending = null;
-        setMessage(isLimitFill
-            ? `Paper ${direction.toUpperCase()} limit filled at ${formatPrice(entryPrice)}. Monitoring simulated stop and targets.`
-            : `Paper ${direction.toUpperCase()} opened after confirmation at ${formatPrice(entryPrice)}. Monitoring simulated stop and targets.`);
-        logEvent(`${marketName(market)} PAPER ${direction.toUpperCase()} ${isLimitFill ? 'LIMIT FILLED' : 'confirmation entry'} at ${formatPrice(entryPrice)}; risk cap $${riskUsd.toFixed(2)}, allocation cap $${Number(state.tradeAllocationUsd).toFixed(2)} margin at 10×, quantity ${fmtQuantity(quantity)}, SL ${formatPrice(stop)}, TP1 ${formatPrice(position.tp1)}, TP2 ${formatPrice(position.tp2)}.`);
+        setMessage(`Paper ${direction.toUpperCase()} opened after confirmation at ${formatPrice(entryPrice)}. Monitoring simulated stop and targets.`);
+        logEvent(`${marketName(market)} PAPER ${direction.toUpperCase()} opened at ${formatPrice(entryPrice)}; SL ${formatPrice(stop)}, TP1 ${formatPrice(position.tp1)}, TP2 ${formatPrice(position.tp2)}.`);
         renderUi();
         return true;
-    }
-
-    function requestAutoEntryRescanAfterClose() {
-        if (!state.autoEntry || !state.enabled || state.position) return;
-        state.autoEntryRescanRequested = true;
-        if (!state.busy) {
-            state.autoEntryRescanRequested = false;
-            Promise.resolve().then(() => {
-                if (state.autoEntry && state.enabled && !state.position) cycle();
-            });
-        }
     }
 
     function closePaperPosition(outcomeR, reason, markPrice) {
         const p = state.position;
         if (!p) return;
-        const cashPnlUsd = outcomeR * p.riskUsd;
         const closed = {
             market: p.market,
             direction: p.direction,
             entry: p.entry,
             exit: markPrice,
             outcomeR,
-            cashPnlUsd,
-            riskUsd: p.riskUsd,
-            notionalExposureAtEntry: Number(p.notionalExposureAtEntry) || Math.abs(Number(p.entry) * Number(p.quantity)),
-            leverageModel: 'not_applied',
             reason,
             openedAt: p.openedAt,
             closedAt: new Date()
         };
         state.closedTrades.push(closed);
         state.netR += outcomeR;
-        state.netPnlUsd += cashPnlUsd;
         if (outcomeR > 0) state.wins++;
         else if (outcomeR < 0) state.losses++;
         state.position = null;
-        state.positionStructureClosed = [];
-        state.lastPositionStructureFetch = 0;
-        state.cooldownUntil = state.autoEntry ? 0 : Date.now() + 60000;
-        setMessage(state.autoEntry ? `Paper trade closed: ${reason}. Result ${fmtR(outcomeR)}. Auto Entry remains enabled and is searching for the next valid setup.` : `Paper trade closed: ${reason}. Result ${fmtR(outcomeR)}. A one-minute cooldown is active.`);
+        state.cooldownUntil = Date.now() + 60000;
+        setMessage(`Paper trade closed: ${reason}. Result ${fmtR(outcomeR)}. A one-minute cooldown is active.`);
         logEvent(`${marketName(p.market)} PAPER trade closed at ${formatPrice(markPrice)}: ${reason}, ${fmtR(outcomeR)}.`);
-        requestAutoEntryRescanAfterClose();
-    }
-
-    function manuallyClosePaperPosition() {
-        const p = state.position;
-        if (!p) { setMessage('There is no open paper position to close.'); renderUi(); return; }
-        const mark = Number(p.markPrice) > 0 ? Number(p.markPrice) : Number(p.entry);
-        const remainingQty = Number.isFinite(Number(p.remainingQuantity)) ? Number(p.remainingQuantity) : Number(p.quantity);
-        const floating = (p.direction === 'long' ? mark - Number(p.entry) : Number(p.entry) - mark) * remainingQty;
-        const cashPnlUsd = (Number(p.realizedPnlUsd) || 0) + floating;
-        const riskUsd = Math.max(0.01, Number(p.riskUsd) || Number(state.maxRiskUsd) || DEMO_RISK_USD);
-        const outcomeR = cashPnlUsd / riskUsd;
-        const closed = {
-            market: p.market, direction: p.direction, entry: Number(p.entry), exit: mark,
-            outcomeR, cashPnlUsd, riskUsd,
-            notionalExposureAtEntry: Number(p.notionalExposureAtEntry) || Math.abs(Number(p.entry) * Number(p.quantity)),
-            leverageModel: '10x_paper_model', reason: 'manual close', openedAt: p.openedAt, closedAt: new Date()
-        };
-        state.closedTrades.push(closed);
-        state.netR += outcomeR;
-        state.netPnlUsd += cashPnlUsd;
-        if (cashPnlUsd > 0) state.wins++; else if (cashPnlUsd < 0) state.losses++;
-        state.position = null;
-        state.positionStructureClosed = [];
-        state.lastPositionStructureFetch = 0;
-        state.cooldownUntil = state.autoEntry ? 0 : Date.now() + 60000;
-        setMessage(state.autoEntry ? `Paper position manually closed at ${formatPrice(mark)}. Realized PnL: ${fmtUsdPnl(cashPnlUsd)}. Auto Entry remains enabled and is searching for the next valid setup.` : `Paper position manually closed at ${formatPrice(mark)}. Realized PnL: ${fmtUsdPnl(cashPnlUsd)}. Added to cumulative closed PnL.`);
-        logEvent(`${marketName(p.market)} PAPER ${p.direction.toUpperCase()} manually closed at ${formatPrice(mark)}; realized ${fmtUsdPnl(cashPnlUsd)} (${fmtR(outcomeR)}).`);
-        requestAutoEntryRescanAfterClose();
-        renderUi();
     }
 
     function managePaperPosition(markPrice) {
         const p = state.position;
         if (!p || !Number.isFinite(markPrice) || markPrice <= 0) return;
-        p.markPrice = markPrice;
-        p.lastMarkTime = Date.now();
-
         const stopHit = p.direction === 'long' ? markPrice <= p.activeStop : markPrice >= p.activeStop;
         if (stopHit) {
-            if (!p.hitTP1 && p.profitProtectionActive) {
-                // Simulate a stop fill at the configured stop price (no gap/slippage model).
-                const stopFill = Number(p.activeStop);
-                const grossPnl = (p.direction === 'long' ? stopFill - p.entry : p.entry - stopFill) * p.quantity;
-                const riskUsd = Math.max(0.01, Number(p.riskUsd) || DEMO_RISK_USD);
-                closePaperPosition(grossPnl / riskUsd, 'pre-TP1 fee-covering profit stop reached', stopFill);
-            } else {
-                const outcome = p.hitTP1 ? p.realizedR : -1;
-                const reason = p.hitTP1 ? 'runner stopped at breakeven after TP1' : 'initial stop reached';
-                closePaperPosition(outcome, reason, markPrice);
-            }
+            const outcome = p.hitTP1 ? p.realizedR : -1;
+            const reason = p.hitTP1 ? 'runner stopped at breakeven after TP1' : 'initial stop reached';
+            closePaperPosition(outcome, reason, markPrice);
             return;
         }
 
@@ -5075,41 +4132,9 @@ setInterval(refreshMultiTimeframePanel, 60000);
         if (!p.hitTP1 && tp1Hit) {
             p.hitTP1 = true;
             p.realizedR = 1; // Half of the simulated position exits at +2R.
-            p.realizedPnlUsd = p.riskUsd; // 50% closed at +2R books +1R of the initial cash risk.
-            p.remainingQuantity = p.quantity / 2;
-            p.activeStop = p.entry; // Existing runner stop rule remains unchanged after TP1.
-            p.profitProtectionActive = false;
-            logEvent(`TP1 reached: simulated 50% exit at +2R; runner stop moved to breakeven ${formatPrice(p.entry)}.`);
+            p.activeStop = p.entry; // Remaining half moves to breakeven.
+            logEvent(`TP1 reached: simulated 50% exit at +2R; runner stop moved to entry ${formatPrice(p.entry)}.`);
             setMessage('TP1 reached. Half the paper position is booked at +2R; the remaining half has its stop at entry.');
-        }
-
-        // Before TP1, activate once the open gross profit can cover estimated entry + exit fees
-        // and a small net buffer. The stop is placed to preserve that amount if revisited.
-        if (state.autoPreTp1Protection && !p.hitTP1 && !p.profitProtectionActive) {
-            const qty = Number(p.quantity);
-            const feeRate = Math.max(0, Math.min(1, Number(state.assumedFeeRatePct) || 0)) / 100;
-            const grossOpenPnl = (p.direction === 'long' ? markPrice - p.entry : p.entry - markPrice) * qty;
-            const entryFee = Math.abs(p.entry * qty) * feeRate;
-            const exitFeeAtMark = Math.abs(markPrice * qty) * feeRate;
-            const estimatedRoundTripFees = entryFee + exitFeeAtMark;
-            const smallNetBuffer = Math.max(0.05, estimatedRoundTripFees * 0.10);
-            if (grossOpenPnl >= estimatedRoundTripFees + smallNetBuffer && qty > 0) {
-                let protectedStop;
-                if (p.direction === 'long') {
-                    protectedStop = (p.entry * qty + entryFee + smallNetBuffer) / (qty * (1 - feeRate));
-                } else {
-                    protectedStop = (p.entry * qty - entryFee - smallNetBuffer) / (qty * (1 + feeRate));
-                }
-                const validStop = Number.isFinite(protectedStop) && protectedStop > 0 &&
-                    (p.direction === 'long' ? protectedStop > p.entry && protectedStop < markPrice : protectedStop < p.entry && protectedStop > markPrice);
-                if (validStop) {
-                    p.activeStop = protectedStop;
-                    p.profitProtectionStop = protectedStop;
-                    p.profitProtectionActive = true;
-                    logEvent(`Pre-TP1 profit protection activated: stop moved to ${formatPrice(protectedStop)} to cover estimated round-trip fees plus a small buffer (assumed fee ${feeRate * 100}% per side).`);
-                    setMessage(`Pre-TP1 profit protection ACTIVE. Stop moved to ${formatPrice(protectedStop)} to target estimated round-trip fee coverage plus a small net buffer.`);
-                }
-            }
         }
 
         const tp2Hit = p.direction === 'long' ? markPrice >= p.tp2 : markPrice <= p.tp2;
@@ -5148,85 +4173,15 @@ setInterval(refreshMultiTimeframePanel, 60000);
         state.busy = true;
         try {
             // Manage an existing paper position first, even if new entries were paused.
-            // Refresh structure relative to the latest mark while a trade is open. Without this,
-            // levels from the entry-time price can remain displayed after price moves through them.
             if (state.position) {
-                const positionMarket = state.position.market;
                 let mark = null;
-                if (selectedMarket === positionMarket && Number.isFinite(currentPrice) && currentPrice > 0) {
+                if (selectedMarket === state.position.market && Number.isFinite(currentPrice) && currentPrice > 0) {
                     mark = currentPrice;
                 } else {
-                    mark = await fetchPriceForMarket(positionMarket);
+                    mark = await fetchPriceForMarket(state.position.market);
                 }
                 managePaperPosition(mark);
-
-                if (state.position) {
-                    try {
-                        const now = Date.now();
-                        if (!state.positionStructureClosed.length || now - state.lastPositionStructureFetch >= STRUCTURE_REFRESH_MS) {
-                            const all15m = await fetchDemoBars(positionMarket, '15m', STRUCTURE_INTERVAL_MINUTES, CANDLE_LIMIT);
-                            if (state.position && state.position.market === positionMarket) {
-                                const closed15m = all15m.filter(c => c[6] !== true);
-                                if (closed15m.length) {
-                                    state.positionStructureClosed = closed15m;
-                                    state.lastPositionStructureFetch = Date.now();
-                                }
-                            }
-                        }
-                    } catch (levelError) {
-                        // Continue managing the paper position if structure refresh fails.
-                        // The cached swing candles are still re-filtered against the latest price below,
-                        // so a previously valid support cannot stay displayed above the current market.
-                        console.warn('Paper-position structure refresh failed:', levelError);
-                    }
-
-                    const positionStructure = state.positionStructureClosed.length
-                        ? state.positionStructureClosed
-                        : state.structureClosed;
-                    state.levels = findStableSwingLevels(positionStructure, mark, 0, state.levels, state.levelsMarket, positionMarket);
-                    state.levelsMarket = positionMarket;
-                }
-
-                // Keep the robot's 1-minute WMA status current while an existing position is open.
-                // Previously, the early return below skipped 1m candles during position management,
-                // leaving the panel as "Unavailable" even when the data feed was healthy.
-                if (state.position) {
-                    try {
-                        const now = Date.now();
-                        if (!state.confirmAll.length || now - state.lastConfirmFetch >= CONFIRM_REFRESH_MS) {
-                            const all1m = await fetchDemoBars(positionMarket, '1m', CONFIRM_INTERVAL_MINUTES, CANDLE_LIMIT);
-                            if (state.position && state.position.market === positionMarket) {
-                                state.confirmAll = all1m;
-                                state.confirmClosed = all1m.filter(c => c[6] !== true);
-                                state.lastConfirmFetch = Date.now();
-                                if (state.confirmClosed.length >= 200) {
-                                    state.trend = calcTrend(state.confirmClosed);
-                                } else {
-                                    state.trend = { direction: 'neutral', label: `Need 200 closed 1m bars (${state.confirmClosed.length} available)` };
-                                }
-                            }
-                        }
-                    } catch (trendError) {
-                        state.trend = { direction: 'neutral', label: 'Unavailable (1m candle feed failed)' };
-                        console.warn('1-minute WMA refresh while managing paper position failed:', trendError);
-                    }
-
-                    // Explicitly explain why a saved LONG may coexist with a current SHORT signal:
-                    // a signal change does not auto-close or reverse an already-open paper position.
-                    // Only one position is allowed, and no new entry is scanned until it closes.
-                    if (state.position) {
-                        const openDirection = state.position.direction;
-                        const currentSignalDirection = directionFromSignal(lastScalpSignal);
-                        const oppositeSignal = currentSignalDirection && currentSignalDirection !== openDirection;
-                        const trendLabel = state.trend ? state.trend.label : 'Unavailable';
-                        setMessage(oppositeSignal
-                            ? `Managing existing PAPER ${openDirection.toUpperCase()} opened at ${formatPrice(state.position.entry)}. Current dashboard ECI is ${lastScalpSignal}, opposite to this position; signals do not auto-close or reverse an open trade. No new entry will be considered until this position closes. 1m WMA: ${trendLabel}.`
-                            : `Managing existing PAPER ${openDirection.toUpperCase()} opened at ${formatPrice(state.position.entry)}. Current dashboard ECI: ${lastScalpSignal || 'No active signal'}. 1m WMA: ${trendLabel}. The position remains subject to its simulated stop/targets; no second position is opened.`);
-                    }
-                }
                 if (state.position || !state.enabled) return;
-                // The position closed during this cycle; this pass can immediately resume Auto Entry.
-                state.autoEntryRescanRequested = false;
             }
 
             if (!state.enabled) return;
@@ -5244,14 +4199,16 @@ setInterval(refreshMultiTimeframePanel, 60000);
 
             const now = Date.now();
             if (!state.confirmAll.length || now - state.lastConfirmFetch >= CONFIRM_REFRESH_MS) {
-                state.confirmAll = await fetchDemoBars(market, '1m', CONFIRM_INTERVAL_MINUTES, CANDLE_LIMIT);
+                const raw1m = await fetchDemoBars(market, '1m', CONFIRM_INTERVAL_MINUTES, CANDLE_LIMIT);
                 if (market !== selectedMarket) return;
+                state.confirmAll = marketBarsToCandles(raw1m, CONFIRM_INTERVAL_MINUTES);
                 state.confirmClosed = state.confirmAll.filter(c => c[6] !== true);
                 state.lastConfirmFetch = Date.now();
             }
             if (!state.structureClosed.length || Date.now() - state.lastStructureFetch >= STRUCTURE_REFRESH_MS) {
-                const all15m = await fetchDemoBars(market, '15m', STRUCTURE_INTERVAL_MINUTES, CANDLE_LIMIT);
+                const raw15m = await fetchDemoBars(market, '15m', STRUCTURE_INTERVAL_MINUTES, CANDLE_LIMIT);
                 if (market !== selectedMarket) return;
+                const all15m = marketBarsToCandles(raw15m, STRUCTURE_INTERVAL_MINUTES);
                 state.structureClosed = all15m.filter(c => c[6] !== true);
                 state.lastStructureFetch = Date.now();
             }
@@ -5273,125 +4230,27 @@ setInterval(refreshMultiTimeframePanel, 60000);
             state.trend = trend;
             const atr = averageTrueRange(state.confirmClosed, 14);
             const tolerance = Math.max(price * 0.00025, Number.isFinite(atr) ? atr * 0.35 : 0);
-            const levels = findStableSwingLevels(state.structureClosed, price, tolerance, state.levels, state.levelsMarket, market);
+            const levels = findSwingLevels(state.structureClosed, price, tolerance);
             state.levels = levels;
-            state.levelsMarket = market;
 
             const signalDirection = directionFromSignal(lastScalpSignal);
             const latestClosed = state.confirmClosed[state.confirmClosed.length - 1];
             const previousClosed = state.confirmClosed[state.confirmClosed.length - 2];
 
-            // Force Limit Entry: use the close of a fully closed 5-minute candle as the limit price.
-            // A refresh request waits for the next 5-minute candle to finish before recalculating.
-            if (state.forceLimitRequest && !state.position && !state.pending) {
-                const request = state.forceLimitRequest;
-                if (request.market !== market) {
-                    state.forceLimitRequest = null;
-                    setMessage('Force Limit Entry request cancelled because the selected market changed.');
-                } else if (Date.now() - request.requestedAt > MAX_LIMIT_PENDING_MINUTES * 60000) {
-                    state.forceLimitRequest = null;
-                    setMessage('Force Limit Entry request expired before a valid 5-minute candle was available. Click refresh to try again.');
-                } else if (!signalDirection || signalDirection !== trend.direction) {
-                    if (state.autoEntry && state.forceLimitMode) {
-                        setMessage('Auto Entry is waiting for the dashboard ECI and 1-minute WMA to agree before setting a limit.');
-                    } else {
-                        state.forceLimitRequest = null;
-                        setMessage('Force Limit Entry cancelled: dashboard ECI and 1-minute WMA must agree in the same direction.');
-                        logEvent('Force Limit Entry request cancelled because ECI/WMA direction did not agree.');
-                    }
-                } else if (request.direction && request.direction !== signalDirection) {
-                    if (state.autoEntry && state.forceLimitMode) {
-                        request.direction = signalDirection;
-                        request.requestedAt = Date.now();
-                        request.minCandleTime = Math.floor(Date.now() / 300000) * 300000;
-                        setMessage('Auto Entry direction updated. Waiting for the next fully closed 5-minute candle.');
-                    } else {
-                        state.forceLimitRequest = null;
-                        setMessage('Force Limit Entry cancelled because the dashboard direction changed. Click refresh to try again.');
-                        logEvent('Force Limit Entry request cancelled after dashboard direction changed.');
-                    }
-                } else if (request.minCandleTime !== null && request.minCandleTime !== undefined && Date.now() < request.minCandleTime + 300000) {
-                    setMessage('Force Limit Entry is waiting for the current 5-minute candle to close before setting the refreshed entry price.');
-                } else {
-                    const all5m = await fetchDemoBars(market, '5m', 5, CANDLE_LIMIT);
-                    const closed5m = all5m.filter(c => c[6] !== true);
-                    const candle5m = closed5m[closed5m.length - 1];
-                    const candleReady = candle5m && (request.minCandleTime === null || request.minCandleTime === undefined || candle5m[0] >= request.minCandleTime);
-                    if (!candleReady) {
-                        setMessage('Force Limit Entry is waiting for the next 5-minute candle to close before setting the refreshed entry price.');
-                    } else {
-                        const level = signalDirection === 'long' ? levels.support : levels.resistance;
-                        if (!level) {
-                            state.forceLimitRequest = null;
-                            setMessage(`Force Limit Entry cancelled: no confirmed ${signalDirection === 'long' ? 'support' : 'resistance'} is available for the existing stop logic.`);
-                        } else {
-                            const limitPrice = Number(candle5m[4]);
-                            const correctSide = Number.isFinite(limitPrice) && limitPrice > 0 && (signalDirection === 'long' ? limitPrice < price : limitPrice > price);
-                            if (!correctSide) {
-                                if (state.autoEntry && state.forceLimitMode) {
-                                    state.forceLimitRequest = {
-                                        market, direction: signalDirection, requestedAt: Date.now(),
-                                        minCandleTime: Math.floor(Date.now() / 300000) * 300000,
-                                        automatic: true
-                                    };
-                                    setMessage(`The last closed 5-minute candle close (${formatPrice(limitPrice)}) is not a valid waiting-side limit at current price (${formatPrice(price)}). Auto Entry will retry after the next 5-minute candle closes.`);
-                                } else {
-                                    state.forceLimitRequest = null;
-                                    setMessage(`Force Limit Entry not placed: the previous closed 5-minute candle close (${formatPrice(limitPrice)}) is not on the waiting side of current price (${formatPrice(price)}). Click refresh after another 5-minute candle closes.`);
-                                }
-                                logEvent(`Force Limit Entry skipped: candle-close price ${formatPrice(limitPrice)} was already crossed or not a valid ${signalDirection.toUpperCase()} limit relative to ${formatPrice(price)}.`);
-                            } else {
-                                state.pending = {
-                                    kind: 'force-limit', market, direction: signalDirection, level,
-                                    limitPrice, tolerance, atr, startedAt: Date.now(),
-                                    triggerCandleTime: null, lastEvaluatedTime: null,
-                                    sourceCandleTime: candle5m[0]
-                                };
-                                state.forceLimitRequest = null;
-                                logEvent(`${marketName(market)} PAPER ${signalDirection.toUpperCase()} LIMIT pending at ${formatPrice(limitPrice)} using the previous closed 5-minute candle close. Structure reference remains ${level.type.toLowerCase()} ${formatPrice(level.price)}. Expires in ${MAX_LIMIT_PENDING_MINUTES} minutes unless signals change or the level invalidates.`);
-                                setMessage(`Paper ${signalDirection.toUpperCase()} Force Limit Entry pending at ${formatPrice(limitPrice)}, based on the previous closed 5-minute candle. Waiting for price to touch the limit.`);
-                            }
-                        }
-                    }
-                }
-            }
-
             if (state.pending) {
                 const pending = state.pending;
-                const isLimitOrder = pending.kind === 'limit' || pending.kind === 'force-limit';
-                const maxAgeMinutes = isLimitOrder ? MAX_LIMIT_PENDING_MINUTES : MAX_PENDING_MINUTES;
                 if (pending.market !== market) {
                     resetPending('market changed');
-                } else if (Date.now() - pending.startedAt > maxAgeMinutes * 60000) {
-                    const expiredForceLimit = pending.kind === 'force-limit';
-                    resetPending(isLimitOrder ? 'paper limit order expired after 30 minutes' : 'no confirmation within five minutes');
-                    if (expiredForceLimit && state.autoEntry && state.forceLimitMode) {
-                        state.forceLimitRequest = {
-                            market, direction: signalDirection || pending.direction, requestedAt: Date.now(),
-                            minCandleTime: Math.floor(Date.now() / 300000) * 300000,
-                            automatic: true
-                        };
-                        setMessage('Force limit expired without a fill. Auto Entry is waiting for the next fully closed 5-minute candle to set a new limit.');
-                        savePersistentState();
-                    }
+                } else if (Date.now() - pending.startedAt > MAX_PENDING_MINUTES * 60000) {
+                    resetPending('no confirmation within five minutes');
                 } else if (signalDirection !== pending.direction) {
                     resetPending('dashboard ECI direction no longer matches the setup');
-                } else if (trend.direction !== pending.direction) {
-                    resetPending('1-minute WMA trend no longer agrees or became neutral');
-                } else if (isLimitOrder && latestClosed && ((pending.direction === 'long' && latestClosed[4] < pending.level.price - pending.tolerance) || (pending.direction === 'short' && latestClosed[4] > pending.level.price + pending.tolerance))) {
-                    resetPending('the last closed 1-minute candle invalidated the support/resistance level');
-                } else if (!isLimitOrder && pending.direction === 'long' && price < pending.level.price - pending.tolerance * 1.5) {
+                } else if (trend.direction !== 'neutral' && trend.direction !== pending.direction) {
+                    resetPending('1-minute WMA trend no longer agrees');
+                } else if (pending.direction === 'long' && price < pending.level.price - pending.tolerance * 1.5) {
                     resetPending('price broke below support');
-                } else if (!isLimitOrder && pending.direction === 'short' && price > pending.level.price + pending.tolerance * 1.5) {
+                } else if (pending.direction === 'short' && price > pending.level.price + pending.tolerance * 1.5) {
                     resetPending('price broke above resistance');
-                } else if (isLimitOrder && pending.direction === 'long' && price <= pending.limitPrice) {
-                    const opened = openPaperPosition('long', pending.level, latestClosed, pending.atr || atr, pending.tolerance, pending.limitPrice, market, { mode: 'limit' });
-                    if (!opened) state.pending = null;
-                } else if (isLimitOrder && pending.direction === 'short' && price >= pending.limitPrice) {
-                    const opened = openPaperPosition('short', pending.level, latestClosed, pending.atr || atr, pending.tolerance, pending.limitPrice, market, { mode: 'limit' });
-                    if (!opened) state.pending = null;
-                } else if (isLimitOrder) {
-                    setMessage(`Paper ${pending.direction.toUpperCase()} limit order waiting at ${formatPrice(pending.limitPrice)} (${MAX_LIMIT_PENDING_MINUTES - Math.floor((Date.now() - pending.startedAt) / 60000)} min max).`);
                 } else if (latestClosed && latestClosed[0] >= pending.triggerCandleTime && latestClosed[0] !== pending.lastEvaluatedTime) {
                     pending.lastEvaluatedTime = latestClosed[0];
                     if (candleConfirms(pending.direction, latestClosed, previousClosed, pending.level, pending.tolerance)) {
@@ -5405,20 +4264,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 }
             } else {
                 const aligned = signalDirection && signalDirection === trend.direction;
-                if (state.autoEntry && state.forceLimitMode && !state.forceLimitRequest && !state.position) {
-                    state.forceLimitRequest = {
-                        market, direction: signalDirection || null, requestedAt: Date.now(),
-                        minCandleTime: null, automatic: true
-                    };
-                    savePersistentState();
-                }
-                if (state.forceLimitRequest) {
-                    setMessage('Force Limit Entry request is active. Waiting for a valid completed 5-minute candle and aligned direction.');
-                } else if (state.forceLimitMode && state.autoEntry) {
-                    setMessage('Auto Entry is enabled. The bot is preparing a limit from the previous closed 5-minute candle and will retry after expiry.');
-                } else if (state.forceLimitMode) {
-                    setMessage('Force Limit Entry is enabled. Click “Force / Refresh Limit Entry” to set a limit from the previous closed 5-minute candle; no market entry will be chased.');
-                } else if (Date.now() < state.cooldownUntil) {
+                if (Date.now() < state.cooldownUntil) {
                     setMessage('Cooling down after the last paper trade. Waiting before looking for another setup.');
                 } else if (!signalDirection) {
                     setMessage('Waiting for an active Buy Long or Sell Short signal from the dashboard ECI.');
@@ -5430,33 +4276,20 @@ setInterval(refreshMultiTimeframePanel, 60000);
                     const level = signalDirection === 'long' ? levels.support : levels.resistance;
                     if (!level) {
                         setMessage(`No confirmed ${signalDirection === 'long' ? 'support' : 'resistance'} is available in closed 15-minute swing candles. No level is invented.`);
-                    } else if (state.limitMode) {
-                        const overrideRaw = String(state.limitPriceOverride || '').trim();
-                        const limitPrice = overrideRaw ? Number(overrideRaw) : Number(level.price);
-                        const correctSide = Number.isFinite(limitPrice) && (signalDirection === 'long' ? limitPrice < price : limitPrice > price);
-                        const maxLevelAdjust = Math.max((Number.isFinite(atr) ? atr : 0) * 1.5, price * 0.0005);
-                        const nearStructure = Math.abs(limitPrice - level.price) <= maxLevelAdjust;
-                        if (!correctSide) {
-                            setMessage(`Limit price must be ${signalDirection === 'long' ? 'below' : 'above'} current market price ${formatPrice(price)}. No paper order placed.`);
-                        } else if (!nearStructure) {
-                            setMessage(`Limit override is too far from the confirmed ${level.type.toLowerCase()}. Keep it within ${formatPrice(maxLevelAdjust)} of ${formatPrice(level.price)}, or use the nearest level.`);
-                        } else {
-                            state.pending = {
-                                kind: 'limit', market, direction: signalDirection, level,
-                                limitPrice, tolerance, atr, startedAt: Date.now(),
-                                triggerCandleTime: null, lastEvaluatedTime: null
-                            };
-                            logEvent(`${marketName(market)} PAPER ${signalDirection.toUpperCase()} LIMIT pending at ${formatPrice(limitPrice)} using ${level.type.toLowerCase()} ${formatPrice(level.price)}. Expires in ${MAX_LIMIT_PENDING_MINUTES} minutes unless signals change or level invalidates.`);
-                            setMessage(`Paper ${signalDirection.toUpperCase()} limit order pending at ${formatPrice(limitPrice)} (${overrideRaw ? 'manual override' : 'nearest confirmed level'}). Waiting for price to touch the limit.`);
-                        }
                     } else if (Math.abs(price - level.price) <= tolerance) {
                         const triggerTime = currentCandleStartTime();
                         if (triggerTime === null) {
                             setMessage('Price reached the structure level, but the current 1-minute candle time is unavailable.');
                         } else {
                             state.pending = {
-                                kind: 'confirmation', market, direction: signalDirection, level, tolerance, atr,
-                                startedAt: Date.now(), triggerCandleTime: triggerTime, lastEvaluatedTime: null
+                                market,
+                                direction: signalDirection,
+                                level,
+                                tolerance,
+                                atr,
+                                startedAt: Date.now(),
+                                triggerCandleTime: triggerTime,
+                                lastEvaluatedTime: null
                             };
                             logEvent(`${marketName(market)} touched ${signalDirection === 'long' ? 'support' : 'resistance'} at ${formatPrice(level.price)}. Waiting for a closed 1-minute confirmation candle.`);
                             setMessage(`Price reached ${signalDirection === 'long' ? 'support' : 'resistance'} at ${formatPrice(level.price)}. Waiting for a closed 1-minute confirmation candle.`);
@@ -5469,15 +4302,8 @@ setInterval(refreshMultiTimeframePanel, 60000);
         } catch (error) {
             setMessage(`Demo data error: ${error?.message || String(error)} No real orders were sent.`);
         } finally {
-            const shouldRescanAfterClose = state.autoEntryRescanRequested;
-            state.autoEntryRescanRequested = false;
             state.busy = false;
             renderUi();
-            if (shouldRescanAfterClose && state.autoEntry && state.enabled && !state.position) {
-                Promise.resolve().then(() => {
-                    if (state.autoEntry && state.enabled && !state.position) cycle();
-                });
-            }
         }
     }
 
@@ -5504,39 +4330,6 @@ setInterval(refreshMultiTimeframePanel, 60000);
         renderUi();
     }
 
-    function exportHistoryCsv() {
-        if (!state.closedTrades.length) {
-            setMessage('There are no closed paper trades to export yet.');
-            renderUi();
-            return;
-        }
-        const headers = ['Closed At', 'Market', 'Direction', 'Entry', 'Exit', 'Entry Notional USD', 'Leverage Model', 'Result R', 'Net PnL USD', 'Reason'];
-        const csvCell = value => `"${String(value ?? '').replace(/"/g, '""')}"`;
-        const rows = state.closedTrades.map(trade => [
-            parseDate(trade.closedAt).toISOString(),
-            marketName(trade.market),
-            String(trade.direction || '').toUpperCase(),
-            Number(trade.entry),
-            Number(trade.exit),
-            Number(trade.notionalExposureAtEntry) || 0,
-            '10× (paper model)',
-            Number(trade.outcomeR) || 0,
-            Number(trade.cashPnlUsd) || 0,
-            String(trade.reason || '')
-        ]);
-        const csv = [headers, ...rows].map(row => row.map(csvCell).join(',')).join('\r\n');
-        const blob = new Blob(['\ufeff', csv], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const anchor = document.createElement('a');
-        anchor.href = url;
-        anchor.download = `paper-trade-history-${new Date().toISOString().slice(0, 10)}.csv`;
-        document.body.append(anchor);
-        anchor.click();
-        anchor.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
-        logEvent(`Exported ${state.closedTrades.length} closed paper trades to CSV.`);
-    }
-
     function clearLog() {
         state.logs = [];
         renderLog();
@@ -5545,238 +4338,11 @@ setInterval(refreshMultiTimeframePanel, 60000);
 
     const toggle = $('demoRobotToggle');
     if (toggle) toggle.addEventListener('click', toggleRobot);
-    const closePositionButton = $('demoRobotClosePosition');
-    if (closePositionButton) closePositionButton.addEventListener('click', () => {
-        if (!state.position) return;
-        if (window.confirm('Close this PAPER position at the latest available mark and add its PnL to closed results?')) manuallyClosePaperPosition();
-    });
-    const bindNumericSetting = (id, key, minValue) => {
-        const input = $(id); if (!input) return;
-        input.addEventListener('change', () => {
-            const value = Number(input.value);
-            if (!Number.isFinite(value) || value < minValue) {
-                input.value = String(state[key]);
-                setMessage(`Enter a valid value of at least ${minValue} for ${input.previousElementSibling?.textContent || key}.`);
-                return;
-            }
-            state[key] = value;
-            savePersistentState();
-            renderUi();
-            logEvent(`${key === 'startingFundingUsd' ? 'Starting demo funding' : key === 'tradeAllocationUsd' ? 'Trade allocation / margin' : 'Maximum initial stop risk'} set to $${value.toFixed(2)}.`);
-        });
-    };
-    bindNumericSetting('demoRobotFunding', 'startingFundingUsd', 1);
-    bindNumericSetting('demoRobotAllocation', 'tradeAllocationUsd', 1);
-    bindNumericSetting('demoRobotRisk', 'maxRiskUsd', 0.01);
-    const feeRateInput = $('demoRobotFeeRate');
-    if (feeRateInput) feeRateInput.addEventListener('change', () => {
-        const value = Number(feeRateInput.value);
-        if (!Number.isFinite(value) || value < 0 || value > 1) {
-            feeRateInput.value = String(state.assumedFeeRatePct);
-            setMessage('Estimated fee per side must be between 0% and 1%.');
-            return;
-        }
-        state.assumedFeeRatePct = value;
-        savePersistentState();
-        renderUi();
-        logEvent(`Estimated trading fee assumption set to ${value.toFixed(3)}% per side. Confirm this against your exchange fee tier.`);
-    });
-    const forceLimitModeInput = $('demoRobotForceLimitMode');
-    const autoEntryInput = $('demoRobotAutoEntry');
-    const forceLimitRefreshButton = $('demoRobotForceLimitRefresh');
-    if (autoEntryInput) {
-        autoEntryInput.addEventListener('change', () => {
-            state.autoEntry = Boolean(autoEntryInput.checked);
-            if (!state.autoEntry && state.forceLimitRequest?.automatic) {
-                state.forceLimitRequest = null;
-                setMessage('Auto Entry disabled. Existing open positions and pending limits remain managed; no automatic retry will be started.');
-                logEvent('Auto Entry disabled; automatic limit retry cancelled.');
-            } else if (state.autoEntry) {
-                state.cooldownUntil = 0;
-                setMessage(state.forceLimitMode
-                    ? 'Auto Entry enabled. The bot will automatically create and refresh 5-minute-candle limit attempts.'
-                    : 'Auto Entry enabled. The bot will scan for the next valid setup after a trade closes.');
-                logEvent('Auto Entry enabled.');
-            } else {
-                setMessage('Auto Entry disabled. Existing paper-trading settings remain unchanged.');
-                logEvent('Auto Entry disabled.');
-            }
-            savePersistentState(); renderUi();
-            if (state.autoEntry && state.enabled) cycle();
-        });
-    }
-    const preTp1ProtectionInput = $('demoRobotAutoPreTp1Protection');
-    if (preTp1ProtectionInput) {
-        preTp1ProtectionInput.addEventListener('change', () => {
-            const enabling = Boolean(preTp1ProtectionInput.checked);
-            if (!enabling) {
-                const warning = 'WARNING: You are about to disable automatic pre-TP1 profit protection.\n\nThe bot will no longer move the stop to cover estimated round-trip fees plus a small buffer before TP1. If protection is already active on the open paper trade, its stop will return to the original stop loss, so ordinary price movement will not trigger the tighter fee-covering stop. This also means open profit can be given back and the trade may reach its original stop loss.\n\nTP1 and the post-TP1 breakeven rule are unchanged. This affects paper-trading logic only.\n\nDisable Auto Pre-TP1 Protection?';
-                if (!window.confirm(warning)) {
-                    preTp1ProtectionInput.checked = true;
-                    return;
-                }
-            }
-            state.autoPreTp1Protection = enabling;
-            if (!enabling && state.position && !state.position.hitTP1 && state.position.profitProtectionActive) {
-                state.position.activeStop = Number(state.position.initialStop);
-                state.position.profitProtectionActive = false;
-                state.position.profitProtectionStop = null;
-                logEvent('Auto Pre-TP1 Protection disabled by user; active stop returned to the original stop loss for the open paper position.');
-                setMessage('Auto Pre-TP1 Protection is OFF. The open paper trade is back to its original stop loss until TP1 or the original stop is reached.');
-            } else if (enabling) {
-                logEvent('Auto Pre-TP1 Protection enabled.');
-                setMessage('Auto Pre-TP1 Protection is ON. It may activate before TP1 when open profit covers estimated fees plus a small buffer.');
-            } else {
-                logEvent('Auto Pre-TP1 Protection disabled by user.');
-                setMessage('Auto Pre-TP1 Protection is OFF for the current and future pre-TP1 paper trade management.');
-            }
-            savePersistentState();
-            renderUi();
-        });
-    }
-
-    function requestForceLimitEntry(waitForNextCandle) {
-        if (!state.forceLimitMode) {
-            setMessage('Enable Force Limit Entry first.'); renderUi(); return;
-        }
-        if (state.position) {
-            setMessage('Force Limit Entry is unavailable while a paper position is open. Manage or close the current position first.'); renderUi(); return;
-        }
-        if (state.pending && state.pending.kind !== 'force-limit') {
-            setMessage('Cancel or finish the existing pending setup before using Force Limit Entry.'); renderUi(); return;
-        }
-        if (state.pending?.kind === 'force-limit') resetPending('force limit entry refreshed by user');
-        const direction = directionFromSignal(lastScalpSignal);
-        if (!direction) {
-            setMessage('Force Limit Entry needs an active dashboard Buy Long or Sell Short signal.'); renderUi(); return;
-        }
-        const now = Date.now();
-        state.forceLimitRequest = {
-            market: selectedMarket,
-            direction,
-            requestedAt: now,
-            // For a refresh, wait for a candle whose start is at/after the currently forming 5m bucket.
-            minCandleTime: waitForNextCandle ? Math.floor(now / 300000) * 300000 : null
-        };
-        savePersistentState();
-        setMessage(waitForNextCandle
-            ? 'Refresh requested. Waiting for the current 5-minute candle to close before setting a new limit.'
-            : 'Force Limit Entry requested. Preparing a limit from the latest closed 5-minute candle.');
-        logEvent(waitForNextCandle
-            ? 'Force Limit Entry refresh requested; waiting for the next 5-minute candle close.'
-            : 'Force Limit Entry enabled; using the latest fully closed 5-minute candle for the first limit.');
-        renderUi();
-        cycle();
-    }
-    if (forceLimitModeInput) {
-        forceLimitModeInput.addEventListener('change', () => {
-            const enabled = Boolean(forceLimitModeInput.checked);
-            if (enabled && (!state.enabled || state.position || state.pending || state.limitMode)) {
-                forceLimitModeInput.checked = false;
-                setMessage(!state.enabled ? 'Start the Demo Robot before enabling Force Limit Entry.' : state.position ? 'Close the open paper position before enabling Force Limit Entry.' : state.pending ? 'Finish or cancel the existing pending setup before enabling Force Limit Entry.' : 'Turn off Optional Paper Limit Entry Mode before enabling Force Limit Entry.');
-                renderUi(); return;
-            }
-            state.forceLimitMode = enabled;
-            if (!enabled) {
-                state.forceLimitRequest = null;
-                if (state.pending?.kind === 'force-limit') resetPending('Force Limit Entry was switched off');
-                setMessage('Force Limit Entry disabled. The standard entry strategy is active.');
-                logEvent('Force Limit Entry disabled.');
-            } else {
-                logEvent('Force Limit Entry enabled.');
-                requestForceLimitEntry(false);
-                return;
-            }
-            savePersistentState(); renderUi();
-        });
-    }
-    if (forceLimitRefreshButton) forceLimitRefreshButton.addEventListener('click', () => requestForceLimitEntry(true));
-
-    const limitModeInput = $('demoRobotLimitMode');
-    if (limitModeInput) {
-        limitModeInput.addEventListener('change', () => {
-            if (limitModeInput.checked && state.forceLimitMode) {
-                limitModeInput.checked = false;
-                setMessage('Turn off Force Limit Entry before enabling Optional Paper Limit Entry Mode.');
-                renderUi(); return;
-            }
-            state.limitMode = Boolean(limitModeInput.checked);
-            if (!state.limitMode && state.pending?.kind === 'limit') resetPending('paper limit-entry mode was switched off');
-            logEvent(state.limitMode
-                ? 'Paper limit-entry mode enabled. The robot will use a limit at confirmed support/resistance; no real orders are sent.'
-                : 'Paper limit-entry mode disabled. The standard closed-candle confirmation rule is active.');
-            setMessage(state.limitMode
-                ? 'Paper limit-entry mode is ON. ECI and 1-minute WMA must still agree; limit orders are simulated only.'
-                : 'Paper limit-entry mode is OFF. Standard rejection-candle confirmation remains active.');
-            renderUi();
-        });
-    }
-    const limitPriceInput = $('demoRobotLimitPrice');
-    if (limitPriceInput) {
-        limitPriceInput.addEventListener('input', () => {
-            state.limitPriceOverride = String(limitPriceInput.value || '').trim();
-            savePersistentState();
-        });
-    }
-    const nearestButton = $('demoRobotUseNearest');
-    if (nearestButton) nearestButton.addEventListener('click', () => {
-        state.limitPriceOverride = '';
-        if (limitPriceInput) limitPriceInput.value = '';
-        savePersistentState();
-        setMessage('Limit override cleared. Paper limit entries will use the nearest confirmed support/resistance.');
-        renderUi();
-    });
     const clear = $('demoRobotClearLog');
     if (clear) clear.addEventListener('click', clearLog);
-    const exportButton = $('demoRobotExportHistory');
-    if (exportButton) exportButton.addEventListener('click', exportHistoryCsv);
 
-    // Tick-level BTC mark updates for the paper position only. Entry decisions remain candle-confirmed.
-    let btcMarkSocket = null;
-    let btcMarkReconnectTimer = null;
-    function connectBtcMarkStream() {
-        if (btcMarkSocket && (btcMarkSocket.readyState === WebSocket.OPEN || btcMarkSocket.readyState === WebSocket.CONNECTING)) return;
-        try {
-            btcMarkSocket = new WebSocket('wss://fstream.binance.com/ws/btcusdt@markPrice');
-            btcMarkSocket.onmessage = event => {
-                try {
-                    const data = JSON.parse(event.data);
-                    const mark = Number(data.p);
-                    if (!Number.isFinite(mark) || mark <= 0) return;
-                    if (state.position && state.position.market === 'BTC') {
-                        state.position.markPrice = mark;
-                        state.position.lastMarkTime = Date.now();
-                        managePaperPosition(mark);
-                        renderUi();
-                    }
-                } catch (_) {}
-            };
-            btcMarkSocket.onclose = () => { btcMarkSocket = null; clearTimeout(btcMarkReconnectTimer); btcMarkReconnectTimer = setTimeout(connectBtcMarkStream, 5000); };
-            btcMarkSocket.onerror = () => { try { btcMarkSocket.close(); } catch (_) {} };
-        } catch (_) { btcMarkReconnectTimer = setTimeout(connectBtcMarkStream, 10000); }
-    }
-    if (typeof WebSocket !== 'undefined') connectBtcMarkStream();
-
-    restorePersistentState();
     renderUi();
     renderLog();
-    if (state.position) {
-        logEvent(`Restored saved ${marketName(state.position.market)} PAPER ${state.position.direction.toUpperCase()} position from local history. It will continue to be monitored while this dashboard page is open.`);
-    }
-    if (state.enabled) {
-        if (String(selectedMarket).startsWith('CUSTOM:')) {
-            state.enabled = false;
-            setMessage('Robot was restored, but the selected custom asset is not supported by the paper robot. Select Gold, BTC, Silver or NASDAQ and start it again.');
-        } else {
-            setMessage(state.pending?.kind === 'limit'
-                ? `Restored active paper robot and pending ${state.pending.direction.toUpperCase()} limit at ${formatPrice(state.pending.limitPrice)}. Monitoring resumed after refresh.`
-                : (state.pending ? 'Restored active paper robot and its pending confirmation setup. Monitoring resumed after refresh.' : 'Restored active paper robot after refresh. Monitoring resumed; no exchange orders are sent.'));
-            logEvent('Paper robot automatically resumed after page refresh, using saved state and trade history.');
-        }
-    }
-    renderUi();
-    savePersistentState();
-    if (state.enabled || state.position) cycle();
     setInterval(cycle, ROBOT_POLL_MS);
 })();
 </script>
