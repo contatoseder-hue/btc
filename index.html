@@ -729,11 +729,6 @@
 .trading-mode-title{font-size:15px;font-weight:800;color:#e5e7eb;margin:0 0 5px}
 .trading-mode-copy{font-size:12px;line-height:1.5;color:#9ca3af;margin:0}
 .trading-mode-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px}
-.live-sizing-controls{display:grid;grid-template-columns:repeat(2,minmax(180px,260px));gap:12px;margin-top:14px;max-width:560px}
-.live-sizing-controls label{display:flex;flex-direction:column;gap:6px;color:#e5e7eb;font-size:12px;font-weight:700}
-.live-sizing-controls input{width:100%;box-sizing:border-box;border:1px solid #475569;border-radius:7px;padding:9px 10px;background:#0b1220;color:#fff;font-size:14px}
-.live-sizing-note{grid-column:1/-1}
-@media(max-width:560px){.live-sizing-controls{grid-template-columns:1fr}}
 .trading-mode-option{display:flex;align-items:center;gap:8px;color:#e5e7eb;font-size:13px;font-weight:700}
 .trading-mode-option input{width:18px;height:18px;accent-color:#16a34a}
 .trading-mode-status{font-size:12px;color:#4ade80;font-weight:800}
@@ -987,17 +982,10 @@
           Enable real-money BingX trading
         </label>
         <button id="checkLiveTradingStatus" type="button">Check live-trading readiness</button>
-      </div>
-      <div class="live-sizing-controls" aria-label="Live BTC trade sizing">
-        <label>Live margin allocation (USDT)
-          <input id="liveAllocationUsd" type="number" min="10" max="100" step="5" value="50" inputmode="decimal" />
-        </label>
-        <label>Maximum stop-loss risk per trade (USDT)
-          <input id="liveRiskUsd" type="number" min="0.5" max="5" step="0.5" value="5" inputmode="decimal" />
-        </label>
-        <p class="trading-mode-copy live-sizing-note">These controls affect real BTC-USDT orders only. Paper settings are unchanged. At the current 10× live sizing model, margin is converted to position notional; the server caps notional at $1,000 and initial stop risk at $5 per trade.</p>
+        <button id="testBingXOrderPath" type="button">Test BingX connection (no order)</button>
       </div>
       <div id="tradingModeMessage" class="trading-mode-copy" role="status" aria-live="polite" style="margin-top:10px">Live trading is disabled. No real orders will be sent.</div>
+      <div id="bingxTestMessage" class="trading-mode-copy" role="status" aria-live="polite" style="margin-top:6px">The test checks authenticated API connectivity only and does not create an exchange order. Live orders are submitted only after the robot opens a qualifying BTC paper position.</div>
     </section>
 
     <!-- DEMO ROBOT: PAPER-TRADING ONLY -->
@@ -5507,11 +5495,11 @@ setInterval(refreshMultiTimeframePanel, 60000);
     finally { setBusy(false); }
   });
   const liveToggle = document.getElementById("enableLiveTrading");
-  const liveAllocationInput = document.getElementById("liveAllocationUsd");
-  const liveRiskInput = document.getElementById("liveRiskUsd");
   const liveCheckBtn = document.getElementById("checkLiveTradingStatus");
   const liveBadge = document.getElementById("tradingModeBadge");
   const liveMessage = document.getElementById("tradingModeMessage");
+  const testBingXOrderPathBtn = document.getElementById("testBingXOrderPath");
+  const bingxTestMessage = document.getElementById("bingxTestMessage");
   let liveModeExplicitlyEnabled = false;
   async function submitLiveOrderForPosition(position) {
     if (!liveModeExplicitlyEnabled || !liveToggle.checked || !position) return;
@@ -5525,18 +5513,10 @@ setInterval(refreshMultiTimeframePanel, 60000);
     }
     const stopDistance = Math.abs(Number(position.entry) - Number(position.initialStop));
     if (!Number.isFinite(stopDistance) || stopDistance <= 0) throw new Error("Live order blocked: invalid stop distance.");
-    // Live sizing is independent of the paper account allocation and quantity.
-    // Worker still enforces its own hard caps of $5 stop risk and $1,000 notional.
-    const liveAllocationUsd = Number(liveAllocationInput.value);
-    const liveRiskUsd = Number(liveRiskInput.value);
-    if (!Number.isFinite(liveAllocationUsd) || liveAllocationUsd < 10 || liveAllocationUsd > 100) {
-      throw new Error("Live order blocked: margin allocation must be between $10 and $100 USDT.");
-    }
-    if (!Number.isFinite(liveRiskUsd) || liveRiskUsd < 0.5 || liveRiskUsd > 5) {
-      throw new Error("Live order blocked: stop-loss risk must be between $0.50 and $5 per trade.");
-    }
-    const liveNotionalUsd = Math.min(liveAllocationUsd * 10, 1000);
-    const liveQuantity = Math.floor(Math.min(liveRiskUsd / stopDistance, liveNotionalUsd / Number(position.entry), 5 / stopDistance) * 10000) / 10000;
+    // Independent live sizing: cap risk at $5 and notional at $1,000 even if
+    // the paper account uses different settings. BTC-USDT quantity precision is
+    // rounded down to avoid exceeding the risk cap.
+    const liveQuantity = Math.floor(Math.min(Number(position.quantity), 5 / stopDistance, 1000 / Number(position.entry)) * 10000) / 10000;
     if (!Number.isFinite(liveQuantity) || liveQuantity <= 0) throw new Error("Live order blocked: calculated BTC quantity is below the supported minimum.");
     const response = await fetch(WORKER_AUTH_URL.replace("?auth=supabase", "?live=order"), {
       method: "POST", cache: "no-store",
@@ -5599,13 +5579,54 @@ setInterval(refreshMultiTimeframePanel, 60000);
     }
   }
   liveCheckBtn.addEventListener("click", checkLiveReadiness);
+  testBingXOrderPathBtn.addEventListener("click", async () => {
+    testBingXOrderPathBtn.disabled = true;
+    bingxTestMessage.textContent = "Testing authenticated BingX order parameters. No real order will be created…";
+    bingxTestMessage.className = "trading-mode-copy";
+    try {
+      const client = getClient();
+      const { data, error } = await client.auth.getSession();
+      if (error) throw error;
+      const session = data && data.session;
+      if (!session?.access_token) throw new Error("Sign in and verify your session before testing BingX.");
+      if (String(selectedMarket).toUpperCase() !== "BTC") throw new Error("Select BTC first so the test uses the supported BTC-USDT contract.");
+      const price = Number(currentPrice);
+      if (!Number.isFinite(price) || price <= 0) throw new Error("A valid current BTC price is not available yet. Wait for the BTC price to load and try again.");
+      const quantity = Math.floor((100 / price) * 10000) / 10000;
+      if (quantity <= 0) throw new Error("BTC test quantity is below the supported precision.");
+      const direction = "long";
+      const response = await fetch(WORKER_AUTH_URL.replace("?auth=supabase", "?live=test-order"), {
+        method: "POST", cache: "no-store",
+        headers: { "Accept": "application/json", "Content-Type": "application/json", "Authorization": "Bearer " + session.access_token },
+        body: JSON.stringify({
+          confirmLive: true, symbol: "BTC-USDT", direction, quantity,
+          entryPrice: price, stopLoss: price * 0.99, takeProfit: price * 1.02,
+          signalTimestamp: Date.now()
+        })
+      });
+      const raw = await response.text();
+      let body;
+      try { body = raw ? JSON.parse(raw) : {}; } catch (_) { body = { error: raw || "Worker returned an invalid response." }; }
+      if (!response.ok || body.ok !== true || body.testOnly !== true) throw new Error(body.error || "BingX test request did not receive a confirmed test-only response.");
+      bingxTestMessage.textContent = "TEST PASSED: BingX accepted the test-order parameters. No real order was created. You can now review any remaining live readiness issue separately.";
+      bingxTestMessage.className = "trading-mode-copy live-success";
+      logEvent("BINGX TEST-ORDER PASSED. Exchange accepted test parameters; no real order was created.");
+    } catch (error) {
+      const message = error && error.message ? error.message : "BingX test request failed.";
+      bingxTestMessage.textContent = "TEST FAILED: " + message;
+      bingxTestMessage.className = "trading-mode-copy";
+      logEvent("BINGX TEST-ORDER FAILED: " + message);
+    } finally {
+      testBingXOrderPathBtn.disabled = false;
+    }
+  });
   liveToggle.addEventListener("change", async () => {
     if (!liveToggle.checked) {
       liveModeExplicitlyEnabled = false;
       setLiveModeOff("New live entries are disabled. Any existing BingX position remains open and must be managed or closed in BingX.");
       return;
     }
-    // Fail closed: this Worker currently advertises orderSubmissionAvailable=false.
+    // Fail closed: the Worker must confirm the authenticated live-order route is ready.
     const ready = await checkLiveReadiness();
     if (!ready) {
       liveModeExplicitlyEnabled = false;
