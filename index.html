@@ -721,6 +721,20 @@
 @media(max-width:650px){.demo-account-controls{grid-template-columns:1fr}.demo-account-stat{grid-column:auto}.demo-position-actions{justify-content:stretch}.demo-position-close{width:100%}}
 
 
+
+/* Trading mode selector: live trading is fail-closed until Worker order support is implemented */
+.trading-mode-card{border:1px solid #334155;background:#101720;border-radius:12px;padding:14px 16px;margin:0 0 18px}
+.trading-mode-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.trading-mode-title{font-size:15px;font-weight:800;color:#e5e7eb;margin:0 0 5px}
+.trading-mode-copy{font-size:12px;line-height:1.5;color:#9ca3af;margin:0}
+.trading-mode-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px}
+.trading-mode-option{display:flex;align-items:center;gap:8px;color:#e5e7eb;font-size:13px;font-weight:700}
+.trading-mode-option input{width:18px;height:18px;accent-color:#16a34a}
+.trading-mode-status{font-size:12px;color:#4ade80;font-weight:800}
+.trading-mode-status.warning{color:#fbbf24}.trading-mode-status.error{color:#f87171}
+.trading-mode-card button{border:1px solid #475569;border-radius:7px;padding:8px 11px;background:#1e293b;color:#fff;cursor:pointer;font-weight:700}
+.trading-mode-card button:disabled{opacity:.55;cursor:not-allowed}
+
 /* Supabase authentication integration */
 .supabase-auth-card{border:1px solid #334155;background:#101720;border-radius:12px;padding:16px;margin-bottom:18px}
 .supabase-auth-card h2{font-size:17px;margin:0 0 8px}
@@ -734,7 +748,10 @@
 .supabase-auth-actions button:disabled{opacity:.55;cursor:wait}
 #supabaseAuthStatus{font-size:13px;margin-top:10px;color:#fbbf24;overflow-wrap:anywhere}
 #supabaseAuthStatus.ok{color:#4ade80} #supabaseAuthStatus.error{color:#f87171}
-@media(max-width:600px){.supabase-auth-grid{grid-template-columns:1fr}}
+.supabase-connected-badge{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 14px;padding:10px 13px;border:1px solid #166534;border-radius:9px;background:#052e16;color:#4ade80;font-size:13px;font-weight:800;overflow-wrap:anywhere}
+.supabase-connected-badge[hidden]{display:none!important}
+.supabase-connected-badge button{flex-shrink:0;border:1px solid #166534;border-radius:6px;padding:6px 10px;background:#14532d;color:#dcfce7;cursor:pointer;font-weight:700}
+@media(max-width:600px){.supabase-auth-grid{grid-template-columns:1fr}.supabase-connected-badge{align-items:flex-start;flex-direction:column}.supabase-connected-badge button{width:100%}}
 
 </style>
 </head>
@@ -742,6 +759,12 @@
 <body>
 
 <div class="container">
+
+    <!-- Compact status shown only after Supabase session is verified by the Worker -->
+    <div id="supabaseConnectedBadge" class="supabase-connected-badge" role="status" aria-live="polite" hidden>
+      <span id="supabaseConnectedText">● Connected</span>
+      <button id="supabaseConnectedSignOutBtn" type="button">Sign out</button>
+    </div>
 
     <!-- Supabase sign-in and Cloudflare token verification -->
     <section class="supabase-auth-card" id="supabaseAuthCard" aria-labelledby="supabaseAuthTitle">
@@ -942,13 +965,33 @@
         </div>
     </div>
 
+
+    <!-- Trading mode: live mode remains disabled unless the server confirms order support -->
+    <section class="trading-mode-card" id="tradingModeCard" aria-labelledby="tradingModeTitle">
+      <div class="trading-mode-head">
+        <div>
+          <h2 class="trading-mode-title" id="tradingModeTitle">Trading Mode</h2>
+          <p class="trading-mode-copy">Paper trading remains available. Real-money BingX trading is OFF by default and will only activate after the Cloudflare Worker confirms that secure live order execution is implemented.</p>
+        </div>
+        <span id="tradingModeBadge" class="trading-mode-status">PAPER MODE · DEFAULT</span>
+      </div>
+      <div class="trading-mode-controls">
+        <label class="trading-mode-option" for="enableLiveTrading">
+          <input id="enableLiveTrading" type="checkbox" autocomplete="off" />
+          Enable real-money BingX trading
+        </label>
+        <button id="checkLiveTradingStatus" type="button">Check live-trading readiness</button>
+      </div>
+      <div id="tradingModeMessage" class="trading-mode-copy" role="status" aria-live="polite" style="margin-top:10px">Live trading is disabled. No real orders will be sent.</div>
+    </section>
+
     <!-- DEMO ROBOT: PAPER-TRADING ONLY -->
     <div class="card demo-robot-card" id="demoRobotCard">
         <div class="demo-robot-top">
             <div>
                 <div class="section-title" style="margin-bottom:0;">Demo Robot · Support / Resistance Confirmation</div>
                 <div class="demo-robot-subtitle">
-                    Paper trading only. The robot uses the dashboard’s shared market feed, waits for ECI direction and the 1-minute WMA 100/200 trend to agree, watches a confirmed 15-minute swing level on the correct side of price, then requires a closed 1-minute rejection candle before recording a simulated entry.
+                    Paper trading remains available. When live mode is explicitly enabled and server-authorized, confirmed BTC setups can also submit a BTC-USDT live order with exchange-side stop-loss and take-profit. Gold and Silver remain paper-only. The robot waits for ECI direction, 1-minute WMA 100/200 agreement, a confirmed 15-minute swing level, and a closed 1-minute rejection candle.
                 </div>
             </div>
             <span id="demoRobotBadge" class="demo-robot-badge">DEMO OFF</span>
@@ -4820,6 +4863,14 @@ setInterval(refreshMultiTimeframePanel, 60000);
             ? `Paper ${direction.toUpperCase()} limit filled at ${formatPrice(entryPrice)}. Monitoring simulated stop and targets.`
             : `Paper ${direction.toUpperCase()} opened after confirmation at ${formatPrice(entryPrice)}. Monitoring simulated stop and targets.`);
         logEvent(`${marketName(market)} PAPER ${direction.toUpperCase()} ${isLimitFill ? 'LIMIT FILLED' : 'confirmation entry'} at ${formatPrice(entryPrice)}; risk cap $${riskUsd.toFixed(2)}, allocation cap $${Number(state.tradeAllocationUsd).toFixed(2)} margin at 10×, quantity ${fmtQuantity(quantity)}, SL ${formatPrice(stop)}, TP1 ${formatPrice(position.tp1)}, TP2 ${formatPrice(position.tp2)}.`);
+        if (window.goldEciLiveMode && window.goldEciLiveMode.isEnabled()) {
+            window.goldEciLiveMode.submit(position).then(result => {
+                logEvent(`LIVE ORDER RESPONSE: ${result.message || "BingX response received."}`);
+            }).catch(error => {
+                const message = error && error.message ? error.message : "Live order failed.";
+                logEvent(`LIVE ORDER NOT CONFIRMED: ${message}`);
+            });
+        }
         renderUi();
         return true;
     }
@@ -5353,6 +5404,10 @@ setInterval(refreshMultiTimeframePanel, 60000);
   const signInBtn = document.getElementById("supabaseSignInBtn");
   const verifyBtn = document.getElementById("supabaseVerifyBtn");
   const signOutBtn = document.getElementById("supabaseSignOutBtn");
+  const authCard = document.getElementById("supabaseAuthCard");
+  const connectedBadge = document.getElementById("supabaseConnectedBadge");
+  const connectedText = document.getElementById("supabaseConnectedText");
+  const connectedSignOutBtn = document.getElementById("supabaseConnectedSignOutBtn");
   let supabaseClient = null;
   let activeKey = null;
   let verifiedUserId = null;
@@ -5360,6 +5415,11 @@ setInterval(refreshMultiTimeframePanel, 60000);
   function setStatus(message, kind) {
     statusEl.textContent = message;
     statusEl.className = kind || "";
+  }
+  function showConnected(isConnected, label) {
+    authCard.hidden = !!isConnected;
+    connectedBadge.hidden = !isConnected;
+    if (isConnected) connectedText.textContent = "● Connected • " + (label || "Verified");
   }
   function setBusy(busy) {
     [signInBtn, verifyBtn, signOutBtn].forEach(button => button.disabled = busy);
@@ -5386,6 +5446,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
     const session = data && data.session;
     if (!session || !session.access_token) {
       verifiedUserId = null;
+      showConnected(false);
       setStatus("No active Supabase session. Choose Sign in with GitHub first.", "error");
       return false;
     }
@@ -5403,7 +5464,9 @@ setInterval(refreshMultiTimeframePanel, 60000);
       throw new Error((body && body.error) || ("Worker verification failed (HTTP " + response.status + ")."));
     }
     verifiedUserId = body.user.id;
-    setStatus("Signed in and verified • " + (body.user.email || body.user.id), "ok");
+    const userLabel = body.user.email || body.user.id;
+    setStatus("Signed in and verified • " + userLabel, "ok");
+    showConnected(true, userLabel);
     return true;
   }
   signInBtn.addEventListener("click", async () => {
@@ -5417,6 +5480,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
       });
       if (error) throw error;
     } catch (error) {
+      showConnected(false);
       setStatus((error && error.message ? error.message : "GitHub sign-in could not start.") + " Confirm GitHub is enabled in Supabase Authentication → Sign In / Providers and the dashboard URL is allowed under URL Configuration.", "error");
       setBusy(false);
     }
@@ -5424,9 +5488,113 @@ setInterval(refreshMultiTimeframePanel, 60000);
   verifyBtn.addEventListener("click", async () => {
     setBusy(true);
     try { await verifySession(); }
-    catch (error) { setStatus(error && error.message ? error.message : "Verification failed.", "error"); }
+    catch (error) { showConnected(false); setStatus(error && error.message ? error.message : "Verification failed.", "error"); }
     finally { setBusy(false); }
   });
+  const liveToggle = document.getElementById("enableLiveTrading");
+  const liveCheckBtn = document.getElementById("checkLiveTradingStatus");
+  const liveBadge = document.getElementById("tradingModeBadge");
+  const liveMessage = document.getElementById("tradingModeMessage");
+  let liveModeExplicitlyEnabled = false;
+  async function submitLiveOrderForPosition(position) {
+    if (!liveModeExplicitlyEnabled || !liveToggle.checked || !position) return;
+    const client = getClient();
+    const { data, error } = await client.auth.getSession();
+    if (error) throw error;
+    const session = data && data.session;
+    if (!session?.access_token) throw new Error("Live order cancelled: authenticated session is missing.");
+    if (String(position.market).toUpperCase() !== "BTC") {
+      throw new Error("Live order blocked: only BTC-USDT has been enabled. Gold and Silver remain paper-only until their BingX contracts are verified.");
+    }
+    const stopDistance = Math.abs(Number(position.entry) - Number(position.initialStop));
+    if (!Number.isFinite(stopDistance) || stopDistance <= 0) throw new Error("Live order blocked: invalid stop distance.");
+    // Independent live sizing: cap risk at $5 and notional at $1,000 even if
+    // the paper account uses different settings. BTC-USDT quantity precision is
+    // rounded down to avoid exceeding the risk cap.
+    const liveQuantity = Math.floor(Math.min(Number(position.quantity), 5 / stopDistance, 1000 / Number(position.entry)) * 10000) / 10000;
+    if (!Number.isFinite(liveQuantity) || liveQuantity <= 0) throw new Error("Live order blocked: calculated BTC quantity is below the supported minimum.");
+    const response = await fetch(WORKER_AUTH_URL.replace("?auth=supabase", "?live=order"), {
+      method: "POST", cache: "no-store",
+      headers: { "Accept": "application/json", "Content-Type": "application/json", "Authorization": "Bearer " + session.access_token },
+      body: JSON.stringify({
+        confirmLive: true, symbol: "BTC-USDT", direction: position.direction,
+        quantity: liveQuantity, entryPrice: position.entry, stopLoss: position.initialStop,
+        takeProfit: position.tp2, signalTimestamp: Number(position.confirmTime || Date.now())
+      })
+    });
+    const text = await response.text();
+    let body; try { body = text ? JSON.parse(text) : {}; } catch (_) { body = { error: text || "Worker returned an invalid response." }; }
+    if (!response.ok || body.ok !== true) throw new Error(body.error || "BingX rejected the live order.");
+    logEvent(`LIVE BTC-USDT ${position.direction.toUpperCase()} accepted by BingX. Order ID: ${body.order?.orderId || "not returned"}. Estimated stop risk $${Number(body.estimatedRiskUsd || 0).toFixed(2)}. Verify fill and protection in BingX.`);
+    liveMessage.textContent = `BingX accepted a live ${position.direction.toUpperCase()} order request. Verify fill and stop/TP orders in BingX.`;
+    liveMessage.className = "trading-mode-copy live-success";
+  }
+  window.goldEciLiveMode = {
+    isEnabled: () => liveModeExplicitlyEnabled && liveToggle.checked,
+    submit: submitLiveOrderForPosition
+  };
+  function setLiveModeOff(message, kind) {
+    liveToggle.checked = false;
+    liveBadge.textContent = "PAPER MODE · DEFAULT";
+    liveBadge.className = "trading-mode-status" + (kind ? " " + kind : "");
+    liveMessage.textContent = message;
+  }
+  async function checkLiveReadiness() {
+    liveCheckBtn.disabled = true;
+    liveToggle.disabled = true;
+    liveMessage.textContent = "Checking authenticated session and Cloudflare live-trading status…";
+    liveMessage.className = "trading-mode-copy";
+    try {
+      const client = getClient();
+      const { data, error } = await client.auth.getSession();
+      if (error) throw error;
+      const session = data && data.session;
+      if (!session || !session.access_token) throw new Error("Sign in and verify your session before checking live trading.");
+      const response = await fetch(WORKER_AUTH_URL.replace("?auth=supabase", "?live=status"), {
+        method: "GET", cache: "no-store",
+        headers: { "Accept": "application/json", "Authorization": "Bearer " + session.access_token }
+      });
+      const bodyText = await response.text();
+      let body;
+      try { body = bodyText ? JSON.parse(bodyText) : {}; } catch (_) { body = { error: bodyText || "Worker returned an empty response." }; }
+      if (!response.ok || body.orderSubmissionAvailable !== true || body.liveTrading !== true) {
+        setLiveModeOff((body && body.message) || (body && body.error) || "Live orders are not enabled by the Cloudflare Worker. Paper trading remains available.", "warning");
+        return false;
+      }
+      liveBadge.textContent = liveToggle.checked ? "LIVE TRADING · ENABLED" : "LIVE READY · OFF UNTIL ENABLED";
+      liveBadge.className = "trading-mode-status" + (liveToggle.checked ? " live-active" : "");
+      liveMessage.textContent = liveToggle.checked ? "Live BTC-USDT execution is enabled for confirmed robot entries. Gold and Silver remain paper-only." : "Live-order support is ready. The checkbox remains off until you explicitly enable it.";
+      return true;
+    } catch (error) {
+      setLiveModeOff(error && error.message ? error.message : "Could not verify live-trading readiness.", "error");
+      return false;
+    } finally {
+      liveCheckBtn.disabled = false;
+      liveToggle.disabled = false;
+    }
+  }
+  liveCheckBtn.addEventListener("click", checkLiveReadiness);
+  liveToggle.addEventListener("change", async () => {
+    if (!liveToggle.checked) {
+      liveModeExplicitlyEnabled = false;
+      setLiveModeOff("New live entries are disabled. Any existing BingX position remains open and must be managed or closed in BingX.");
+      return;
+    }
+    // Fail closed: this Worker currently advertises orderSubmissionAvailable=false.
+    const ready = await checkLiveReadiness();
+    if (!ready) {
+      liveModeExplicitlyEnabled = false;
+      liveToggle.checked = false;
+    } else {
+      liveModeExplicitlyEnabled = true;
+      liveBadge.textContent = "LIVE TRADING · ENABLED";
+      liveBadge.className = "trading-mode-status live-active";
+      liveMessage.textContent = "Live BTC-USDT execution is enabled for confirmed robot entries. Gold and Silver remain paper-only. Real orders may be submitted when the robot confirms a valid entry.";
+      liveMessage.className = "trading-mode-copy live-success";
+    }
+  });
+
+  connectedSignOutBtn.addEventListener("click", () => signOutBtn.click());
   signOutBtn.addEventListener("click", async () => {
     setBusy(true);
     try {
@@ -5434,6 +5602,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
       const { error } = await client.auth.signOut();
       if (error) throw error;
       verifiedUserId = null;
+      showConnected(false);
       setStatus("Signed out. No verified Supabase session is active.", "");
     } catch (error) { setStatus(error && error.message ? error.message : "Sign-out failed.", "error"); }
     finally { setBusy(false); }
@@ -5448,125 +5617,14 @@ setInterval(refreshMultiTimeframePanel, 60000);
       const client = getClient();
       client.auth.getSession().then(({ data, error }) => {
         if (error) { setStatus(error.message, "error"); return; }
-        if (data && data.session) verifySession().catch(error => setStatus(error.message || "Session verification failed.", "error"));
-        else setStatus("Ready. Sign in with GitHub to authenticate.", "");
+        if (data && data.session) verifySession().catch(error => { showConnected(false); setStatus(error.message || "Session verification failed.", "error"); });
+        else { showConnected(false); setStatus("Ready. Sign in with GitHub to authenticate.", ""); }
       });
     } catch (error) { setStatus(error.message || "Ready to configure Supabase.", ""); }
   }
 })();
 </script>
-<script>
-(() => {
-  "use strict";
-  const SUPABASE_URL = "https://gzboixmsmnqgfohqkuxs.supabase.co";
-  const WORKER_AUTH_URL = "https://gold-eci-api.contatoseder.workers.dev/?auth=supabase";
-  const KEY_STORAGE = "dashboard_supabase_publishable_key_v1";
-  const statusEl = document.getElementById("supabaseAuthStatus");
-  const keyEl = document.getElementById("supabasePublishableKey");
-  const emailEl = document.getElementById("supabaseEmail");
-  const passwordEl = document.getElementById("supabasePassword");
-  const signInBtn = document.getElementById("supabaseSignInBtn");
-  const verifyBtn = document.getElementById("supabaseVerifyBtn");
-  const signOutBtn = document.getElementById("supabaseSignOutBtn");
-  let supabaseClient = null;
-  let verifiedUserId = null;
 
-  function setStatus(message, kind) {
-    statusEl.textContent = message;
-    statusEl.className = kind || "";
-  }
-  function setBusy(busy) {
-    [signInBtn, verifyBtn, signOutBtn].forEach(button => button.disabled = busy);
-  }
-  function getClient() {
-    if (!window.supabase || !window.supabase.createClient) {
-      throw new Error("Supabase client library did not load. Check the network or content blocker.");
-    }
-    const key = keyEl.value.trim();
-    if (!key) throw new Error("Enter the Supabase publishable key from your Supabase project API settings.");
-    try { localStorage.setItem(KEY_STORAGE, key); } catch (_) {}
-    if (!supabaseClient) supabaseClient = window.supabase.createClient(SUPABASE_URL, key, {
-      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
-    });
-    return supabaseClient;
-  }
-  async function verifySession() {
-    const client = getClient();
-    const { data, error } = await client.auth.getSession();
-    if (error) throw error;
-    const session = data && data.session;
-    if (!session || !session.access_token) {
-      verifiedUserId = null;
-      setStatus("No active Supabase session. Sign in first.", "error");
-      return false;
-    }
-    setStatus("Session found. Verifying with Cloudflare Worker…", "");
-    const response = await fetch(WORKER_AUTH_URL, {
-      method: "GET",
-      cache: "no-store",
-      headers: { "Accept": "application/json", "Authorization": "Bearer " + session.access_token }
-    });
-    const bodyText = await response.text();
-    let body;
-    try { body = bodyText ? JSON.parse(bodyText) : {}; }
-    catch (_) { body = { error: bodyText || "Worker returned an empty response." }; }
-    if (!response.ok || body.authenticated !== true || !body.user || !body.user.id) {
-      verifiedUserId = null;
-      throw new Error((body && body.error) || ("Worker authentication verification failed (HTTP " + response.status + ")."));
-    }
-    verifiedUserId = body.user.id;
-    setStatus("Verified by Cloudflare Worker • " + (body.user.email || body.user.id), "ok");
-    return true;
-  }
-  signInBtn.addEventListener("click", async () => {
-    setBusy(true);
-    try {
-      const client = getClient();
-      const email = emailEl.value.trim();
-      const password = passwordEl.value;
-      if (!email || !password) throw new Error("Enter both email and password.");
-      setStatus("Signing in to Supabase…", "");
-      const { data, error } = await client.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-      passwordEl.value = "";
-      if (!data || !data.session) throw new Error("Supabase did not return an active session.");
-      await verifySession();
-    } catch (error) {
-      setStatus(error && error.message ? error.message : "Sign-in failed.", "error");
-    } finally { setBusy(false); }
-  });
-  verifyBtn.addEventListener("click", async () => {
-    setBusy(true);
-    try { await verifySession(); }
-    catch (error) { setStatus(error && error.message ? error.message : "Verification failed.", "error"); }
-    finally { setBusy(false); }
-  });
-  signOutBtn.addEventListener("click", async () => {
-    setBusy(true);
-    try {
-      if (!supabaseClient) getClient();
-      const { error } = await supabaseClient.auth.signOut();
-      if (error) throw error;
-      verifiedUserId = null;
-      passwordEl.value = "";
-      setStatus("Signed out. No verified Supabase session is active.", "");
-    } catch (error) { setStatus(error && error.message ? error.message : "Sign-out failed.", "error"); }
-    finally { setBusy(false); }
-  });
-  try {
-    const savedKey = localStorage.getItem(KEY_STORAGE);
-    if (savedKey) keyEl.value = savedKey;
-  } catch (_) {}
-  // Intentionally do not claim authentication based only on browser storage.
-  // The session must be checked by the Worker before displaying a verified status.
-  setStatus("Ready. Enter the Supabase publishable key and sign in to verify the session.", "");
-})();
-</script>
 
 </body>
 </html>
-
-
-
-
-working index
