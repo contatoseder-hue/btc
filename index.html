@@ -574,16 +574,6 @@
 .demo-robot-stat .label { margin-bottom:7px; }
 .demo-robot-stat .value { font-size:17px; overflow-wrap:anywhere; }
 .demo-robot-message { border-radius:10px; padding:12px; background:#101827; border:1px solid #263244; color:#d1d5db; font-size:13px; line-height:1.55; margin:12px 0; }
-.demo-robot-scanning { display:flex; align-items:center; gap:11px; border:1px solid rgba(96,165,250,.42); background:rgba(38,110,170,.10); color:#dbeafe; border-radius:10px; padding:12px 14px; margin:12px 0; }
-.demo-robot-scanning-icon { position:relative; display:block; flex:0 0 42px; width:42px; height:42px; border:1px solid rgba(74,222,128,.65); border-radius:50%; overflow:hidden; background:radial-gradient(circle,rgba(34,197,94,.18) 0 2px,transparent 3px),rgba(2,18,20,.8); box-shadow:0 0 12px rgba(34,197,94,.16),inset 0 0 10px rgba(34,197,94,.12); }
-.demo-robot-scanning-icon::before,.demo-robot-scanning-icon::after { content:""; position:absolute; border:1px solid rgba(74,222,128,.35); border-radius:50%; inset:7px; }
-.demo-robot-scanning-icon::after { inset:15px; }
-.demo-robot-scanning-icon .radar-sweep { position:absolute; inset:0; border-radius:50%; background:conic-gradient(from 0deg,transparent 0deg,transparent 285deg,rgba(34,197,94,.03) 300deg,rgba(74,222,128,.72) 355deg,transparent 360deg); animation:demoRadarSweep 1.8s linear infinite; }
-.demo-robot-scanning-icon .radar-sweep::after { content:""; position:absolute; width:3px; height:3px; border-radius:50%; background:#86efac; left:50%; top:50%; box-shadow:0 0 6px #4ade80; transform:translate(-50%,-50%); }
-@keyframes demoRadarSweep { to { transform:rotate(360deg); } }
-@media(prefers-reduced-motion:reduce){.demo-robot-scanning-icon .radar-sweep{animation:none;}}
-.demo-robot-scanning strong { display:block; font-size:13px; font-weight:800; }
-.demo-robot-scanning small { display:block; margin-top:3px; color:#aabbd0; font-size:11px; line-height:1.45; }
 .demo-robot-controls { display:flex; gap:9px; flex-wrap:wrap; margin:12px 0; }
 .demo-robot-controls button { width:auto; margin:0; }
 .demo-robot-start { background:#166534 !important; }
@@ -619,10 +609,10 @@
   .demo-position-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .demo-position-pnl { font-size:22px; }
 }
-.demo-history-wrap { max-height:660px; overflow:auto; margin-top:10px; border:1px solid #263244; border-radius:10px; }
-.demo-history-table { width:100%; min-width:1040px; border-collapse:separate; border-spacing:0; font-size:12px; }
-.demo-history-table th, .demo-history-table td { padding:7px 10px; line-height:16px; border-bottom:1px solid #263244; text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums; }
-.demo-history-table th { position:sticky; top:0; z-index:2; color:#9ca3af; background:#101827; font-weight:800; }
+.demo-history-wrap { overflow-x:auto; margin-top:10px; border:1px solid #263244; border-radius:10px; }
+.demo-history-table { width:100%; min-width:1040px; border-collapse:collapse; font-size:12px; }
+.demo-history-table th, .demo-history-table td { padding:9px 10px; border-bottom:1px solid #263244; text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.demo-history-table th { color:#9ca3af; background:#101827; font-weight:800; }
 .demo-history-table th:first-child, .demo-history-table td:first-child,
 .demo-history-table th:nth-child(2), .demo-history-table td:nth-child(2),
 .demo-history-table th:nth-child(3), .demo-history-table td:nth-child(3),
@@ -678,62 +668,6 @@
 .demo-limit-note { color:#9ca3af; font-size:11px; line-height:1.5; margin-top:9px; }
 @media (max-width: 600px) { .demo-limit-price-field { flex-basis:100%; } .demo-limit-price-row button { flex:1 1 100%; } }
 
-/* Auto Entry panel layout: keep checkbox and explanatory text together inside the panel. */
-#demoRobotAutoEntryControls,
-#demoRobotAutoEntryControls * { box-sizing: border-box; }
-#demoRobotAutoEntryControls { display: block; width: 100%; min-width: 0; }
-#demoRobotAutoEntryControls .demo-limit-toggle {
-    display: grid;
-    grid-template-columns: 18px minmax(0, 1fr);
-    align-items: start;
-    gap: 10px;
-    width: 100%;
-    min-width: 0;
-    margin: 0;
-}
-#demoRobotAutoEntryControls .demo-limit-toggle input {
-    position: static;
-    display: block;
-    width: 14px;
-    height: 14px;
-    margin: 3px 0 0;
-}
-#demoRobotAutoEntryControls .demo-limit-toggle > span {
-    display: block;
-    width: 100%;
-    min-width: 0;
-    overflow-wrap: anywhere;
-}
-#demoRobotAutoEntryControls .demo-limit-toggle strong,
-#demoRobotAutoEntryControls .demo-limit-toggle small {
-    display: block;
-    white-space: normal;
-    overflow-wrap: anywhere;
-}
-#demoRobotAutoEntryControls .demo-limit-note { overflow-wrap: anywhere; }
-
-/* Force Limit Entry panel layout: keep copy and action aligned within the panel. */
-#demoRobotForceLimitControls,
-#demoRobotForceLimitControls * { box-sizing: border-box; }
-#demoRobotForceLimitControls { width: 100%; min-width: 0; }
-#demoRobotForceLimitControls .demo-limit-toggle {
-    display: grid;
-    grid-template-columns: 18px minmax(0, 1fr);
-    align-items: start;
-    gap: 10px;
-    width: 100%;
-    min-width: 0;
-    margin: 0;
-}
-#demoRobotForceLimitControls .demo-limit-toggle input { position: static; display: block; width: 14px; height: 14px; margin: 3px 0 0; }
-#demoRobotForceLimitControls .demo-limit-toggle > span { display: block; width: 100%; min-width: 0; overflow-wrap: anywhere; }
-#demoRobotForceLimitControls .demo-limit-toggle strong,
-#demoRobotForceLimitControls .demo-limit-toggle small { display: block; white-space: normal; overflow-wrap: anywhere; }
-#demoRobotForceLimitControls .demo-robot-controls { justify-content: flex-start; width: 100%; min-width: 0; }
-#demoRobotForceLimitControls .demo-robot-controls button { flex: 0 1 auto; max-width: 100%; white-space: normal; }
-#demoRobotForceLimitControls .demo-limit-note { overflow-wrap: anywhere; }
-@media (max-width: 600px) { #demoRobotForceLimitControls .demo-robot-controls button { flex: 1 1 100%; width: 100%; } }
-
 /* Layout hardening: keep the limit toggle and its copy inside the panel. */
 #demoRobotLimitControls,
 #demoRobotLimitControls * { box-sizing: border-box; }
@@ -786,12 +720,47 @@
 .demo-position-close:hover{background:#991b1b}
 @media(max-width:650px){.demo-account-controls{grid-template-columns:1fr}.demo-account-stat{grid-column:auto}.demo-position-actions{justify-content:stretch}.demo-position-close{width:100%}}
 
+
+/* Supabase authentication integration */
+.supabase-auth-card{border:1px solid #334155;background:#101720;border-radius:12px;padding:16px;margin-bottom:18px}
+.supabase-auth-card h2{font-size:17px;margin:0 0 8px}
+.supabase-auth-note{font-size:12px;color:#9ca3af;line-height:1.45;margin:0 0 12px}
+.supabase-auth-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.supabase-auth-card label{display:block;font-size:12px;color:#cbd5e1;margin-bottom:5px}
+.supabase-auth-card input{width:100%;min-width:0;background:#0b0f14;color:#fff;border:1px solid #374151;border-radius:7px;padding:10px;font-size:14px}
+.supabase-auth-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.supabase-auth-actions button{border:1px solid #475569;border-radius:7px;padding:9px 13px;background:#1e293b;color:#fff;cursor:pointer;font-weight:700}
+.supabase-auth-actions button.primary{background:#166534;border-color:#15803d}
+.supabase-auth-actions button:disabled{opacity:.55;cursor:wait}
+#supabaseAuthStatus{font-size:13px;margin-top:10px;color:#fbbf24;overflow-wrap:anywhere}
+#supabaseAuthStatus.ok{color:#4ade80} #supabaseAuthStatus.error{color:#f87171}
+@media(max-width:600px){.supabase-auth-grid{grid-template-columns:1fr}}
+
 </style>
 </head>
 
 <body>
 
 <div class="container">
+
+    <!-- Supabase sign-in and Cloudflare token verification -->
+    <section class="supabase-auth-card" id="supabaseAuthCard" aria-labelledby="supabaseAuthTitle">
+      <h2 id="supabaseAuthTitle">Account Authentication</h2>
+      <p class="supabase-auth-note">Sign in with GitHub. After Supabase returns you to this dashboard, your session is verified by the Cloudflare Worker. This does not enable live trading. GitHub must first be enabled under Supabase Authentication → Sign In / Providers.</p>
+      <div class="supabase-auth-grid">
+        <div>
+          <label for="supabasePublishableKey">Supabase publishable key</label>
+          <input id="supabasePublishableKey" type="password" autocomplete="off" placeholder="sb_publishable_…" />
+        </div>
+      </div>
+      <div class="supabase-auth-actions">
+        <button class="primary" id="supabaseSignInBtn" type="button">Sign in with GitHub</button>
+        <button id="supabaseVerifyBtn" type="button">Verify current session</button>
+        <button id="supabaseSignOutBtn" type="button">Sign out</button>
+      </div>
+      <div id="supabaseAuthStatus" role="status" aria-live="polite">Enter the Supabase publishable key, then sign in with GitHub.</div>
+    </section>
+
 
     <!-- HEADER -->
     <div class="card header">
@@ -902,7 +871,7 @@
 
             <div class="stat">
                 <div id="marketPriceLabel" class="label">
-                    <span id="marketPriceLabelText">Gold Live Price (BingX GOLD/XAU-USDT)</span>
+                    <span id="marketPriceLabelText">Gold Live Price (Binance Spot PAXG/USDT)</span>
                     <span id="marketPriceLive" class="live-indicator" style="margin-left:8px;">
                         <span class="live-dot"></span>
                         <span>LIVE</span>
@@ -979,7 +948,7 @@
             <div>
                 <div class="section-title" style="margin-bottom:0;">Demo Robot · Support / Resistance Confirmation</div>
                 <div class="demo-robot-subtitle">
-                    Paper trading only. The robot preserves the existing ECI, 1-minute WMA 100/200, confirmed 15-minute support/resistance, and closed 1-minute rejection rules. Added filter: a completed 5-minute Volumatic VIDYA trend and BigBeluga Two-Pole momentum must also agree. Paper trading only.
+                    Paper trading only. The robot uses the dashboard’s shared market feed, waits for ECI direction and the 1-minute WMA 100/200 trend to agree, watches a confirmed 15-minute swing level on the correct side of price, then requires a closed 1-minute rejection candle before recording a simulated entry.
                 </div>
             </div>
             <span id="demoRobotBadge" class="demo-robot-badge">DEMO OFF</span>
@@ -1001,11 +970,6 @@
             <div class="demo-robot-stat">
                 <div class="label">1m WMA Trend</div>
                 <div id="demoRobotTrend" class="value">Waiting</div>
-            </div>
-            <div class="demo-robot-stat">
-                <div class="label">5m VIDYA + Two Pole</div>
-                <div id="demoRobotMtfFilter" class="value">Waiting for closed candles</div>
-                <div id="demoRobotMtfFilterDetail" class="label" style="margin-top:4px;">Both signals must agree with the trade</div>
             </div>
             <div class="demo-robot-stat">
                 <div class="label">Closed Demo Trades</div>
@@ -1031,16 +995,11 @@
             <div class="demo-account-field"><label for="demoRobotFunding">Starting Account Funding (USD)</label><input id="demoRobotFunding" type="number" min="1" step="any" value="1000"></div>
             <div class="demo-account-field"><label for="demoRobotAllocation">Trade Allocation / Margin (USD)</label><input id="demoRobotAllocation" type="number" min="1" step="any" value="100"></div>
             <div class="demo-account-field"><label for="demoRobotRisk">Max Initial Stop Risk (USD)</label><input id="demoRobotRisk" type="number" min="0.01" step="any" value="10"></div>
-            <div class="demo-account-field"><label for="demoRobotFeeRate">Estimated Trading Fee per Side (%)</label><input id="demoRobotFeeRate" type="number" min="0" max="1" step="0.001" value="0.05"><small style="display:block;color:#9ca3af;font-size:11px;margin-top:4px;">Default 0.05% per side; adjust to your actual fee tier.</small></div>
             <div class="demo-account-stat"><span>Current Demo Equity: <strong id="demoRobotEquity">$1,000.00</strong></span><span>Estimated margin per trade: <strong id="demoRobotMargin">$100.00</strong></span><span>Leverage model: <strong>10×</strong></span></div>
         </div>
 
         <div id="demoRobotMessage" class="demo-robot-message" aria-live="polite">
             Demo robot is off. Start it to monitor market structure. It cannot place real orders.
-        </div>
-        <div id="demoRobotScanning" class="demo-robot-scanning" style="display:none;" role="status" aria-live="polite">
-            <img class="demo-robot-scanning-icon" src="https://media.tenor.com/ZNYv-XVE6e0AAAAM/radar-scanner.gif" alt="Animated radar scanning" width="56" height="56" loading="eager" style="width:56px;height:56px;flex:0 0 56px;object-fit:contain;border:0;border-radius:8px;background:transparent;box-shadow:none;" />
-            <span><strong>Scanning the market</strong><small>Looking for the best valid entry point and direction…</small></span>
         </div>
 
         <div id="demoRobotPosition" class="demo-position-card" style="display:none;" aria-live="polite">
@@ -1068,27 +1027,8 @@
                 <div class="demo-position-stat"><div class="demo-position-stat-label">Leverage Used</div><div id="demoPositionLeverage" class="demo-position-stat-value demo-leverage-note">10× paper leverage</div></div>
                 <div class="demo-position-stat"><div class="demo-position-stat-label">Notional Exposure (remaining)</div><div id="demoPositionNotional" class="demo-position-stat-value">—</div></div>
             </div>
-            <div id="demoPositionPnlBreakdown" class="demo-position-note">Percentages update with the open position: ROI = floating PnL ÷ estimated remaining margin at 10×; account impact = floating PnL ÷ starting funding. Pre-TP1 protection estimates round-trip fees and moves the stop to cover those fees plus a small buffer. Paper only; no exchange order is placed.</div>
+            <div id="demoPositionPnlBreakdown" class="demo-position-note">Percentages update with the open position: ROI = floating PnL ÷ estimated remaining margin at 10×; account impact = floating PnL ÷ starting funding. Realized return uses closed PnL ÷ starting funding. Paper only; no exchange order is placed.</div>
             <div class="demo-position-actions"><button id="demoRobotClosePosition" class="demo-position-close" type="button">Close Position at Current Mark</button></div>
-        </div>
-
-        <div class="demo-limit-controls" id="demoRobotAutoEntryControls">
-            <label class="demo-limit-toggle" for="demoRobotAutoEntry">
-                <input id="demoRobotAutoEntry" type="checkbox">
-                <span><strong>Auto Entry</strong><small>Automatically search for the next paper entry after a trade closes or a limit expires.</small></span>
-            </label>
-            <div class="demo-limit-note">When Force Limit Entry is enabled too, each new attempt uses the previous fully closed 5-minute candle close. Paper trading only.</div>
-        </div>
-
-        <div class="demo-limit-controls" id="demoRobotForceLimitControls">
-            <label class="demo-limit-toggle" for="demoRobotForceLimitMode">
-                <input id="demoRobotForceLimitMode" type="checkbox">
-                <span><strong>Force Limit Entry</strong><small>Search for a forced entry opportunity when enabled.</small></span>
-            </label>
-            <div class="demo-robot-controls" style="margin-top:8px;">
-                <button id="demoRobotForceLimitRefresh" class="demo-robot-clear" type="button" disabled>Force / Refresh Limit Entry</button>
-            </div>
-            <div class="demo-limit-note">Paper trading only.</div>
         </div>
 
         <div class="demo-limit-controls" id="demoRobotLimitControls">
@@ -1128,7 +1068,7 @@
             </table>
         </div>
         <div class="demo-robot-footnote">
-            Standard mode: ECI direction must match the 1-minute WMA trend, then a closed 1-minute rejection candle confirms the 15-minute swing level. Optional Paper Limit Entry mode simulates a limit at confirmed support/resistance (or a nearby manual override). Force Limit Entry is a separate manual trigger using the previous fully closed 5-minute candle close as the limit (LONG) or the same reversed rule (SHORT); refresh waits for the next 5-minute candle to close. Both limit modes expire after 30 minutes and retain direction and structure invalidation checks. Support/resistance stays fixed as price moves, changing only if crossed/invalidated or replaced by a newer confirmed, closer swing. Demo sizing respects both the configured maximum initial stop risk and the configured margin allocation at the 10× paper model; estimated margin is not an exchange simulation and liquidation is not modeled. USD PnL is an estimate and excludes fees, spread, slippage and instrument-specific contract sizing. TP1 is 2R; 50% exits there and the remaining 50% targets 3R, with the stop moved to entry after TP1. State, pending setup/order, levels, open position and trade history are saved locally and an active robot resumes on refresh. JavaScript cannot monitor trades while the browser/page is closed; it resumes only when the dashboard is open again. BTC open-position mark and floating PnL use a public mark-price WebSocket when available; entry decisions still require closed candles. Other market marks continue to use the existing polling feed. Paper trading only; no exchange orders are sent. Custom assets are not enabled in this test.
+            Standard mode: ECI direction must match the 1-minute WMA trend, then a closed 1-minute rejection candle confirms the 15-minute swing level. Optional Paper Limit Entry mode skips the rejection-candle requirement and simulates a limit at the nearest confirmed support/resistance (or a nearby manual override); it is higher risk and expires after 30 minutes. Support/resistance stays fixed as price moves, changing only if crossed/invalidated or replaced by a newer confirmed, closer swing. Demo sizing respects both the configured maximum initial stop risk and the configured margin allocation at the 10× paper model; estimated margin is not an exchange simulation and liquidation is not modeled. USD PnL is an estimate and excludes fees, spread, slippage and instrument-specific contract sizing. TP1 is 2R; 50% exits there and the remaining 50% targets 3R, with the stop moved to entry after TP1. State, pending setup/order, levels, open position and trade history are saved locally and an active robot resumes on refresh. JavaScript cannot monitor trades while the browser/page is closed; it resumes only when the dashboard is open again. BTC open-position mark and floating PnL use a public mark-price WebSocket when available; entry decisions still require closed candles. Other market marks continue to use the existing polling feed. Paper trading only; no exchange orders are sent. Custom assets are not enabled in this test.
         </div>
     </div>
 
@@ -2003,10 +1943,10 @@ function getMarketConfig() {
             label: "XAU/USD",
             name: "Gold",
             yahoo: GOLD_SYMBOL,
-            dataSymbol: "XAUUSD",
+            dataSymbol: "PAXGUSDT",
             bingxSymbol: "GOLD(XAU)-USDT",
-            binanceSymbol: null,
-            tradingView: "BINGX:GOLDXAUUSDT.P"
+            binanceSymbol: "PAXGUSDT",
+            tradingView: "BINANCE:PAXGUSDT"
         };
     }
 
@@ -2049,7 +1989,7 @@ function getMarketPriceSourceName(marketCode = selectedMarket) {
         if (asset && /(^|[^a-z])(oil|wti|brent|crude)([^a-z]|$)/i.test(String(asset.name || ""))) return "Yahoo Finance WTI Futures (CL=F)";
         return "Binance Spot";
     }
-    if (marketCode === "GOLD") return "BingX GOLD(XAU)-USDT Perpetual";
+    if (marketCode === "GOLD") return "Binance Spot PAXG/USDT";
     if (marketCode === "BTC") return "Binance Futures";
     return "BingX";
 }
@@ -2060,7 +2000,7 @@ function getMarketPriceSourceBadge(marketCode = selectedMarket) {
         if (asset && /(^|[^a-z])(oil|wti|brent|crude)([^a-z]|$)/i.test(String(asset.name || ""))) return "YAHOO FINANCE WTI FUTURES LAST PRICE";
         return "BINANCE SPOT LAST PRICE";
     }
-    if (marketCode === "GOLD") return "BINGX GOLD(XAU)-USDT LAST PRICE";
+    if (marketCode === "GOLD") return "BINANCE SPOT PAXG/USDT LAST PRICE";
     if (marketCode === "BTC") return "BINANCE FUTURES LAST PRICE";
     return "BINGX LAST PRICE";
 }
@@ -3281,8 +3221,8 @@ async function fetchMtfCandleHistory(marketCode, frame) {
 
     const request = (async () => {
         // MTF history is served by the Worker from the same source used for live price
-        // and ECI candles (BingX GOLD(XAU)-USDT for Gold; Binance Futures BTCUSDT for BTC;
-        // existing BingX feed paths for Silver/NASDAQ).
+        // and ECI candles (Binance Spot PAXG/USDT for Gold; Binance Futures BTCUSDT for BTC;
+        // existing BingX feed paths for Silver/NASDAQ in this Worker version).
         const params = new URLSearchParams({
             market: marketCode,
             candles: "1",
@@ -4220,7 +4160,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
 
 <script>
 /* =========================================================
-   DEMO ROBOT — SIMULATION ONLY — 5m VIDYA + TWO-POLE ENTRY FILTER
+   DEMO ROBOT — SIMULATION ONLY
    This code makes read-only GET requests for candle/price data.
    It contains no trading credentials and sends no exchange orders.
 ========================================================= */
@@ -4235,10 +4175,8 @@ setInterval(refreshMultiTimeframePanel, 60000);
         confirmAll: [],
         confirmClosed: [],
         structureClosed: [],
-        filterClosed: [],
         lastConfirmFetch: 0,
         lastStructureFetch: 0,
-        lastFilterFetch: 0,
         // Keep structure candles for the open position's market separately.
         // The selected dashboard market can change while an existing paper trade is managed.
         positionStructureClosed: [],
@@ -4249,11 +4187,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
         levelsMarket: null,
         limitMode: false,
         limitPriceOverride: '',
-        forceLimitMode: false,
-        autoEntry: false,
-        forceLimitRequest: null,
         trend: null,
-        mtfFilter: { direction: 'neutral', label: 'Waiting for closed candles', detail: 'Both signals must agree with the trade', valid: false, candleTime: null },
         logs: [],
         closedTrades: [],
         wins: 0,
@@ -4263,7 +4197,6 @@ setInterval(refreshMultiTimeframePanel, 60000);
         startingFundingUsd: 1000,
         tradeAllocationUsd: 100,
         maxRiskUsd: 10,
-        assumedFeeRatePct: 0.05,
         cooldownUntil: 0
     };
 
@@ -4332,9 +4265,6 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 levelsMarket: state.levelsMarket,
                 limitMode: Boolean(state.limitMode),
                 limitPriceOverride: String(state.limitPriceOverride || ''),
-                forceLimitMode: Boolean(state.forceLimitMode),
-                autoEntry: Boolean(state.autoEntry),
-                forceLimitRequest: state.forceLimitRequest,
                 position: state.position,
                 closedTrades: state.closedTrades.slice(-MAX_SAVED_CLOSED_TRADES),
                 wins: state.wins,
@@ -4344,7 +4274,6 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 startingFundingUsd: state.startingFundingUsd,
                 tradeAllocationUsd: state.tradeAllocationUsd,
                 maxRiskUsd: state.maxRiskUsd,
-                assumedFeeRatePct: state.assumedFeeRatePct,
                 cooldownUntil: state.cooldownUntil,
                 logs: state.logs.slice(0, MAX_SAVED_LOG_EVENTS)
             };
@@ -4370,11 +4299,6 @@ setInterval(refreshMultiTimeframePanel, 60000);
             state.activeMarket = saved.activeMarket || null;
             state.limitMode = Boolean(saved.limitMode);
             state.limitPriceOverride = String(saved.limitPriceOverride || '');
-            state.forceLimitMode = Boolean(saved.forceLimitMode);
-            state.autoEntry = Boolean(saved.autoEntry);
-            state.forceLimitRequest = saved.forceLimitRequest && typeof saved.forceLimitRequest === 'object'
-                ? { ...saved.forceLimitRequest, requestedAt: Number(saved.forceLimitRequest.requestedAt) || Date.now(), minCandleTime: Number.isFinite(Number(saved.forceLimitRequest.minCandleTime)) ? Number(saved.forceLimitRequest.minCandleTime) : null }
-                : null;
             if (saved.levels && typeof saved.levels === 'object') {
                 const validLevel = (level, side) => level && Number.isFinite(Number(level.price)) && Number(level.price) > 0 && (side === 'support' ? 'Support' : 'Resistance') === level.type
                     ? { price: Number(level.price), time: Number(level.time) || 0, type: level.type }
@@ -4412,7 +4336,6 @@ setInterval(refreshMultiTimeframePanel, 60000);
             state.startingFundingUsd = Number(saved.startingFundingUsd) > 0 ? Number(saved.startingFundingUsd) : 1000;
             state.tradeAllocationUsd = Number(saved.tradeAllocationUsd) > 0 ? Number(saved.tradeAllocationUsd) : 100;
             state.maxRiskUsd = Number(saved.maxRiskUsd) > 0 ? Number(saved.maxRiskUsd) : 10;
-            state.assumedFeeRatePct = Number.isFinite(Number(saved.assumedFeeRatePct)) && Number(saved.assumedFeeRatePct) >= 0 && Number(saved.assumedFeeRatePct) <= 1 ? Number(saved.assumedFeeRatePct) : 0.05;
             state.cooldownUntil = Number(saved.cooldownUntil) || 0;
             state.logs = Array.isArray(saved.logs) ? saved.logs.slice(0, 12).map(item => ({
                 time: parseDate(item.time),
@@ -4432,9 +4355,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
                     remainingQuantity: Number.isFinite(Number(p.remainingQuantity)) ? Number(p.remainingQuantity) : Number(p.quantity),
                     realizedPnlUsd: Number(p.realizedPnlUsd) || 0,
                     riskUsd: Number(p.riskUsd) || DEMO_RISK_USD,
-                    hitTP1: Boolean(p.hitTP1),
-                    profitProtectionActive: Boolean(p.profitProtectionActive),
-                    profitProtectionStop: Number(p.profitProtectionStop) > 0 ? Number(p.profitProtectionStop) : null
+                    hitTP1: Boolean(p.hitTP1)
                 };
                 state.positionStructureClosed = [];
                 state.lastPositionStructureFetch = 0;
@@ -4539,15 +4460,12 @@ setInterval(refreshMultiTimeframePanel, 60000);
         state.confirmAll = [];
         state.confirmClosed = [];
         state.structureClosed = [];
-        state.filterClosed = [];
         state.lastConfirmFetch = 0;
         state.lastStructureFetch = 0;
-        state.lastFilterFetch = 0;
         state.pending = null;
         state.levels = { support: null, resistance: null };
         state.levelsMarket = market;
         state.trend = null;
-        state.mtfFilter = { direction: 'neutral', label: 'Waiting for closed candles', detail: 'Both signals must agree with the trade', valid: false, candleTime: null };
     }
 
     function setMessage(message) {
@@ -4559,25 +4477,6 @@ setInterval(refreshMultiTimeframePanel, 60000);
         const toggle = $('demoRobotToggle');
         const message = $('demoRobotMessage');
         const positionEl = $('demoRobotPosition');
-        const scanningEl = $('demoRobotScanning');
-        if (scanningEl) {
-            // The animated radar is visible only while the robot is actively searching.
-            // Hide it as soon as a setup becomes a pending limit or a position is opened.
-            const isLimitWaiting = state.pending && ['limit', 'force-limit'].includes(state.pending.kind);
-            const isSearching = state.enabled && !state.position && !isLimitWaiting;
-            if (isSearching) {
-                const scanningTitle = scanningEl.querySelector('strong');
-                const scanningDetail = scanningEl.querySelector('small');
-                if (scanningTitle) scanningTitle.textContent = state.forceLimitRequest ? 'SEARCHING FOR ENTRY' : 'SCANNING THE MARKET';
-                if (scanningDetail) scanningDetail.textContent = state.forceLimitRequest
-                    ? 'Checking for a valid completed 5-minute candle and aligned direction…'
-                    : 'Checking ECI, WMA, 5m VIDYA + Two Pole, support/resistance and candle confirmation…';
-                scanningEl.style.display = 'flex';
-                scanningEl.setAttribute('aria-label', 'Scanning the market for a valid paper entry');
-            } else {
-                scanningEl.style.display = 'none';
-            }
-        }
         if (badge) {
             badge.className = 'demo-robot-badge' + (state.enabled ? ' active' : (state.position ? ' managing' : ''));
             badge.textContent = state.enabled ? 'DEMO ON · NO ORDERS' : (state.position ? 'MANAGING PAPER TRADE' : 'DEMO OFF');
@@ -4598,24 +4497,15 @@ setInterval(refreshMultiTimeframePanel, 60000);
         }
         const modeToggle = $('demoRobotLimitMode');
         const limitPriceInput = $('demoRobotLimitPrice');
-        const forceModeToggle = $('demoRobotForceLimitMode');
-        const autoEntryToggle = $('demoRobotAutoEntry');
-        const forceRefreshButton = $('demoRobotForceLimitRefresh');
         if (modeToggle && modeToggle.checked !== state.limitMode) modeToggle.checked = state.limitMode;
-        if (forceModeToggle && forceModeToggle.checked !== state.forceLimitMode) forceModeToggle.checked = state.forceLimitMode;
-        if (autoEntryToggle && autoEntryToggle.checked !== state.autoEntry) autoEntryToggle.checked = state.autoEntry;
-        if (forceModeToggle) forceModeToggle.disabled = Boolean(state.position || (state.pending && state.pending.kind !== 'force-limit') || state.limitMode);
-        if (forceRefreshButton) forceRefreshButton.disabled = !state.forceLimitMode || !state.enabled || Boolean(state.position);
         if (limitPriceInput && limitPriceInput.value !== state.limitPriceOverride) limitPriceInput.value = state.limitPriceOverride;
         if ($('demoRobotLeverageMode')) $('demoRobotLeverageMode').textContent = '10× (paper model)';
         const fundingInput = $('demoRobotFunding');
         const allocationInput = $('demoRobotAllocation');
         const riskInput = $('demoRobotRisk');
-        const feeRateInput = $('demoRobotFeeRate');
         if (fundingInput && document.activeElement !== fundingInput) fundingInput.value = String(state.startingFundingUsd);
         if (allocationInput && document.activeElement !== allocationInput) allocationInput.value = String(state.tradeAllocationUsd);
         if (riskInput && document.activeElement !== riskInput) riskInput.value = String(state.maxRiskUsd);
-        if (feeRateInput && document.activeElement !== feeRateInput) feeRateInput.value = String(state.assumedFeeRatePct);
         const equityEl = $('demoRobotEquity');
         if (equityEl) {
             let openPositionPnl = 0;
@@ -4632,8 +4522,6 @@ setInterval(refreshMultiTimeframePanel, 60000);
         }
         const marginEl = $('demoRobotMargin'); if (marginEl) marginEl.textContent = `$${Number(state.tradeAllocationUsd).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}`;
         if ($('demoRobotTrend')) $('demoRobotTrend').textContent = state.trend ? state.trend.label : 'Unavailable';
-        if ($('demoRobotMtfFilter')) { $('demoRobotMtfFilter').textContent = state.mtfFilter?.label || 'Unavailable'; $('demoRobotMtfFilter').style.color = state.mtfFilter?.direction === 'long' ? '#22c55e' : (state.mtfFilter?.direction === 'short' ? '#ef4444' : '#facc15'); }
-        if ($('demoRobotMtfFilterDetail')) $('demoRobotMtfFilterDetail').textContent = state.mtfFilter?.detail || 'Waiting for valid 15-minute data';
         if ($('demoRobotClosed')) $('demoRobotClosed').textContent = String(state.closedTrades.length);
         if ($('demoRobotNetR')) {
             $('demoRobotNetR').textContent = fmtR(state.netR);
@@ -4699,12 +4587,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
                     const realized = Number(p.realizedPnlUsd) || 0;
                     const remainingNotional = Math.abs(mark * remainingQty);
                     const estimatedMargin = remainingNotional / 10;
-                    const feeRate = Math.max(0, Number(state.assumedFeeRatePct) || 0) / 100;
-                    const entryFeeEstimate = Math.abs(Number(p.entry) * Number(p.quantity)) * feeRate;
-                    const exitFeeEstimate = Math.abs(mark * remainingQty) * feeRate;
-                    const roundTripFeeEstimate = entryFeeEstimate + exitFeeEstimate;
-                    const protectionStatus = p.hitTP1 ? 'TP1 reached; runner stop uses the existing breakeven rule.' : (p.profitProtectionActive ? `Pre-TP1 fee-covering stop ACTIVE at ${formatPrice(p.activeStop)}; estimated round-trip fees $${roundTripFeeEstimate.toFixed(2)}.` : `Pre-TP1 fee protection waiting; estimated round-trip fees $${roundTripFeeEstimate.toFixed(2)} at ${(Number(state.assumedFeeRatePct) || 0).toFixed(3)}% per side.`);
-                    $('demoPositionPnlBreakdown').textContent = `Assumed risk: $${p.riskUsd.toFixed(2)} at the initial stop · Simulated leverage: 10× · Estimated margin at 10×: $${estimatedMargin.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · Realized from partial exits: ${fmtUsdPnl(realized)} · Floating PnL on remaining quantity: ${fmtUsdPnl(floatingPnl)} · Remaining notional exposure: $${remainingNotional.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}. ${protectionStatus} Fee-covering stop uses estimated entry + exit fees and a small $0.05 minimum / 10% fee buffer. This is paper-only; PnL otherwise excludes fees, spread, slippage and exchange contract specifications.`;
+                    $('demoPositionPnlBreakdown').textContent = `Assumed risk: $${p.riskUsd.toFixed(2)} at the initial stop · Simulated leverage: 10× · Estimated margin at 10×: $${estimatedMargin.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · Realized from partial exits: ${fmtUsdPnl(realized)} · Floating PnL on remaining quantity: ${fmtUsdPnl(floatingPnl)} · Remaining notional exposure: $${remainingNotional.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}. Quantity remains sized from fixed initial risk; this is a paper estimate and does not model liquidation. PnL excludes fees, spread, slippage and exchange contract specifications.`;
                 }
                 positionEl.style.display = 'block';
             }
@@ -4851,92 +4734,6 @@ setInterval(refreshMultiTimeframePanel, 60000);
         throw new Error(`${intervalKey} candle feed failed after ${maxAttempts} attempts: ${details}`);
     }
 
-    // 15-minute confirmation filter. Uses only fully closed candles.
-    // VIDYA trend uses adaptive CMO weighting and ATR bands; Two-Pole uses
-    // deviation-from-mean normalization followed by two cascaded smoothing poles.
-    function calcVolumaticTwoPoleFilter(candles) {
-        const bars = (Array.isArray(candles) ? candles : []).filter(c => c && c[6] !== true &&
-            [c[0], c[1], c[2], c[3], c[4], c[5]].every(v => Number.isFinite(Number(v))));
-        const waiting = { direction: 'neutral', label: 'Waiting for data', detail: 'Need enough closed 5-minute candles', valid: false, candleTime: bars.length ? bars[bars.length - 1][0] : null };
-        if (bars.length < 220) return { ...waiting, label: `Need 220 closed 5m candles (${bars.length} available)` };
-        const closes = bars.map(c => Number(c[4]));
-        const highs = bars.map(c => Number(c[2]));
-        const lows = bars.map(c => Number(c[3]));
-        const volumes = bars.map(c => Math.max(0, Number(c[5]) || 0));
-        const trueRanges = bars.map((c, i) => i === 0 ? highs[i] - lows[i] : Math.max(highs[i] - lows[i], Math.abs(highs[i] - closes[i - 1]), Math.abs(lows[i] - closes[i - 1])));
-        const atrs = trueRanges.map((_, i) => {
-            if (i < 199) return null;
-            let sum = 0;
-            for (let j = i - 199; j <= i; j++) sum += trueRanges[j];
-            return sum / 200;
-        });
-        // BigBeluga-style VIDYA defaults: length 10, CMO momentum 20, band distance 2.0.
-        const vidya = [];
-        for (let i = 0; i < closes.length; i++) {
-            if (i === 0) { vidya.push(closes[i]); continue; }
-            if (i < 20) { vidya.push(vidya[i - 1]); continue; }
-            let pos = 0, neg = 0;
-            for (let j = i - 19; j <= i; j++) {
-                const change = closes[j] - closes[j - 1];
-                if (change >= 0) pos += change; else neg -= change;
-            }
-            const denom = pos + neg;
-            const absCmo = denom > 0 ? Math.abs(100 * (pos - neg) / denom) : 0;
-            const alpha = 2 / (10 + 1) * absCmo / 100;
-            vidya.push(alpha * closes[i] + (1 - alpha) * vidya[i - 1]);
-        }
-        const smoothed = vidya.map((_, i) => {
-            if (i < 14) return null;
-            let sum = 0;
-            for (let j = i - 14; j <= i; j++) sum += vidya[j];
-            return sum / 15;
-        });
-        // Two-Pole Oscillator [BigBeluga]-style normalized deviation and signal comparison.
-        const priceMean = closes.map((_, i) => i < 24 ? null : closes.slice(i - 24, i + 1).reduce((a, b) => a + b, 0) / 25);
-        const priceResidual = closes.map((close, i) => Number.isFinite(priceMean[i]) ? close - priceMean[i] : null);
-        const deviation = closes.map((_, i) => {
-            if (i < 48 || !Number.isFinite(priceResidual[i])) return null;
-            const residuals = priceResidual.slice(i - 24, i + 1);
-            if (residuals.some(v => !Number.isFinite(v))) return null;
-            const residualMean = residuals.reduce((a, b) => a + b, 0) / 25;
-            const variance = residuals.reduce((a, b) => a + (b - residualMean) ** 2, 0) / 25;
-            const stdev = Math.sqrt(variance);
-            return stdev > 0 ? (priceResidual[i] - residualMean) / stdev : 0;
-        });
-        const pole1 = [], pole2 = [];
-        const alpha = 2 / (15 + 1);
-        for (let i = 0; i < deviation.length; i++) {
-            const source = Number.isFinite(deviation[i]) ? deviation[i] : 0;
-            pole1[i] = i === 0 ? source : (1 - alpha) * pole1[i - 1] + alpha * source;
-            pole2[i] = i === 0 ? pole1[i] : (1 - alpha) * pole2[i - 1] + alpha * pole1[i];
-        }
-        const signal = pole2.map((_, i) => i < 3 ? null : (pole2[i] + pole2[i - 1] + pole2[i - 2] + pole2[i - 3]) / 4);
-        const last = bars.length - 1;
-        const osc = pole2[last], sig = signal[last];
-        if (!Number.isFinite(smoothed[last]) || !Number.isFinite(atrs[last]) || !Number.isFinite(osc) || !Number.isFinite(sig)) {
-            return { ...waiting, label: 'Filter unavailable', detail: 'Not enough valid 5-minute indicator values' };
-        }
-        const upper = smoothed[last] + 2 * atrs[last];
-        const lower = smoothed[last] - 2 * atrs[last];
-        // Re-evaluate persistent VIDYA regime through the latest closed candle.
-        let regime = 'neutral';
-        for (let i = 200; i <= last; i++) {
-            if (!Number.isFinite(smoothed[i]) || !Number.isFinite(atrs[i])) continue;
-            if (closes[i] > smoothed[i] + 2 * atrs[i]) regime = 'long';
-            else if (closes[i] < smoothed[i] - 2 * atrs[i]) regime = 'short';
-        }
-        const poleDirection = osc > sig && osc > 0 ? 'long' : (osc < sig && osc < 0 ? 'short' : 'neutral');
-        const aligned = regime !== 'neutral' && regime === poleDirection;
-        const volWindow = Math.min(6, bars.length);
-        let buyVol = 0, sellVol = 0;
-        for (let i = bars.length - volWindow; i < bars.length; i++) {
-            if (closes[i] >= Number(bars[i][1])) buyVol += volumes[i]; else sellVol += volumes[i];
-        }
-        const volumeBias = buyVol > sellVol ? 'buy-volume' : (sellVol > buyVol ? 'sell-volume' : 'balanced volume');
-        const detail = `VIDYA ${regime.toUpperCase()} · Two Pole ${poleDirection.toUpperCase()} · ${volumeBias}`;
-        return { direction: aligned ? regime : 'neutral', label: aligned ? `${regime === 'long' ? 'BULLISH' : 'BEARISH'} CONFIRMED` : 'WAITING · NO ALIGNMENT', detail, valid: true, candleTime: bars[last][0], vidyaDirection: regime, poleDirection, oscillator: osc, signal: sig };
-    }
-
     function resetPending(reason) {
         if (state.pending) logEvent(`Setup cancelled: ${reason}`);
         state.pending = null;
@@ -5010,8 +4807,6 @@ setInterval(refreshMultiTimeframePanel, 60000);
             tp2: entryPrice + sign * risk * 3,
             hitTP1: false,
             realizedR: 0,
-            profitProtectionActive: false,
-            profitProtectionStop: null,
             openedAt: new Date(),
             level: level.price,
             entryMode: isLimitFill ? 'paper_limit' : 'confirmed_rejection',
@@ -5055,8 +4850,8 @@ setInterval(refreshMultiTimeframePanel, 60000);
         state.position = null;
         state.positionStructureClosed = [];
         state.lastPositionStructureFetch = 0;
-        state.cooldownUntil = state.autoEntry ? 0 : Date.now() + 60000;
-        setMessage(state.autoEntry ? `Paper trade closed: ${reason}. Result ${fmtR(outcomeR)}. Auto Entry is searching for the next valid setup.` : `Paper trade closed: ${reason}. Result ${fmtR(outcomeR)}. A one-minute cooldown is active.`);
+        state.cooldownUntil = Date.now() + 60000;
+        setMessage(`Paper trade closed: ${reason}. Result ${fmtR(outcomeR)}. A one-minute cooldown is active.`);
         logEvent(`${marketName(p.market)} PAPER trade closed at ${formatPrice(markPrice)}: ${reason}, ${fmtR(outcomeR)}.`);
     }
 
@@ -5082,8 +4877,8 @@ setInterval(refreshMultiTimeframePanel, 60000);
         state.position = null;
         state.positionStructureClosed = [];
         state.lastPositionStructureFetch = 0;
-        state.cooldownUntil = state.autoEntry ? 0 : Date.now() + 60000;
-        setMessage(state.autoEntry ? `Paper position manually closed at ${formatPrice(mark)}. Realized PnL: ${fmtUsdPnl(cashPnlUsd)}. Auto Entry is searching for the next valid setup.` : `Paper position manually closed at ${formatPrice(mark)}. Realized PnL: ${fmtUsdPnl(cashPnlUsd)}. Added to cumulative closed PnL.`);
+        state.cooldownUntil = Date.now() + 60000;
+        setMessage(`Paper position manually closed at ${formatPrice(mark)}. Realized PnL: ${fmtUsdPnl(cashPnlUsd)}. Added to cumulative closed PnL.`);
         logEvent(`${marketName(p.market)} PAPER ${p.direction.toUpperCase()} manually closed at ${formatPrice(mark)}; realized ${fmtUsdPnl(cashPnlUsd)} (${fmtR(outcomeR)}).`);
         renderUi();
     }
@@ -5093,20 +4888,11 @@ setInterval(refreshMultiTimeframePanel, 60000);
         if (!p || !Number.isFinite(markPrice) || markPrice <= 0) return;
         p.markPrice = markPrice;
         p.lastMarkTime = Date.now();
-
         const stopHit = p.direction === 'long' ? markPrice <= p.activeStop : markPrice >= p.activeStop;
         if (stopHit) {
-            if (!p.hitTP1 && p.profitProtectionActive) {
-                // Simulate a stop fill at the configured stop price (no gap/slippage model).
-                const stopFill = Number(p.activeStop);
-                const grossPnl = (p.direction === 'long' ? stopFill - p.entry : p.entry - stopFill) * p.quantity;
-                const riskUsd = Math.max(0.01, Number(p.riskUsd) || DEMO_RISK_USD);
-                closePaperPosition(grossPnl / riskUsd, 'pre-TP1 fee-covering profit stop reached', stopFill);
-            } else {
-                const outcome = p.hitTP1 ? p.realizedR : -1;
-                const reason = p.hitTP1 ? 'runner stopped at breakeven after TP1' : 'initial stop reached';
-                closePaperPosition(outcome, reason, markPrice);
-            }
+            const outcome = p.hitTP1 ? p.realizedR : -1;
+            const reason = p.hitTP1 ? 'runner stopped at breakeven after TP1' : 'initial stop reached';
+            closePaperPosition(outcome, reason, markPrice);
             return;
         }
 
@@ -5116,39 +4902,9 @@ setInterval(refreshMultiTimeframePanel, 60000);
             p.realizedR = 1; // Half of the simulated position exits at +2R.
             p.realizedPnlUsd = p.riskUsd; // 50% closed at +2R books +1R of the initial cash risk.
             p.remainingQuantity = p.quantity / 2;
-            p.activeStop = p.entry; // Existing runner stop rule remains unchanged after TP1.
-            p.profitProtectionActive = false;
-            logEvent(`TP1 reached: simulated 50% exit at +2R; runner stop moved to breakeven ${formatPrice(p.entry)}.`);
+            p.activeStop = p.entry; // Remaining half moves to breakeven.
+            logEvent(`TP1 reached: simulated 50% exit at +2R; runner stop moved to entry ${formatPrice(p.entry)}.`);
             setMessage('TP1 reached. Half the paper position is booked at +2R; the remaining half has its stop at entry.');
-        }
-
-        // Before TP1, activate once the open gross profit can cover estimated entry + exit fees
-        // and a small net buffer. The stop is placed to preserve that amount if revisited.
-        if (!p.hitTP1 && !p.profitProtectionActive) {
-            const qty = Number(p.quantity);
-            const feeRate = Math.max(0, Math.min(1, Number(state.assumedFeeRatePct) || 0)) / 100;
-            const grossOpenPnl = (p.direction === 'long' ? markPrice - p.entry : p.entry - markPrice) * qty;
-            const entryFee = Math.abs(p.entry * qty) * feeRate;
-            const exitFeeAtMark = Math.abs(markPrice * qty) * feeRate;
-            const estimatedRoundTripFees = entryFee + exitFeeAtMark;
-            const smallNetBuffer = Math.max(0.05, estimatedRoundTripFees * 0.10);
-            if (grossOpenPnl >= estimatedRoundTripFees + smallNetBuffer && qty > 0) {
-                let protectedStop;
-                if (p.direction === 'long') {
-                    protectedStop = (p.entry * qty + entryFee + smallNetBuffer) / (qty * (1 - feeRate));
-                } else {
-                    protectedStop = (p.entry * qty - entryFee - smallNetBuffer) / (qty * (1 + feeRate));
-                }
-                const validStop = Number.isFinite(protectedStop) && protectedStop > 0 &&
-                    (p.direction === 'long' ? protectedStop > p.entry && protectedStop < markPrice : protectedStop < p.entry && protectedStop > markPrice);
-                if (validStop) {
-                    p.activeStop = protectedStop;
-                    p.profitProtectionStop = protectedStop;
-                    p.profitProtectionActive = true;
-                    logEvent(`Pre-TP1 profit protection activated: stop moved to ${formatPrice(protectedStop)} to cover estimated round-trip fees plus a small buffer (assumed fee ${feeRate * 100}% per side).`);
-                    setMessage(`Pre-TP1 profit protection ACTIVE. Stop moved to ${formatPrice(protectedStop)} to target estimated round-trip fee coverage plus a small net buffer.`);
-                }
-            }
         }
 
         const tp2Hit = p.direction === 'long' ? markPrice >= p.tp2 : markPrice <= p.tp2;
@@ -5292,15 +5048,6 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 state.structureClosed = all15m.filter(c => c[6] !== true);
                 state.lastStructureFetch = Date.now();
             }
-            // The test indicators use their own 5-minute closed-candle history.
-            // Do not reuse the 15-minute structure candles for this filter.
-            if (!state.filterClosed.length || Date.now() - state.lastFilterFetch >= 60000) {
-                const all5m = await fetchDemoBars(market, '5m', 5, CANDLE_LIMIT);
-                if (market !== selectedMarket) return;
-                state.filterClosed = all5m.filter(c => c[6] !== true);
-                state.lastFilterFetch = Date.now();
-            }
-            state.mtfFilter = calcVolumaticTwoPoleFilter(state.filterClosed);
 
             const price = selectedMarket === market && Number.isFinite(currentPrice) && currentPrice > 0
                 ? currentPrice
@@ -5327,108 +5074,18 @@ setInterval(refreshMultiTimeframePanel, 60000);
             const latestClosed = state.confirmClosed[state.confirmClosed.length - 1];
             const previousClosed = state.confirmClosed[state.confirmClosed.length - 2];
 
-            // Force Limit Entry: use the close of a fully closed 5-minute candle as the limit price.
-            // A refresh request waits for the next 5-minute candle to finish before recalculating.
-            if (state.forceLimitRequest && !state.position && !state.pending) {
-                const request = state.forceLimitRequest;
-                if (!state.mtfFilter?.valid || state.mtfFilter.direction !== signalDirection) {
-                    setMessage(`Force Limit Entry waiting: 5m VIDYA + Two Pole must confirm ${String(signalDirection || 'a direction').toUpperCase()}. ${state.mtfFilter?.detail || ''}`);
-                } else if (request.market !== market) {
-                    state.forceLimitRequest = null;
-                    setMessage('Force Limit Entry request cancelled because the selected market changed.');
-                } else if (Date.now() - request.requestedAt > MAX_LIMIT_PENDING_MINUTES * 60000) {
-                    state.forceLimitRequest = null;
-                    setMessage('Force Limit Entry request expired before a valid 5-minute candle was available. Click refresh to try again.');
-                } else if (!signalDirection || signalDirection !== trend.direction) {
-                    if (state.autoEntry && state.forceLimitMode) {
-                        setMessage('Auto Entry is waiting for the dashboard ECI and 1-minute WMA to agree before setting a limit.');
-                    } else {
-                        state.forceLimitRequest = null;
-                        setMessage('Force Limit Entry cancelled: dashboard ECI and 1-minute WMA must agree in the same direction.');
-                        logEvent('Force Limit Entry request cancelled because ECI/WMA direction did not agree.');
-                    }
-                } else if (request.direction && request.direction !== signalDirection) {
-                    if (state.autoEntry && state.forceLimitMode) {
-                        request.direction = signalDirection;
-                        request.requestedAt = Date.now();
-                        request.minCandleTime = Math.floor(Date.now() / 300000) * 300000;
-                        setMessage('Auto Entry direction updated. Waiting for the next fully closed 5-minute candle.');
-                    } else {
-                        state.forceLimitRequest = null;
-                        setMessage('Force Limit Entry cancelled because the dashboard direction changed. Click refresh to try again.');
-                        logEvent('Force Limit Entry request cancelled after dashboard direction changed.');
-                    }
-                } else if (request.minCandleTime !== null && request.minCandleTime !== undefined && Date.now() < request.minCandleTime + 300000) {
-                    setMessage('Force Limit Entry is waiting for the current 5-minute candle to close before setting the refreshed entry price.');
-                } else {
-                    const all5m = await fetchDemoBars(market, '5m', 5, CANDLE_LIMIT);
-                    const closed5m = all5m.filter(c => c[6] !== true);
-                    const candle5m = closed5m[closed5m.length - 1];
-                    const candleReady = candle5m && (request.minCandleTime === null || request.minCandleTime === undefined || candle5m[0] >= request.minCandleTime);
-                    if (!candleReady) {
-                        setMessage('Force Limit Entry is waiting for the next 5-minute candle to close before setting the refreshed entry price.');
-                    } else {
-                        const level = signalDirection === 'long' ? levels.support : levels.resistance;
-                        if (!level) {
-                            state.forceLimitRequest = null;
-                            setMessage(`Force Limit Entry cancelled: no confirmed ${signalDirection === 'long' ? 'support' : 'resistance'} is available for the existing stop logic.`);
-                        } else {
-                            const limitPrice = Number(candle5m[4]);
-                            const correctSide = Number.isFinite(limitPrice) && limitPrice > 0 && (signalDirection === 'long' ? limitPrice < price : limitPrice > price);
-                            if (!correctSide) {
-                                if (state.autoEntry && state.forceLimitMode) {
-                                    state.forceLimitRequest = {
-                                        market, direction: signalDirection, requestedAt: Date.now(),
-                                        minCandleTime: Math.floor(Date.now() / 300000) * 300000,
-                                        automatic: true
-                                    };
-                                    setMessage(`The last closed 5-minute candle close (${formatPrice(limitPrice)}) is not a valid waiting-side limit at current price (${formatPrice(price)}). Auto Entry will retry after the next 5-minute candle closes.`);
-                                } else {
-                                    state.forceLimitRequest = null;
-                                    setMessage(`Force Limit Entry not placed: the previous closed 5-minute candle close (${formatPrice(limitPrice)}) is not on the waiting side of current price (${formatPrice(price)}). Click refresh after another 5-minute candle closes.`);
-                                }
-                                logEvent(`Force Limit Entry skipped: candle-close price ${formatPrice(limitPrice)} was already crossed or not a valid ${signalDirection.toUpperCase()} limit relative to ${formatPrice(price)}.`);
-                            } else {
-                                state.pending = {
-                                    kind: 'force-limit', market, direction: signalDirection, level,
-                                    limitPrice, tolerance, atr, startedAt: Date.now(),
-                                    triggerCandleTime: null, lastEvaluatedTime: null,
-                                    sourceCandleTime: candle5m[0]
-                                };
-                                state.forceLimitRequest = null;
-                                logEvent(`${marketName(market)} PAPER ${signalDirection.toUpperCase()} LIMIT pending at ${formatPrice(limitPrice)} using the previous closed 5-minute candle close. Structure reference remains ${level.type.toLowerCase()} ${formatPrice(level.price)}. Expires in ${MAX_LIMIT_PENDING_MINUTES} minutes unless signals change or the level invalidates.`);
-                                setMessage(`Paper ${signalDirection.toUpperCase()} Force Limit Entry pending at ${formatPrice(limitPrice)}, based on the previous closed 5-minute candle. Waiting for price to touch the limit.`);
-                            }
-                        }
-                    }
-                }
-            }
-
             if (state.pending) {
                 const pending = state.pending;
-                const isLimitOrder = pending.kind === 'limit' || pending.kind === 'force-limit';
+                const isLimitOrder = pending.kind === 'limit';
                 const maxAgeMinutes = isLimitOrder ? MAX_LIMIT_PENDING_MINUTES : MAX_PENDING_MINUTES;
                 if (pending.market !== market) {
                     resetPending('market changed');
                 } else if (Date.now() - pending.startedAt > maxAgeMinutes * 60000) {
-                    const expiredForceLimit = pending.kind === 'force-limit';
                     resetPending(isLimitOrder ? 'paper limit order expired after 30 minutes' : 'no confirmation within five minutes');
-                    if (expiredForceLimit && state.autoEntry && state.forceLimitMode) {
-                        state.forceLimitRequest = {
-                            market, direction: signalDirection || pending.direction, requestedAt: Date.now(),
-                            minCandleTime: Math.floor(Date.now() / 300000) * 300000,
-                            automatic: true
-                        };
-                        setMessage('Force limit expired without a fill. Auto Entry is waiting for the next fully closed 5-minute candle to set a new limit.');
-                        savePersistentState();
-                    }
                 } else if (signalDirection !== pending.direction) {
                     resetPending('dashboard ECI direction no longer matches the setup');
                 } else if (trend.direction !== pending.direction) {
                     resetPending('1-minute WMA trend no longer agrees or became neutral');
-                } else if (!state.mtfFilter?.valid || state.mtfFilter.direction !== pending.direction) {
-                    resetPending('5-minute Volumatic VIDYA + Two Pole confirmation no longer agrees');
-                    setMessage('Pending entry cancelled: the closed 5-minute VIDYA + Two Pole confirmation no longer agrees.');
                 } else if (isLimitOrder && latestClosed && ((pending.direction === 'long' && latestClosed[4] < pending.level.price - pending.tolerance) || (pending.direction === 'short' && latestClosed[4] > pending.level.price + pending.tolerance))) {
                     resetPending('the last closed 1-minute candle invalidated the support/resistance level');
                 } else if (!isLimitOrder && pending.direction === 'long' && price < pending.level.price - pending.tolerance * 1.5) {
@@ -5456,20 +5113,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 }
             } else {
                 const aligned = signalDirection && signalDirection === trend.direction;
-                if (state.autoEntry && state.forceLimitMode && !state.forceLimitRequest && !state.position) {
-                    state.forceLimitRequest = {
-                        market, direction: signalDirection || null, requestedAt: Date.now(),
-                        minCandleTime: null, automatic: true
-                    };
-                    savePersistentState();
-                }
-                if (state.forceLimitRequest) {
-                    setMessage('Force Limit Entry request is active. Waiting for a valid completed 5-minute candle and aligned direction.');
-                } else if (state.forceLimitMode && state.autoEntry) {
-                    setMessage('Auto Entry is enabled. The bot is preparing a limit from the previous closed 5-minute candle and will retry after expiry.');
-                } else if (state.forceLimitMode) {
-                    setMessage('Force Limit Entry is enabled. Click “Force / Refresh Limit Entry” to set a limit from the previous closed 5-minute candle; no market entry will be chased.');
-                } else if (Date.now() < state.cooldownUntil) {
+                if (Date.now() < state.cooldownUntil) {
                     setMessage('Cooling down after the last paper trade. Waiting before looking for another setup.');
                 } else if (!signalDirection) {
                     setMessage('Waiting for an active Buy Long or Sell Short signal from the dashboard ECI.');
@@ -5477,8 +5121,6 @@ setInterval(refreshMultiTimeframePanel, 60000);
                     setMessage('Waiting for a clear 1-minute WMA 100/200 trend.');
                 } else if (!aligned) {
                     setMessage(`No entry: dashboard ECI is ${lastScalpSignal}, but the 1-minute WMA trend is ${trend.label}. Direction must agree.`);
-                } else if (!state.mtfFilter?.valid || state.mtfFilter.direction !== signalDirection) {
-                    setMessage(`No entry: 5-minute Volumatic VIDYA + Two Pole has not confirmed ${signalDirection.toUpperCase()}. ${state.mtfFilter?.detail || 'Waiting for valid closed 5-minute candles.'}`);
                 } else {
                     const level = signalDirection === 'long' ? levels.support : levels.resistance;
                     if (!level) {
@@ -5499,8 +5141,8 @@ setInterval(refreshMultiTimeframePanel, 60000);
                                 limitPrice, tolerance, atr, startedAt: Date.now(),
                                 triggerCandleTime: null, lastEvaluatedTime: null
                             };
-                            logEvent(`${marketName(market)} PAPER ${signalDirection.toUpperCase()} LIMIT pending at ${formatPrice(limitPrice)} using ${level.type.toLowerCase()} ${formatPrice(level.price)}. Expires in ${MAX_LIMIT_PENDING_MINUTES} minutes unless signals change or level invalidates.`);
-                            setMessage(`Paper ${signalDirection.toUpperCase()} limit order pending at ${formatPrice(limitPrice)} (${overrideRaw ? 'manual override' : 'nearest confirmed level'}). Waiting for price to touch the limit.`);
+                            logEvent(`${marketName(market)} PAPER ${signalDirection.toUpperCase()} LIMIT placed at ${formatPrice(limitPrice)} using ${level.type.toLowerCase()} ${formatPrice(level.price)}. Expires in ${MAX_LIMIT_PENDING_MINUTES} minutes unless signals change or level invalidates.`);
+                            setMessage(`Paper ${signalDirection.toUpperCase()} limit order placed at ${formatPrice(limitPrice)} (${overrideRaw ? 'manual override' : 'nearest confirmed level'}). Waiting for price to reach the limit.`);
                         }
                     } else if (Math.abs(price - level.price) <= tolerance) {
                         const triggerTime = currentCandleStartTime();
@@ -5614,108 +5256,9 @@ setInterval(refreshMultiTimeframePanel, 60000);
     bindNumericSetting('demoRobotFunding', 'startingFundingUsd', 1);
     bindNumericSetting('demoRobotAllocation', 'tradeAllocationUsd', 1);
     bindNumericSetting('demoRobotRisk', 'maxRiskUsd', 0.01);
-    const feeRateInput = $('demoRobotFeeRate');
-    if (feeRateInput) feeRateInput.addEventListener('change', () => {
-        const value = Number(feeRateInput.value);
-        if (!Number.isFinite(value) || value < 0 || value > 1) {
-            feeRateInput.value = String(state.assumedFeeRatePct);
-            setMessage('Estimated fee per side must be between 0% and 1%.');
-            return;
-        }
-        state.assumedFeeRatePct = value;
-        savePersistentState();
-        renderUi();
-        logEvent(`Estimated trading fee assumption set to ${value.toFixed(3)}% per side. Confirm this against your exchange fee tier.`);
-    });
-    const forceLimitModeInput = $('demoRobotForceLimitMode');
-    const autoEntryInput = $('demoRobotAutoEntry');
-    const forceLimitRefreshButton = $('demoRobotForceLimitRefresh');
-    if (autoEntryInput) {
-        autoEntryInput.addEventListener('change', () => {
-            state.autoEntry = Boolean(autoEntryInput.checked);
-            if (!state.autoEntry && state.forceLimitRequest?.automatic) {
-                state.forceLimitRequest = null;
-                setMessage('Auto Entry disabled. Existing open positions and pending limits remain managed; no automatic retry will be started.');
-                logEvent('Auto Entry disabled; automatic limit retry cancelled.');
-            } else if (state.autoEntry) {
-                state.cooldownUntil = 0;
-                setMessage(state.forceLimitMode
-                    ? 'Auto Entry enabled. The bot will automatically create and refresh 5-minute-candle limit attempts.'
-                    : 'Auto Entry enabled. The bot will scan for the next valid setup after a trade closes.');
-                logEvent('Auto Entry enabled.');
-            } else {
-                setMessage('Auto Entry disabled. Existing paper-trading settings remain unchanged.');
-                logEvent('Auto Entry disabled.');
-            }
-            savePersistentState(); renderUi();
-            if (state.autoEntry && state.enabled) cycle();
-        });
-    }
-    function requestForceLimitEntry(waitForNextCandle) {
-        if (!state.forceLimitMode) {
-            setMessage('Enable Force Limit Entry first.'); renderUi(); return;
-        }
-        if (state.position) {
-            setMessage('Force Limit Entry is unavailable while a paper position is open. Manage or close the current position first.'); renderUi(); return;
-        }
-        if (state.pending && state.pending.kind !== 'force-limit') {
-            setMessage('Cancel or finish the existing pending setup before using Force Limit Entry.'); renderUi(); return;
-        }
-        if (state.pending?.kind === 'force-limit') resetPending('force limit entry refreshed by user');
-        const direction = directionFromSignal(lastScalpSignal);
-        if (!direction) {
-            setMessage('Force Limit Entry needs an active dashboard Buy Long or Sell Short signal.'); renderUi(); return;
-        }
-        const now = Date.now();
-        state.forceLimitRequest = {
-            market: selectedMarket,
-            direction,
-            requestedAt: now,
-            // For a refresh, wait for a candle whose start is at/after the currently forming 5m bucket.
-            minCandleTime: waitForNextCandle ? Math.floor(now / 300000) * 300000 : null
-        };
-        savePersistentState();
-        setMessage(waitForNextCandle
-            ? 'Refresh requested. Waiting for the current 5-minute candle to close before setting a new limit.'
-            : 'Force Limit Entry requested. Preparing a limit from the latest closed 5-minute candle.');
-        logEvent(waitForNextCandle
-            ? 'Force Limit Entry refresh requested; waiting for the next 5-minute candle close.'
-            : 'Force Limit Entry enabled; using the latest fully closed 5-minute candle for the first limit.');
-        renderUi();
-        cycle();
-    }
-    if (forceLimitModeInput) {
-        forceLimitModeInput.addEventListener('change', () => {
-            const enabled = Boolean(forceLimitModeInput.checked);
-            if (enabled && (!state.enabled || state.position || state.pending || state.limitMode)) {
-                forceLimitModeInput.checked = false;
-                setMessage(!state.enabled ? 'Start the Demo Robot before enabling Force Limit Entry.' : state.position ? 'Close the open paper position before enabling Force Limit Entry.' : state.pending ? 'Finish or cancel the existing pending setup before enabling Force Limit Entry.' : 'Turn off Optional Paper Limit Entry Mode before enabling Force Limit Entry.');
-                renderUi(); return;
-            }
-            state.forceLimitMode = enabled;
-            if (!enabled) {
-                state.forceLimitRequest = null;
-                if (state.pending?.kind === 'force-limit') resetPending('Force Limit Entry was switched off');
-                setMessage('Force Limit Entry disabled. The standard entry strategy is active.');
-                logEvent('Force Limit Entry disabled.');
-            } else {
-                logEvent('Force Limit Entry enabled.');
-                requestForceLimitEntry(false);
-                return;
-            }
-            savePersistentState(); renderUi();
-        });
-    }
-    if (forceLimitRefreshButton) forceLimitRefreshButton.addEventListener('click', () => requestForceLimitEntry(true));
-
     const limitModeInput = $('demoRobotLimitMode');
     if (limitModeInput) {
         limitModeInput.addEventListener('change', () => {
-            if (limitModeInput.checked && state.forceLimitMode) {
-                limitModeInput.checked = false;
-                setMessage('Turn off Force Limit Entry before enabling Optional Paper Limit Entry Mode.');
-                renderUi(); return;
-            }
             state.limitMode = Boolean(limitModeInput.checked);
             if (!state.limitMode && state.pending?.kind === 'limit') resetPending('paper limit-entry mode was switched off');
             logEvent(state.limitMode
@@ -5797,5 +5340,233 @@ setInterval(refreshMultiTimeframePanel, 60000);
 })();
 </script>
 
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(() => {
+  "use strict";
+  const SUPABASE_URL = "https://gzboixmsmnqgfohqkuxs.supabase.co";
+  const WORKER_AUTH_URL = "https://gold-eci-api.contatoseder.workers.dev/?auth=supabase";
+  const KEY_STORAGE = "dashboard_supabase_publishable_key_v1";
+  const statusEl = document.getElementById("supabaseAuthStatus");
+  const keyEl = document.getElementById("supabasePublishableKey");
+  const signInBtn = document.getElementById("supabaseSignInBtn");
+  const verifyBtn = document.getElementById("supabaseVerifyBtn");
+  const signOutBtn = document.getElementById("supabaseSignOutBtn");
+  let supabaseClient = null;
+  let activeKey = null;
+  let verifiedUserId = null;
+
+  function setStatus(message, kind) {
+    statusEl.textContent = message;
+    statusEl.className = kind || "";
+  }
+  function setBusy(busy) {
+    [signInBtn, verifyBtn, signOutBtn].forEach(button => button.disabled = busy);
+  }
+  function getClient() {
+    if (!window.supabase || !window.supabase.createClient) {
+      throw new Error("Supabase client library did not load. Check your connection or content blocker.");
+    }
+    const key = keyEl.value.trim();
+    if (!key) throw new Error("Enter the Supabase publishable key from your project's API settings.");
+    try { localStorage.setItem(KEY_STORAGE, key); } catch (_) {}
+    if (!supabaseClient || activeKey !== key) {
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, key, {
+        auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: "pkce" }
+      });
+      activeKey = key;
+    }
+    return supabaseClient;
+  }
+  async function verifySession() {
+    const client = getClient();
+    const { data, error } = await client.auth.getSession();
+    if (error) throw error;
+    const session = data && data.session;
+    if (!session || !session.access_token) {
+      verifiedUserId = null;
+      setStatus("No active Supabase session. Choose Sign in with GitHub first.", "error");
+      return false;
+    }
+    setStatus("GitHub sign-in returned. Verifying your Supabase session with Cloudflare…", "");
+    const response = await fetch(WORKER_AUTH_URL, {
+      method: "GET", cache: "no-store",
+      headers: { "Accept": "application/json", "Authorization": "Bearer " + session.access_token }
+    });
+    const bodyText = await response.text();
+    let body;
+    try { body = bodyText ? JSON.parse(bodyText) : {}; }
+    catch (_) { body = { error: bodyText || "Worker returned an empty response." }; }
+    if (!response.ok || body.authenticated !== true || !body.user || !body.user.id) {
+      verifiedUserId = null;
+      throw new Error((body && body.error) || ("Worker verification failed (HTTP " + response.status + ")."));
+    }
+    verifiedUserId = body.user.id;
+    setStatus("Signed in and verified • " + (body.user.email || body.user.id), "ok");
+    return true;
+  }
+  signInBtn.addEventListener("click", async () => {
+    setBusy(true);
+    try {
+      const client = getClient();
+      setStatus("Redirecting to GitHub for sign-in…", "");
+      const { error } = await client.auth.signInWithOAuth({
+        provider: "github",
+        options: { redirectTo: window.location.origin + window.location.pathname }
+      });
+      if (error) throw error;
+    } catch (error) {
+      setStatus((error && error.message ? error.message : "GitHub sign-in could not start.") + " Confirm GitHub is enabled in Supabase Authentication → Sign In / Providers and the dashboard URL is allowed under URL Configuration.", "error");
+      setBusy(false);
+    }
+  });
+  verifyBtn.addEventListener("click", async () => {
+    setBusy(true);
+    try { await verifySession(); }
+    catch (error) { setStatus(error && error.message ? error.message : "Verification failed.", "error"); }
+    finally { setBusy(false); }
+  });
+  signOutBtn.addEventListener("click", async () => {
+    setBusy(true);
+    try {
+      const client = getClient();
+      const { error } = await client.auth.signOut();
+      if (error) throw error;
+      verifiedUserId = null;
+      setStatus("Signed out. No verified Supabase session is active.", "");
+    } catch (error) { setStatus(error && error.message ? error.message : "Sign-out failed.", "error"); }
+    finally { setBusy(false); }
+  });
+  try {
+    const savedKey = localStorage.getItem(KEY_STORAGE);
+    if (savedKey) keyEl.value = savedKey;
+  } catch (_) {}
+  // OAuth returns to this page; verify only after Supabase restores the session.
+  if (keyEl.value.trim()) {
+    try {
+      const client = getClient();
+      client.auth.getSession().then(({ data, error }) => {
+        if (error) { setStatus(error.message, "error"); return; }
+        if (data && data.session) verifySession().catch(error => setStatus(error.message || "Session verification failed.", "error"));
+        else setStatus("Ready. Sign in with GitHub to authenticate.", "");
+      });
+    } catch (error) { setStatus(error.message || "Ready to configure Supabase.", ""); }
+  }
+})();
+</script>
+<script>
+(() => {
+  "use strict";
+  const SUPABASE_URL = "https://gzboixmsmnqgfohqkuxs.supabase.co";
+  const WORKER_AUTH_URL = "https://gold-eci-api.contatoseder.workers.dev/?auth=supabase";
+  const KEY_STORAGE = "dashboard_supabase_publishable_key_v1";
+  const statusEl = document.getElementById("supabaseAuthStatus");
+  const keyEl = document.getElementById("supabasePublishableKey");
+  const emailEl = document.getElementById("supabaseEmail");
+  const passwordEl = document.getElementById("supabasePassword");
+  const signInBtn = document.getElementById("supabaseSignInBtn");
+  const verifyBtn = document.getElementById("supabaseVerifyBtn");
+  const signOutBtn = document.getElementById("supabaseSignOutBtn");
+  let supabaseClient = null;
+  let verifiedUserId = null;
+
+  function setStatus(message, kind) {
+    statusEl.textContent = message;
+    statusEl.className = kind || "";
+  }
+  function setBusy(busy) {
+    [signInBtn, verifyBtn, signOutBtn].forEach(button => button.disabled = busy);
+  }
+  function getClient() {
+    if (!window.supabase || !window.supabase.createClient) {
+      throw new Error("Supabase client library did not load. Check the network or content blocker.");
+    }
+    const key = keyEl.value.trim();
+    if (!key) throw new Error("Enter the Supabase publishable key from your Supabase project API settings.");
+    try { localStorage.setItem(KEY_STORAGE, key); } catch (_) {}
+    if (!supabaseClient) supabaseClient = window.supabase.createClient(SUPABASE_URL, key, {
+      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+    });
+    return supabaseClient;
+  }
+  async function verifySession() {
+    const client = getClient();
+    const { data, error } = await client.auth.getSession();
+    if (error) throw error;
+    const session = data && data.session;
+    if (!session || !session.access_token) {
+      verifiedUserId = null;
+      setStatus("No active Supabase session. Sign in first.", "error");
+      return false;
+    }
+    setStatus("Session found. Verifying with Cloudflare Worker…", "");
+    const response = await fetch(WORKER_AUTH_URL, {
+      method: "GET",
+      cache: "no-store",
+      headers: { "Accept": "application/json", "Authorization": "Bearer " + session.access_token }
+    });
+    const bodyText = await response.text();
+    let body;
+    try { body = bodyText ? JSON.parse(bodyText) : {}; }
+    catch (_) { body = { error: bodyText || "Worker returned an empty response." }; }
+    if (!response.ok || body.authenticated !== true || !body.user || !body.user.id) {
+      verifiedUserId = null;
+      throw new Error((body && body.error) || ("Worker authentication verification failed (HTTP " + response.status + ")."));
+    }
+    verifiedUserId = body.user.id;
+    setStatus("Verified by Cloudflare Worker • " + (body.user.email || body.user.id), "ok");
+    return true;
+  }
+  signInBtn.addEventListener("click", async () => {
+    setBusy(true);
+    try {
+      const client = getClient();
+      const email = emailEl.value.trim();
+      const password = passwordEl.value;
+      if (!email || !password) throw new Error("Enter both email and password.");
+      setStatus("Signing in to Supabase…", "");
+      const { data, error } = await client.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      passwordEl.value = "";
+      if (!data || !data.session) throw new Error("Supabase did not return an active session.");
+      await verifySession();
+    } catch (error) {
+      setStatus(error && error.message ? error.message : "Sign-in failed.", "error");
+    } finally { setBusy(false); }
+  });
+  verifyBtn.addEventListener("click", async () => {
+    setBusy(true);
+    try { await verifySession(); }
+    catch (error) { setStatus(error && error.message ? error.message : "Verification failed.", "error"); }
+    finally { setBusy(false); }
+  });
+  signOutBtn.addEventListener("click", async () => {
+    setBusy(true);
+    try {
+      if (!supabaseClient) getClient();
+      const { error } = await supabaseClient.auth.signOut();
+      if (error) throw error;
+      verifiedUserId = null;
+      passwordEl.value = "";
+      setStatus("Signed out. No verified Supabase session is active.", "");
+    } catch (error) { setStatus(error && error.message ? error.message : "Sign-out failed.", "error"); }
+    finally { setBusy(false); }
+  });
+  try {
+    const savedKey = localStorage.getItem(KEY_STORAGE);
+    if (savedKey) keyEl.value = savedKey;
+  } catch (_) {}
+  // Intentionally do not claim authentication based only on browser storage.
+  // The session must be checked by the Worker before displaying a verified status.
+  setStatus("Ready. Enter the Supabase publishable key and sign in to verify the session.", "");
+})();
+</script>
+
 </body>
 </html>
+
+
+
+
+working index
