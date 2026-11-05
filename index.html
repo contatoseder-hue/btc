@@ -1007,7 +1007,7 @@
       </div>
       <div class="trading-mode-controls">
         <label class="trading-mode-option" for="enableLiveTrading">
-          <input id="enableLiveTrading" type="checkbox" autocomplete="off" disabled />
+          <input id="enableLiveTrading" type="checkbox" autocomplete="off" />
           Enable real-money BingX trading
         </label>
         <button id="checkLiveTradingStatus" type="button">Check live-trading readiness</button>
@@ -1021,7 +1021,7 @@
         </label>
         <p class="trading-mode-copy live-sizing-note">These controls are intended for real BTC-USDT orders only. Minimum margin allocation: $5. Minimum maximum stop-loss risk: $0.50. There is no dashboard upper cap; available BingX margin, 10× leverage, and exchange contract limits determine whether an order can be accepted.</p>
       </div>
-      <div id="tradingModeMessage" class="trading-mode-copy" role="status" aria-live="polite" style="margin-top:10px">Live trading is LOCKED in this build. The Worker staging code can submit and reconcile BTC-USDT orders, but automatic pending-order expiry, signal-change cancellation, partial-fill recovery, and full live Pre-TP1 automation still require validation. No real orders will be sent by this build.</div>
+      <div id="tradingModeMessage" class="trading-mode-copy" role="status" aria-live="polite" style="margin-top:10px">The checkbox is clickable for readiness checks. Live execution remains locked until pending-order expiry, signal-change cancellation, partial-fill recovery, and live Pre-TP1 protection are validated. Checking this box will not bypass the execution lock or send a real order.</div>
     </section>
 
     <!-- DEMO ROBOT: PAPER-TRADING ONLY -->
@@ -5909,7 +5909,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
   const liveMessage = document.getElementById("tradingModeMessage");
   let liveModeExplicitlyEnabled = false;
   const LIVE_EXECUTION_LOCKED = true;
-  liveToggle.disabled = true;
+  liveToggle.disabled = false;
   async function submitLiveOrderForPosition(position) {
     if (!liveModeExplicitlyEnabled || !liveToggle.checked || !position) return;
     const client = getClient();
@@ -6000,7 +6000,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
   }
   async function checkLiveReadiness() {
     liveCheckBtn.disabled = true;
-    liveToggle.disabled = true;
+    liveToggle.disabled = false;
     liveMessage.textContent = "Checking authenticated session and Cloudflare live-trading status…";
     liveMessage.className = "trading-mode-copy";
     try {
@@ -6033,7 +6033,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
       return false;
     } finally {
       liveCheckBtn.disabled = false;
-      liveToggle.disabled = LIVE_EXECUTION_LOCKED;
+      liveToggle.disabled = false;
     }
   }
   liveCheckBtn.addEventListener("click", checkLiveReadiness);
