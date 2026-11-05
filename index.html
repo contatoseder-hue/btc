@@ -763,8 +763,8 @@
 
 /* Restored market scanner and robot controls */
 .demo-robot-scanning { display:flex; align-items:center; gap:11px; border:1px solid rgba(96,165,250,.42); background:rgba(38,110,170,.10); color:#dbeafe; border-radius:10px; padding:12px 14px; margin:12px 0; }
-.demo-robot-scanning-icon { display:flex; align-items:center; justify-content:center; flex:0 0 42px; width:42px; height:42px; border:1px solid rgba(74,222,128,.65); border-radius:50%; background:radial-gradient(circle,rgba(34,197,94,.18) 0 2px,transparent 3px),rgba(2,18,20,.8); box-shadow:0 0 12px rgba(34,197,94,.16),inset 0 0 10px rgba(34,197,94,.12); font-size:22px; animation:demoRadarPulse 1.8s ease-in-out infinite; }
-@keyframes demoRadarPulse { 0%,100% { transform:scale(1); box-shadow:0 0 8px rgba(34,197,94,.12); } 50% { transform:scale(1.08); box-shadow:0 0 16px rgba(34,197,94,.32); } }
+.demo-robot-scanning-icon { display:flex; align-items:center; justify-content:center; flex:0 0 42px; width:42px; height:42px; border:1px solid rgba(74,222,128,.65); border-radius:50%; background:radial-gradient(circle,rgba(34,197,94,.18) 0 2px,transparent 3px),rgba(2,18,20,.8); box-shadow:0 0 12px rgba(34,197,94,.16),inset 0 0 10px rgba(34,197,94,.12); font-size:22px; animation:demoRadarSpin 1.8s linear infinite; }
+@keyframes demoRadarSpin { from { transform:rotate(0deg); box-shadow:0 0 8px rgba(34,197,94,.12); } to { transform:rotate(360deg); box-shadow:0 0 16px rgba(34,197,94,.32); } }
 @media(prefers-reduced-motion:reduce){.demo-robot-scanning-icon{animation:none;}}
 .demo-robot-scanning strong { display:block; font-size:13px; font-weight:800; }
 .demo-robot-scanning small { display:block; margin-top:3px; color:#aabbd0; font-size:11px; line-height:1.45; }
@@ -1129,10 +1129,10 @@
 
         <div class="demo-limit-controls" id="demoRobotAutoEntryControls">
             <label class="demo-limit-toggle" for="demoRobotAutoEntry">
-                <input id="demoRobotAutoEntry" type="checkbox">
-                <span><strong>Auto Entry</strong><small>Automatically search for the next paper entry after a trade closes or a limit expires.</small></span>
+                <input id="demoRobotAutoEntry" type="checkbox" checked>
+                <span><strong>Auto Entry · ON by default</strong><small>Automatically search again after a trade closes or a limit expires. Turn off to pause automatic re-entry.</small></span>
             </label>
-            <div class="demo-limit-note">When Force Limit Entry is enabled too, each new attempt uses the previous fully closed 5-minute candle close. Paper trading only.</div>
+            <div class="demo-limit-note">When Force Limit Entry is enabled too, each new attempt uses the previous fully closed 5-minute candle close. The robot must remain active. Live BTC orders use the same qualifying setup when the live switch is on; they do not require a separate entry click.</div>
         </div>
 
         <div class="demo-limit-controls" id="demoRobotPreTp1ProtectionControls">
@@ -4312,7 +4312,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
         limitMode: false,
         limitPriceOverride: '',
         forceLimitMode: false,
-        autoEntry: false,
+        autoEntry: true,
         autoPreTp1Protection: true,
         autoEntryRescanRequested: false,
         forceLimitRequest: null,
@@ -4385,7 +4385,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
     function savePersistentState() {
         try {
             const toSave = {
-                version: 3,
+                version: 4,
                 savedAt: new Date().toISOString(),
                 // Resume only if the user had left the paper robot running before refresh.
                 enabled: Boolean(state.enabled),
@@ -4435,7 +4435,9 @@ setInterval(refreshMultiTimeframePanel, 60000);
             state.limitMode = Boolean(saved.limitMode);
             state.limitPriceOverride = String(saved.limitPriceOverride || '');
             state.forceLimitMode = Boolean(saved.forceLimitMode);
-            state.autoEntry = Boolean(saved.autoEntry);
+            // Auto Entry now defaults on so an active paper robot resumes
+            // searching after a close. Preserve a user's explicit v4 choice.
+            state.autoEntry = saved.version >= 4 ? Boolean(saved.autoEntry) : true;
             state.autoPreTp1Protection = saved.autoPreTp1Protection === undefined ? true : Boolean(saved.autoPreTp1Protection);
             state.forceLimitRequest = saved.forceLimitRequest && typeof saved.forceLimitRequest === 'object'
                 ? { ...saved.forceLimitRequest, requestedAt: Number(saved.forceLimitRequest.requestedAt) || Date.now(), minCandleTime: Number.isFinite(Number(saved.forceLimitRequest.minCandleTime)) ? Number(saved.forceLimitRequest.minCandleTime) : null }
@@ -4623,10 +4625,10 @@ setInterval(refreshMultiTimeframePanel, 60000);
         const positionEl = $('demoRobotPosition');
         const scanningEl = $('demoRobotScanning');
         if (scanningEl) {
-            // The animated radar is visible only while the robot is actively searching.
-            // Hide it as soon as a setup becomes a pending limit or a position is opened.
-            const isLimitWaiting = state.pending && ['limit', 'force-limit'].includes(state.pending.kind);
-            const isSearching = state.enabled && !state.position && !isLimitWaiting;
+            // Spin only while scanning; any pending setup means an entry point
+            // has been found, so hide the animation until it resolves.
+            const hasFoundEntry = Boolean(state.pending);
+            const isSearching = state.enabled && !state.position && !hasFoundEntry;
             if (isSearching) {
                 const scanningTitle = scanningEl.querySelector('strong');
                 const scanningDetail = scanningEl.querySelector('small');
@@ -4635,7 +4637,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
                     ? 'Checking for a valid completed 5-minute candle and aligned direction…'
                     : 'Checking direction, support/resistance and entry confirmation…';
                 scanningEl.style.display = 'flex';
-                scanningEl.setAttribute('aria-label', 'Scanning the market for a valid paper entry');
+                scanningEl.setAttribute('aria-label', 'Scanning the market for a valid entry');
             } else {
                 scanningEl.style.display = 'none';
             }
