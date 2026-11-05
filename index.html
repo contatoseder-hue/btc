@@ -760,6 +760,30 @@
 .supabase-connected-badge button:hover{color:#fff}
 @media(max-width:600px){.supabase-auth-grid{grid-template-columns:1fr}.supabase-connected-badge{top:8px;right:10px;gap:7px;font-size:10px;max-width:calc(100% - 20px)}}
 
+
+/* Restored market scanner and robot controls */
+.demo-robot-scanning { display:flex; align-items:center; gap:11px; border:1px solid rgba(96,165,250,.42); background:rgba(38,110,170,.10); color:#dbeafe; border-radius:10px; padding:12px 14px; margin:12px 0; }
+.demo-robot-scanning-icon { display:flex; align-items:center; justify-content:center; flex:0 0 42px; width:42px; height:42px; border:1px solid rgba(74,222,128,.65); border-radius:50%; background:radial-gradient(circle,rgba(34,197,94,.18) 0 2px,transparent 3px),rgba(2,18,20,.8); box-shadow:0 0 12px rgba(34,197,94,.16),inset 0 0 10px rgba(34,197,94,.12); font-size:22px; animation:demoRadarPulse 1.8s ease-in-out infinite; }
+@keyframes demoRadarPulse { 0%,100% { transform:scale(1); box-shadow:0 0 8px rgba(34,197,94,.12); } 50% { transform:scale(1.08); box-shadow:0 0 16px rgba(34,197,94,.32); } }
+@media(prefers-reduced-motion:reduce){.demo-robot-scanning-icon{animation:none;}}
+.demo-robot-scanning strong { display:block; font-size:13px; font-weight:800; }
+.demo-robot-scanning small { display:block; margin-top:3px; color:#aabbd0; font-size:11px; line-height:1.45; }
+.demo-robot-controls { display:flex; gap:9px; flex-wrap:wrap; margin:12px 0; }
+.demo-robot-controls button { width:auto; margin:0; }
+#demoRobotAutoEntryControls, #demoRobotAutoEntryControls * { box-sizing:border-box; }
+#demoRobotAutoEntryControls { display:block; width:100%; min-width:0; }
+#demoRobotAutoEntryControls .demo-limit-toggle { align-items:flex-start; }
+#demoRobotAutoEntryControls .demo-limit-toggle input { position:static; display:block; width:14px; height:14px; margin:3px 0 0; }
+#demoRobotAutoEntryControls .demo-limit-toggle > span { display:block; width:100%; min-width:0; overflow-wrap:anywhere; }
+#demoRobotAutoEntryControls .demo-limit-toggle strong, #demoRobotAutoEntryControls .demo-limit-toggle small { display:block; white-space:normal; overflow-wrap:anywhere; }
+#demoRobotAutoEntryControls .demo-limit-note { overflow-wrap:anywhere; }
+#demoRobotPreTp1ProtectionControls .demo-limit-toggle, #demoRobotForceLimitControls .demo-limit-toggle { align-items:flex-start; }
+#demoRobotPreTp1ProtectionControls .demo-limit-toggle input, #demoRobotForceLimitControls .demo-limit-toggle input { position:static; display:block; width:14px; height:14px; margin:3px 0 0; }
+#demoRobotPreTp1ProtectionControls .demo-limit-toggle > span, #demoRobotForceLimitControls .demo-limit-toggle > span { display:block; width:100%; min-width:0; overflow-wrap:anywhere; }
+#demoRobotPreTp1ProtectionControls .demo-limit-toggle strong, #demoRobotPreTp1ProtectionControls .demo-limit-toggle small, #demoRobotForceLimitControls .demo-limit-toggle strong, #demoRobotForceLimitControls .demo-limit-toggle small { display:block; white-space:normal; overflow-wrap:anywhere; }
+#demoRobotForceLimitControls .demo-robot-controls { justify-content:flex-start; width:100%; min-width:0; }
+#demoRobotForceLimitControls .demo-robot-controls button { flex:0 1 auto; max-width:100%; white-space:normal; }
+@media(max-width:600px){#demoRobotForceLimitControls .demo-robot-controls button{flex:1 1 100%;width:100%;}}
 </style>
 </head>
 
@@ -977,27 +1001,27 @@
       <div class="trading-mode-head">
         <div>
           <h2 class="trading-mode-title" id="tradingModeTitle">Trading Mode</h2>
-          <p class="trading-mode-copy">Paper trading remains available. Real-money BingX trading is OFF by default and will only activate after the Cloudflare Worker confirms that secure live order execution is implemented.</p>
+          <p class="trading-mode-copy">Paper trading remains available. The staging backend now includes BTC-USDT order reconciliation, idempotent entry requests, limit-order submission and cancellation, and exchange-side protective-stop requests. Live execution remains locked until the full dashboard lifecycle and exchange behavior pass testing.</p>
         </div>
         <span id="tradingModeBadge" class="trading-mode-status">PAPER MODE · DEFAULT</span>
       </div>
       <div class="trading-mode-controls">
         <label class="trading-mode-option" for="enableLiveTrading">
-          <input id="enableLiveTrading" type="checkbox" autocomplete="off" />
+          <input id="enableLiveTrading" type="checkbox" autocomplete="off" disabled />
           Enable real-money BingX trading
         </label>
         <button id="checkLiveTradingStatus" type="button">Check live-trading readiness</button>
       </div>
       <div class="live-sizing-controls" aria-label="Live BTC trade sizing">
         <label>Live margin allocation (USDT)
-          <input id="liveAllocationUsd" type="number" min="10" max="100" step="5" value="50" inputmode="decimal" />
+          <input id="liveAllocationUsd" type="number" min="5" step="1" value="50" inputmode="decimal" />
         </label>
         <label>Maximum stop-loss risk per trade (USDT)
-          <input id="liveRiskUsd" type="number" min="0.5" max="5" step="0.5" value="5" inputmode="decimal" />
+          <input id="liveRiskUsd" type="number" min="0.5" step="0.5" value="5" inputmode="decimal" />
         </label>
-        <p class="trading-mode-copy live-sizing-note">These controls affect real BTC-USDT orders only. Paper settings are unchanged. At the current 10× live sizing model, margin is converted to position notional; the server caps notional at $1,000 and initial stop risk at $5 per trade.</p>
+        <p class="trading-mode-copy live-sizing-note">These controls are intended for real BTC-USDT orders only. Minimum margin allocation: $5. Minimum maximum stop-loss risk: $0.50. There is no dashboard upper cap; available BingX margin, 10× leverage, and exchange contract limits determine whether an order can be accepted.</p>
       </div>
-      <div id="tradingModeMessage" class="trading-mode-copy" role="status" aria-live="polite" style="margin-top:10px">Live trading is disabled. No real orders will be sent.</div>
+      <div id="tradingModeMessage" class="trading-mode-copy" role="status" aria-live="polite" style="margin-top:10px">Live trading is LOCKED in this build. The Worker staging code can submit and reconcile BTC-USDT orders, but automatic pending-order expiry, signal-change cancellation, partial-fill recovery, and full live Pre-TP1 automation still require validation. No real orders will be sent by this build.</div>
     </section>
 
     <!-- DEMO ROBOT: PAPER-TRADING ONLY -->
@@ -1006,7 +1030,7 @@
             <div>
                 <div class="section-title" style="margin-bottom:0;">Demo Robot · Support / Resistance Confirmation</div>
                 <div class="demo-robot-subtitle">
-                    Paper trading remains available. When live mode is explicitly enabled and server-authorized, confirmed BTC setups can also submit a BTC-USDT live order with exchange-side stop-loss and take-profit. Gold and Silver remain paper-only. The robot waits for ECI direction, 1-minute WMA 100/200 agreement, a confirmed 15-minute swing level, and a closed 1-minute rejection candle.
+                    Paper trading remains available. Live execution remains separately gated while the BingX order lifecycle and exchange-side protection are being validated. Gold and Silver remain paper-only. The robot waits for ECI direction, 1-minute WMA 100/200 agreement, a confirmed 15-minute swing level, and a closed 1-minute rejection candle.
                 </div>
             </div>
             <span id="demoRobotBadge" class="demo-robot-badge">DEMO OFF</span>
@@ -1051,13 +1075,18 @@
 
         <div class="demo-account-controls" id="demoRobotAccountControls">
             <div class="demo-account-field"><label for="demoRobotFunding">Starting Account Funding (USD)</label><input id="demoRobotFunding" type="number" min="1" step="any" value="1000"></div>
-            <div class="demo-account-field"><label for="demoRobotAllocation">Trade Allocation / Margin (USD)</label><input id="demoRobotAllocation" type="number" min="1" step="any" value="100"></div>
-            <div class="demo-account-field"><label for="demoRobotRisk">Max Initial Stop Risk (USD)</label><input id="demoRobotRisk" type="number" min="0.01" step="any" value="10"></div>
+            <div class="demo-account-field"><label for="demoRobotAllocation">Trade Allocation / Margin (USD)</label><input id="demoRobotAllocation" type="number" min="5" step="any" value="100"></div>
+            <div class="demo-account-field"><label for="demoRobotRisk">Max Initial Stop Risk (USD)</label><input id="demoRobotRisk" type="number" min="0.5" step="any" value="10"></div>
+            <div class="demo-account-field"><label for="demoRobotFeeRate">Estimated Trading Fee per Side (%)</label><input id="demoRobotFeeRate" type="number" min="0" max="1" step="0.001" value="0.05"><small style="display:block;color:#9ca3af;font-size:11px;margin-top:4px;">Default 0.05% per side; adjust to your actual fee tier.</small></div>
             <div class="demo-account-stat"><span>Current Demo Equity: <strong id="demoRobotEquity">$1,000.00</strong></span><span>Estimated margin per trade: <strong id="demoRobotMargin">$100.00</strong></span><span>Leverage model: <strong>10×</strong></span></div>
         </div>
 
         <div id="demoRobotMessage" class="demo-robot-message" aria-live="polite">
             Demo robot is off. Start it to monitor market structure. It cannot place real orders.
+        </div>
+        <div id="demoRobotScanning" class="demo-robot-scanning" style="display:none;" role="status" aria-live="polite">
+            <span class="demo-robot-scanning-icon" aria-hidden="true">📡</span>
+            <span><strong>Scanning the market</strong><small>Looking for the best valid entry point and direction…</small></span>
         </div>
 
         <div id="demoRobotPosition" class="demo-position-card" style="display:none;" aria-live="polite">
@@ -1088,6 +1117,35 @@
             <div id="demoPositionPnlBreakdown" class="demo-position-note">Percentages update with the open position: ROI = floating PnL ÷ estimated remaining margin at 10×; account impact = floating PnL ÷ starting funding. Realized return uses closed PnL ÷ starting funding. Paper only; no exchange order is placed.</div>
             <div class="demo-position-actions"><button id="demoRobotClosePosition" class="demo-position-close" type="button">Close Position at Current Mark</button></div>
         </div>
+
+
+        <div class="demo-limit-controls" id="demoRobotAutoEntryControls">
+            <label class="demo-limit-toggle" for="demoRobotAutoEntry">
+                <input id="demoRobotAutoEntry" type="checkbox">
+                <span><strong>Auto Entry</strong><small>Automatically search for the next paper entry after a trade closes or a limit expires.</small></span>
+            </label>
+            <div class="demo-limit-note">When Force Limit Entry is enabled too, each new attempt uses the previous fully closed 5-minute candle close. Paper trading only.</div>
+        </div>
+
+        <div class="demo-limit-controls" id="demoRobotPreTp1ProtectionControls">
+            <label class="demo-limit-toggle" for="demoRobotAutoPreTp1Protection">
+                <input id="demoRobotAutoPreTp1Protection" type="checkbox" checked>
+                <span><strong>Auto Pre-TP1 Protection</strong><small>When enabled, move the stop to estimated fee coverage plus a small buffer after the trade has enough open profit. TP1 and the post-TP1 breakeven rule remain unchanged.</small></span>
+            </label>
+            <div class="demo-limit-note">Disabling this removes the automatic fee-covering stop before TP1. The original stop loss remains in place until TP1 or that stop is reached.</div>
+        </div>
+
+        <div class="demo-limit-controls" id="demoRobotForceLimitControls">
+            <label class="demo-limit-toggle" for="demoRobotForceLimitMode">
+                <input id="demoRobotForceLimitMode" type="checkbox">
+                <span><strong>Force Limit Entry</strong><small>Search for a forced entry opportunity when enabled.</small></span>
+            </label>
+            <div class="demo-robot-controls" style="margin-top:8px;">
+                <button id="demoRobotForceLimitRefresh" class="demo-robot-clear" type="button" disabled>Force / Refresh Limit Entry</button>
+            </div>
+            <div class="demo-limit-note">Paper trading only.</div>
+        </div>
+
 
         <div class="demo-limit-controls" id="demoRobotLimitControls">
             <label class="demo-limit-toggle" for="demoRobotLimitMode">
@@ -1134,7 +1192,7 @@
     <section class="card public-beta-notice" aria-label="Public beta notice">
         <div class="public-beta-notice-title">⚠️ PUBLIC BETA · UNDER DEVELOPMENT</div>
         <p>
-            This dashboard is actively being developed. Signals and market-structure levels are experimental and may be inaccurate, delayed, or temporarily unavailable. The demo robot currently supports paper trading only and does not place real orders.
+            This dashboard is actively being developed. Signals and market-structure levels are experimental and may be inaccurate, delayed, or temporarily unavailable. The paper robot and live BingX execution are separate. Live execution remains disabled until order placement, order cancellation, and exchange-side protection are fully validated.
         </p>
     </section>
 
@@ -4245,6 +4303,11 @@ setInterval(refreshMultiTimeframePanel, 60000);
         levelsMarket: null,
         limitMode: false,
         limitPriceOverride: '',
+        forceLimitMode: false,
+        autoEntry: false,
+        autoPreTp1Protection: true,
+        autoEntryRescanRequested: false,
+        forceLimitRequest: null,
         trend: null,
         logs: [],
         closedTrades: [],
@@ -4255,6 +4318,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
         startingFundingUsd: 1000,
         tradeAllocationUsd: 100,
         maxRiskUsd: 10,
+        assumedFeeRatePct: 0.05,
         cooldownUntil: 0
     };
 
@@ -4323,6 +4387,10 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 levelsMarket: state.levelsMarket,
                 limitMode: Boolean(state.limitMode),
                 limitPriceOverride: String(state.limitPriceOverride || ''),
+                forceLimitMode: Boolean(state.forceLimitMode),
+                autoEntry: Boolean(state.autoEntry),
+                autoPreTp1Protection: Boolean(state.autoPreTp1Protection),
+                forceLimitRequest: state.forceLimitRequest,
                 position: state.position,
                 closedTrades: state.closedTrades.slice(-MAX_SAVED_CLOSED_TRADES),
                 wins: state.wins,
@@ -4332,6 +4400,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 startingFundingUsd: state.startingFundingUsd,
                 tradeAllocationUsd: state.tradeAllocationUsd,
                 maxRiskUsd: state.maxRiskUsd,
+                assumedFeeRatePct: state.assumedFeeRatePct,
                 cooldownUntil: state.cooldownUntil,
                 logs: state.logs.slice(0, MAX_SAVED_LOG_EVENTS)
             };
@@ -4357,6 +4426,12 @@ setInterval(refreshMultiTimeframePanel, 60000);
             state.activeMarket = saved.activeMarket || null;
             state.limitMode = Boolean(saved.limitMode);
             state.limitPriceOverride = String(saved.limitPriceOverride || '');
+            state.forceLimitMode = Boolean(saved.forceLimitMode);
+            state.autoEntry = Boolean(saved.autoEntry);
+            state.autoPreTp1Protection = saved.autoPreTp1Protection === undefined ? true : Boolean(saved.autoPreTp1Protection);
+            state.forceLimitRequest = saved.forceLimitRequest && typeof saved.forceLimitRequest === 'object'
+                ? { ...saved.forceLimitRequest, requestedAt: Number(saved.forceLimitRequest.requestedAt) || Date.now(), minCandleTime: Number.isFinite(Number(saved.forceLimitRequest.minCandleTime)) ? Number(saved.forceLimitRequest.minCandleTime) : null }
+                : null;
             if (saved.levels && typeof saved.levels === 'object') {
                 const validLevel = (level, side) => level && Number.isFinite(Number(level.price)) && Number(level.price) > 0 && (side === 'support' ? 'Support' : 'Resistance') === level.type
                     ? { price: Number(level.price), time: Number(level.time) || 0, type: level.type }
@@ -4392,8 +4467,9 @@ setInterval(refreshMultiTimeframePanel, 60000);
             state.netR = Number.isFinite(Number(saved.netR)) ? Number(saved.netR) : state.closedTrades.reduce((sum, t) => sum + (Number(t.outcomeR) || 0), 0);
             state.netPnlUsd = Number.isFinite(Number(saved.netPnlUsd)) ? Number(saved.netPnlUsd) : state.closedTrades.reduce((sum, t) => sum + (Number(t.cashPnlUsd) || 0), 0);
             state.startingFundingUsd = Number(saved.startingFundingUsd) > 0 ? Number(saved.startingFundingUsd) : 1000;
-            state.tradeAllocationUsd = Number(saved.tradeAllocationUsd) > 0 ? Number(saved.tradeAllocationUsd) : 100;
-            state.maxRiskUsd = Number(saved.maxRiskUsd) > 0 ? Number(saved.maxRiskUsd) : 10;
+            state.tradeAllocationUsd = Number(saved.tradeAllocationUsd) >= 5 ? Number(saved.tradeAllocationUsd) : 100;
+            state.maxRiskUsd = Number(saved.maxRiskUsd) >= 0.5 ? Number(saved.maxRiskUsd) : 10;
+            state.assumedFeeRatePct = Number.isFinite(Number(saved.assumedFeeRatePct)) && Number(saved.assumedFeeRatePct) >= 0 && Number(saved.assumedFeeRatePct) <= 1 ? Number(saved.assumedFeeRatePct) : 0.05;
             state.cooldownUntil = Number(saved.cooldownUntil) || 0;
             state.logs = Array.isArray(saved.logs) ? saved.logs.slice(0, 12).map(item => ({
                 time: parseDate(item.time),
@@ -4413,7 +4489,9 @@ setInterval(refreshMultiTimeframePanel, 60000);
                     remainingQuantity: Number.isFinite(Number(p.remainingQuantity)) ? Number(p.remainingQuantity) : Number(p.quantity),
                     realizedPnlUsd: Number(p.realizedPnlUsd) || 0,
                     riskUsd: Number(p.riskUsd) || DEMO_RISK_USD,
-                    hitTP1: Boolean(p.hitTP1)
+                    hitTP1: Boolean(p.hitTP1),
+                    profitProtectionActive: Boolean(p.profitProtectionActive),
+                    profitProtectionStop: Number(p.profitProtectionStop) > 0 ? Number(p.profitProtectionStop) : null
                 };
                 state.positionStructureClosed = [];
                 state.lastPositionStructureFetch = 0;
@@ -4535,6 +4613,25 @@ setInterval(refreshMultiTimeframePanel, 60000);
         const toggle = $('demoRobotToggle');
         const message = $('demoRobotMessage');
         const positionEl = $('demoRobotPosition');
+        const scanningEl = $('demoRobotScanning');
+        if (scanningEl) {
+            // The animated radar is visible only while the robot is actively searching.
+            // Hide it as soon as a setup becomes a pending limit or a position is opened.
+            const isLimitWaiting = state.pending && ['limit', 'force-limit'].includes(state.pending.kind);
+            const isSearching = state.enabled && !state.position && !isLimitWaiting;
+            if (isSearching) {
+                const scanningTitle = scanningEl.querySelector('strong');
+                const scanningDetail = scanningEl.querySelector('small');
+                if (scanningTitle) scanningTitle.textContent = state.forceLimitRequest ? 'SEARCHING FOR ENTRY' : 'SCANNING THE MARKET';
+                if (scanningDetail) scanningDetail.textContent = state.forceLimitRequest
+                    ? 'Checking for a valid completed 5-minute candle and aligned direction…'
+                    : 'Checking direction, support/resistance and entry confirmation…';
+                scanningEl.style.display = 'flex';
+                scanningEl.setAttribute('aria-label', 'Scanning the market for a valid paper entry');
+            } else {
+                scanningEl.style.display = 'none';
+            }
+        }
         if (badge) {
             badge.className = 'demo-robot-badge' + (state.enabled ? ' active' : (state.position ? ' managing' : ''));
             badge.textContent = state.enabled ? 'DEMO ON · NO ORDERS' : (state.position ? 'MANAGING PAPER TRADE' : 'DEMO OFF');
@@ -4555,15 +4652,26 @@ setInterval(refreshMultiTimeframePanel, 60000);
         }
         const modeToggle = $('demoRobotLimitMode');
         const limitPriceInput = $('demoRobotLimitPrice');
+        const forceModeToggle = $('demoRobotForceLimitMode');
+        const autoEntryToggle = $('demoRobotAutoEntry');
+        const preTp1ProtectionToggle = $('demoRobotAutoPreTp1Protection');
+        const forceRefreshButton = $('demoRobotForceLimitRefresh');
         if (modeToggle && modeToggle.checked !== state.limitMode) modeToggle.checked = state.limitMode;
+        if (forceModeToggle && forceModeToggle.checked !== state.forceLimitMode) forceModeToggle.checked = state.forceLimitMode;
+        if (autoEntryToggle && autoEntryToggle.checked !== state.autoEntry) autoEntryToggle.checked = state.autoEntry;
+        if (preTp1ProtectionToggle && preTp1ProtectionToggle.checked !== state.autoPreTp1Protection) preTp1ProtectionToggle.checked = state.autoPreTp1Protection;
+        if (forceModeToggle) forceModeToggle.disabled = Boolean(state.position || (state.pending && state.pending.kind !== 'force-limit') || state.limitMode);
+        if (forceRefreshButton) forceRefreshButton.disabled = !state.forceLimitMode || !state.enabled || Boolean(state.position);
         if (limitPriceInput && limitPriceInput.value !== state.limitPriceOverride) limitPriceInput.value = state.limitPriceOverride;
         if ($('demoRobotLeverageMode')) $('demoRobotLeverageMode').textContent = '10× (paper model)';
         const fundingInput = $('demoRobotFunding');
         const allocationInput = $('demoRobotAllocation');
         const riskInput = $('demoRobotRisk');
+        const feeRateInput = $('demoRobotFeeRate');
         if (fundingInput && document.activeElement !== fundingInput) fundingInput.value = String(state.startingFundingUsd);
         if (allocationInput && document.activeElement !== allocationInput) allocationInput.value = String(state.tradeAllocationUsd);
         if (riskInput && document.activeElement !== riskInput) riskInput.value = String(state.maxRiskUsd);
+        if (feeRateInput && document.activeElement !== feeRateInput) feeRateInput.value = String(state.assumedFeeRatePct);
         const equityEl = $('demoRobotEquity');
         if (equityEl) {
             let openPositionPnl = 0;
@@ -4645,7 +4753,12 @@ setInterval(refreshMultiTimeframePanel, 60000);
                     const realized = Number(p.realizedPnlUsd) || 0;
                     const remainingNotional = Math.abs(mark * remainingQty);
                     const estimatedMargin = remainingNotional / 10;
-                    $('demoPositionPnlBreakdown').textContent = `Assumed risk: $${p.riskUsd.toFixed(2)} at the initial stop · Simulated leverage: 10× · Estimated margin at 10×: $${estimatedMargin.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · Realized from partial exits: ${fmtUsdPnl(realized)} · Floating PnL on remaining quantity: ${fmtUsdPnl(floatingPnl)} · Remaining notional exposure: $${remainingNotional.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}. Quantity remains sized from fixed initial risk; this is a paper estimate and does not model liquidation. PnL excludes fees, spread, slippage and exchange contract specifications.`;
+                    const feeRate = Math.max(0, Number(state.assumedFeeRatePct) || 0) / 100;
+                    const entryFeeEstimate = Math.abs(Number(p.entry) * Number(p.quantity)) * feeRate;
+                    const exitFeeEstimate = Math.abs(mark * remainingQty) * feeRate;
+                    const roundTripFeeEstimate = entryFeeEstimate + exitFeeEstimate;
+                    const protectionStatus = p.hitTP1 ? 'TP1 reached; runner stop uses the existing breakeven rule.' : (!state.autoPreTp1Protection ? 'Auto Pre-TP1 Protection is OFF; original stop loss remains active.' : (p.profitProtectionActive ? `Pre-TP1 fee-covering stop ACTIVE at ${formatPrice(p.activeStop)}; estimated round-trip fees $${roundTripFeeEstimate.toFixed(2)}.` : `Pre-TP1 fee protection waiting; estimated round-trip fees $${roundTripFeeEstimate.toFixed(2)} at ${(Number(state.assumedFeeRatePct) || 0).toFixed(3)}% per side.`));
+                    $('demoPositionPnlBreakdown').textContent = `Assumed risk: $${p.riskUsd.toFixed(2)} at the initial stop · Simulated leverage: 10× · Estimated margin at 10×: $${estimatedMargin.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · Realized from partial exits: ${fmtUsdPnl(realized)} · Floating PnL on remaining quantity: ${fmtUsdPnl(floatingPnl)} · Remaining notional exposure: $${remainingNotional.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}. ${protectionStatus} Fee-covering stop uses estimated entry + exit fees and a small $0.05 minimum / 10% fee buffer. This is paper-only; PnL otherwise excludes fees, spread, slippage and exchange contract specifications.`;
                 }
                 positionEl.style.display = 'block';
             }
@@ -4834,9 +4947,9 @@ setInterval(refreshMultiTimeframePanel, 60000);
         }
 
         const sign = direction === 'long' ? 1 : -1;
-        const riskUsd = Math.max(0.01, Number(state.maxRiskUsd) || DEMO_RISK_USD);
+        const riskUsd = Math.max(0.5, Number(state.maxRiskUsd) || DEMO_RISK_USD);
         const riskSizedQuantity = riskUsd / risk;
-        const maxNotional = Math.max(1, Number(state.tradeAllocationUsd) || 100) * 10;
+        const maxNotional = Math.max(5, Number(state.tradeAllocationUsd) || 100) * 10;
         const allocationSizedQuantity = maxNotional / entryPrice;
         // Respect both the user's allocation (margin × 10 leverage) and the configured stop-risk cap.
         const quantity = Math.min(riskSizedQuantity, allocationSizedQuantity);
@@ -4865,6 +4978,8 @@ setInterval(refreshMultiTimeframePanel, 60000);
             tp2: entryPrice + sign * risk * 3,
             hitTP1: false,
             realizedR: 0,
+            profitProtectionActive: false,
+            profitProtectionStop: null,
             openedAt: new Date(),
             level: level.price,
             entryMode: isLimitFill ? 'paper_limit' : 'confirmed_rejection',
@@ -4878,16 +4993,19 @@ setInterval(refreshMultiTimeframePanel, 60000);
             ? `Paper ${direction.toUpperCase()} limit filled at ${formatPrice(entryPrice)}. Monitoring simulated stop and targets.`
             : `Paper ${direction.toUpperCase()} opened after confirmation at ${formatPrice(entryPrice)}. Monitoring simulated stop and targets.`);
         logEvent(`${marketName(market)} PAPER ${direction.toUpperCase()} ${isLimitFill ? 'LIMIT FILLED' : 'confirmation entry'} at ${formatPrice(entryPrice)}; risk cap $${riskUsd.toFixed(2)}, allocation cap $${Number(state.tradeAllocationUsd).toFixed(2)} margin at 10×, quantity ${fmtQuantity(quantity)}, SL ${formatPrice(stop)}, TP1 ${formatPrice(position.tp1)}, TP2 ${formatPrice(position.tp2)}.`);
-        if (window.goldEciLiveMode && window.goldEciLiveMode.isEnabled()) {
-            window.goldEciLiveMode.submit(position).then(result => {
-                logEvent(`LIVE ORDER RESPONSE: ${result.message || "BingX response received."}`);
-            }).catch(error => {
-                const message = error && error.message ? error.message : "Live order failed.";
-                logEvent(`LIVE ORDER NOT CONFIRMED: ${message}`);
-            });
-        }
         renderUi();
         return true;
+    }
+
+    function requestAutoEntryRescanAfterClose() {
+        if (!state.autoEntry || !state.enabled || state.position) return;
+        state.autoEntryRescanRequested = true;
+        if (!state.busy) {
+            state.autoEntryRescanRequested = false;
+            Promise.resolve().then(() => {
+                if (state.autoEntry && state.enabled && !state.position) cycle();
+            });
+        }
     }
 
     function closePaperPosition(outcomeR, reason, markPrice) {
@@ -4916,9 +5034,10 @@ setInterval(refreshMultiTimeframePanel, 60000);
         state.position = null;
         state.positionStructureClosed = [];
         state.lastPositionStructureFetch = 0;
-        state.cooldownUntil = Date.now() + 60000;
-        setMessage(`Paper trade closed: ${reason}. Result ${fmtR(outcomeR)}. A one-minute cooldown is active.`);
+        state.cooldownUntil = state.autoEntry ? 0 : Date.now() + 60000;
+        setMessage(state.autoEntry ? `Paper trade closed: ${reason}. Result ${fmtR(outcomeR)}. Auto Entry remains enabled and is searching for the next valid setup.` : `Paper trade closed: ${reason}. Result ${fmtR(outcomeR)}. A one-minute cooldown is active.`);
         logEvent(`${marketName(p.market)} PAPER trade closed at ${formatPrice(markPrice)}: ${reason}, ${fmtR(outcomeR)}.`);
+        requestAutoEntryRescanAfterClose();
     }
 
     function manuallyClosePaperPosition() {
@@ -4943,9 +5062,10 @@ setInterval(refreshMultiTimeframePanel, 60000);
         state.position = null;
         state.positionStructureClosed = [];
         state.lastPositionStructureFetch = 0;
-        state.cooldownUntil = Date.now() + 60000;
-        setMessage(`Paper position manually closed at ${formatPrice(mark)}. Realized PnL: ${fmtUsdPnl(cashPnlUsd)}. Added to cumulative closed PnL.`);
+        state.cooldownUntil = state.autoEntry ? 0 : Date.now() + 60000;
+        setMessage(state.autoEntry ? `Paper position manually closed at ${formatPrice(mark)}. Realized PnL: ${fmtUsdPnl(cashPnlUsd)}. Auto Entry remains enabled and is searching for the next valid setup.` : `Paper position manually closed at ${formatPrice(mark)}. Realized PnL: ${fmtUsdPnl(cashPnlUsd)}. Added to cumulative closed PnL.`);
         logEvent(`${marketName(p.market)} PAPER ${p.direction.toUpperCase()} manually closed at ${formatPrice(mark)}; realized ${fmtUsdPnl(cashPnlUsd)} (${fmtR(outcomeR)}).`);
+        requestAutoEntryRescanAfterClose();
         renderUi();
     }
 
@@ -4954,11 +5074,20 @@ setInterval(refreshMultiTimeframePanel, 60000);
         if (!p || !Number.isFinite(markPrice) || markPrice <= 0) return;
         p.markPrice = markPrice;
         p.lastMarkTime = Date.now();
+
         const stopHit = p.direction === 'long' ? markPrice <= p.activeStop : markPrice >= p.activeStop;
         if (stopHit) {
-            const outcome = p.hitTP1 ? p.realizedR : -1;
-            const reason = p.hitTP1 ? 'runner stopped at breakeven after TP1' : 'initial stop reached';
-            closePaperPosition(outcome, reason, markPrice);
+            if (!p.hitTP1 && p.profitProtectionActive) {
+                // Simulate a stop fill at the configured stop price (no gap/slippage model).
+                const stopFill = Number(p.activeStop);
+                const grossPnl = (p.direction === 'long' ? stopFill - p.entry : p.entry - stopFill) * p.quantity;
+                const riskUsd = Math.max(0.01, Number(p.riskUsd) || DEMO_RISK_USD);
+                closePaperPosition(grossPnl / riskUsd, 'pre-TP1 fee-covering profit stop reached', stopFill);
+            } else {
+                const outcome = p.hitTP1 ? p.realizedR : -1;
+                const reason = p.hitTP1 ? 'runner stopped at breakeven after TP1' : 'initial stop reached';
+                closePaperPosition(outcome, reason, markPrice);
+            }
             return;
         }
 
@@ -4968,9 +5097,39 @@ setInterval(refreshMultiTimeframePanel, 60000);
             p.realizedR = 1; // Half of the simulated position exits at +2R.
             p.realizedPnlUsd = p.riskUsd; // 50% closed at +2R books +1R of the initial cash risk.
             p.remainingQuantity = p.quantity / 2;
-            p.activeStop = p.entry; // Remaining half moves to breakeven.
-            logEvent(`TP1 reached: simulated 50% exit at +2R; runner stop moved to entry ${formatPrice(p.entry)}.`);
+            p.activeStop = p.entry; // Existing runner stop rule remains unchanged after TP1.
+            p.profitProtectionActive = false;
+            logEvent(`TP1 reached: simulated 50% exit at +2R; runner stop moved to breakeven ${formatPrice(p.entry)}.`);
             setMessage('TP1 reached. Half the paper position is booked at +2R; the remaining half has its stop at entry.');
+        }
+
+        // Before TP1, activate once the open gross profit can cover estimated entry + exit fees
+        // and a small net buffer. The stop is placed to preserve that amount if revisited.
+        if (state.autoPreTp1Protection && !p.hitTP1 && !p.profitProtectionActive) {
+            const qty = Number(p.quantity);
+            const feeRate = Math.max(0, Math.min(1, Number(state.assumedFeeRatePct) || 0)) / 100;
+            const grossOpenPnl = (p.direction === 'long' ? markPrice - p.entry : p.entry - markPrice) * qty;
+            const entryFee = Math.abs(p.entry * qty) * feeRate;
+            const exitFeeAtMark = Math.abs(markPrice * qty) * feeRate;
+            const estimatedRoundTripFees = entryFee + exitFeeAtMark;
+            const smallNetBuffer = Math.max(0.05, estimatedRoundTripFees * 0.10);
+            if (grossOpenPnl >= estimatedRoundTripFees + smallNetBuffer && qty > 0) {
+                let protectedStop;
+                if (p.direction === 'long') {
+                    protectedStop = (p.entry * qty + entryFee + smallNetBuffer) / (qty * (1 - feeRate));
+                } else {
+                    protectedStop = (p.entry * qty - entryFee - smallNetBuffer) / (qty * (1 + feeRate));
+                }
+                const validStop = Number.isFinite(protectedStop) && protectedStop > 0 &&
+                    (p.direction === 'long' ? protectedStop > p.entry && protectedStop < markPrice : protectedStop < p.entry && protectedStop > markPrice);
+                if (validStop) {
+                    p.activeStop = protectedStop;
+                    p.profitProtectionStop = protectedStop;
+                    p.profitProtectionActive = true;
+                    logEvent(`Pre-TP1 profit protection activated: stop moved to ${formatPrice(protectedStop)} to cover estimated round-trip fees plus a small buffer (assumed fee ${feeRate * 100}% per side).`);
+                    setMessage(`Pre-TP1 profit protection ACTIVE. Stop moved to ${formatPrice(protectedStop)} to target estimated round-trip fee coverage plus a small net buffer.`);
+                }
+            }
         }
 
         const tp2Hit = p.direction === 'long' ? markPrice >= p.tp2 : markPrice <= p.tp2;
@@ -5086,6 +5245,8 @@ setInterval(refreshMultiTimeframePanel, 60000);
                     }
                 }
                 if (state.position || !state.enabled) return;
+                // The position closed during this cycle; this pass can immediately resume Auto Entry.
+                state.autoEntryRescanRequested = false;
             }
 
             if (!state.enabled) return;
@@ -5140,14 +5301,99 @@ setInterval(refreshMultiTimeframePanel, 60000);
             const latestClosed = state.confirmClosed[state.confirmClosed.length - 1];
             const previousClosed = state.confirmClosed[state.confirmClosed.length - 2];
 
+            // Force Limit Entry: use the close of a fully closed 5-minute candle as the limit price.
+            // A refresh request waits for the next 5-minute candle to finish before recalculating.
+            if (state.forceLimitRequest && !state.position && !state.pending) {
+                const request = state.forceLimitRequest;
+                if (request.market !== market) {
+                    state.forceLimitRequest = null;
+                    setMessage('Force Limit Entry request cancelled because the selected market changed.');
+                } else if (Date.now() - request.requestedAt > MAX_LIMIT_PENDING_MINUTES * 60000) {
+                    state.forceLimitRequest = null;
+                    setMessage('Force Limit Entry request expired before a valid 5-minute candle was available. Click refresh to try again.');
+                } else if (!signalDirection || signalDirection !== trend.direction) {
+                    if (state.autoEntry && state.forceLimitMode) {
+                        setMessage('Auto Entry is waiting for the dashboard ECI and 1-minute WMA to agree before setting a limit.');
+                    } else {
+                        state.forceLimitRequest = null;
+                        setMessage('Force Limit Entry cancelled: dashboard ECI and 1-minute WMA must agree in the same direction.');
+                        logEvent('Force Limit Entry request cancelled because ECI/WMA direction did not agree.');
+                    }
+                } else if (request.direction && request.direction !== signalDirection) {
+                    if (state.autoEntry && state.forceLimitMode) {
+                        request.direction = signalDirection;
+                        request.requestedAt = Date.now();
+                        request.minCandleTime = Math.floor(Date.now() / 300000) * 300000;
+                        setMessage('Auto Entry direction updated. Waiting for the next fully closed 5-minute candle.');
+                    } else {
+                        state.forceLimitRequest = null;
+                        setMessage('Force Limit Entry cancelled because the dashboard direction changed. Click refresh to try again.');
+                        logEvent('Force Limit Entry request cancelled after dashboard direction changed.');
+                    }
+                } else if (request.minCandleTime !== null && request.minCandleTime !== undefined && Date.now() < request.minCandleTime + 300000) {
+                    setMessage('Force Limit Entry is waiting for the current 5-minute candle to close before setting the refreshed entry price.');
+                } else {
+                    const all5m = await fetchDemoBars(market, '5m', 5, CANDLE_LIMIT);
+                    const closed5m = all5m.filter(c => c[6] !== true);
+                    const candle5m = closed5m[closed5m.length - 1];
+                    const candleReady = candle5m && (request.minCandleTime === null || request.minCandleTime === undefined || candle5m[0] >= request.minCandleTime);
+                    if (!candleReady) {
+                        setMessage('Force Limit Entry is waiting for the next 5-minute candle to close before setting the refreshed entry price.');
+                    } else {
+                        const level = signalDirection === 'long' ? levels.support : levels.resistance;
+                        if (!level) {
+                            state.forceLimitRequest = null;
+                            setMessage(`Force Limit Entry cancelled: no confirmed ${signalDirection === 'long' ? 'support' : 'resistance'} is available for the existing stop logic.`);
+                        } else {
+                            const limitPrice = Number(candle5m[4]);
+                            const correctSide = Number.isFinite(limitPrice) && limitPrice > 0 && (signalDirection === 'long' ? limitPrice < price : limitPrice > price);
+                            if (!correctSide) {
+                                if (state.autoEntry && state.forceLimitMode) {
+                                    state.forceLimitRequest = {
+                                        market, direction: signalDirection, requestedAt: Date.now(),
+                                        minCandleTime: Math.floor(Date.now() / 300000) * 300000,
+                                        automatic: true
+                                    };
+                                    setMessage(`The last closed 5-minute candle close (${formatPrice(limitPrice)}) is not a valid waiting-side limit at current price (${formatPrice(price)}). Auto Entry will retry after the next 5-minute candle closes.`);
+                                } else {
+                                    state.forceLimitRequest = null;
+                                    setMessage(`Force Limit Entry not placed: the previous closed 5-minute candle close (${formatPrice(limitPrice)}) is not on the waiting side of current price (${formatPrice(price)}). Click refresh after another 5-minute candle closes.`);
+                                }
+                                logEvent(`Force Limit Entry skipped: candle-close price ${formatPrice(limitPrice)} was already crossed or not a valid ${signalDirection.toUpperCase()} limit relative to ${formatPrice(price)}.`);
+                            } else {
+                                state.pending = {
+                                    kind: 'force-limit', market, direction: signalDirection, level,
+                                    limitPrice, tolerance, atr, startedAt: Date.now(),
+                                    triggerCandleTime: null, lastEvaluatedTime: null,
+                                    sourceCandleTime: candle5m[0]
+                                };
+                                state.forceLimitRequest = null;
+                                logEvent(`${marketName(market)} PAPER ${signalDirection.toUpperCase()} LIMIT pending at ${formatPrice(limitPrice)} using the previous closed 5-minute candle close. Structure reference remains ${level.type.toLowerCase()} ${formatPrice(level.price)}. Expires in ${MAX_LIMIT_PENDING_MINUTES} minutes unless signals change or the level invalidates.`);
+                                setMessage(`Paper ${signalDirection.toUpperCase()} Force Limit Entry pending at ${formatPrice(limitPrice)}, based on the previous closed 5-minute candle. Waiting for price to touch the limit.`);
+                            }
+                        }
+                    }
+                }
+            }
+
             if (state.pending) {
                 const pending = state.pending;
-                const isLimitOrder = pending.kind === 'limit';
+                const isLimitOrder = pending.kind === 'limit' || pending.kind === 'force-limit';
                 const maxAgeMinutes = isLimitOrder ? MAX_LIMIT_PENDING_MINUTES : MAX_PENDING_MINUTES;
                 if (pending.market !== market) {
                     resetPending('market changed');
                 } else if (Date.now() - pending.startedAt > maxAgeMinutes * 60000) {
+                    const expiredForceLimit = pending.kind === 'force-limit';
                     resetPending(isLimitOrder ? 'paper limit order expired after 30 minutes' : 'no confirmation within five minutes');
+                    if (expiredForceLimit && state.autoEntry && state.forceLimitMode) {
+                        state.forceLimitRequest = {
+                            market, direction: signalDirection || pending.direction, requestedAt: Date.now(),
+                            minCandleTime: Math.floor(Date.now() / 300000) * 300000,
+                            automatic: true
+                        };
+                        setMessage('Force limit expired without a fill. Auto Entry is waiting for the next fully closed 5-minute candle to set a new limit.');
+                        savePersistentState();
+                    }
                 } else if (signalDirection !== pending.direction) {
                     resetPending('dashboard ECI direction no longer matches the setup');
                 } else if (trend.direction !== pending.direction) {
@@ -5179,7 +5425,20 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 }
             } else {
                 const aligned = signalDirection && signalDirection === trend.direction;
-                if (Date.now() < state.cooldownUntil) {
+                if (state.autoEntry && state.forceLimitMode && !state.forceLimitRequest && !state.position) {
+                    state.forceLimitRequest = {
+                        market, direction: signalDirection || null, requestedAt: Date.now(),
+                        minCandleTime: null, automatic: true
+                    };
+                    savePersistentState();
+                }
+                if (state.forceLimitRequest) {
+                    setMessage('Force Limit Entry request is active. Waiting for a valid completed 5-minute candle and aligned direction.');
+                } else if (state.forceLimitMode && state.autoEntry) {
+                    setMessage('Auto Entry is enabled. The bot is preparing a limit from the previous closed 5-minute candle and will retry after expiry.');
+                } else if (state.forceLimitMode) {
+                    setMessage('Force Limit Entry is enabled. Click “Force / Refresh Limit Entry” to set a limit from the previous closed 5-minute candle; no market entry will be chased.');
+                } else if (Date.now() < state.cooldownUntil) {
                     setMessage('Cooling down after the last paper trade. Waiting before looking for another setup.');
                 } else if (!signalDirection) {
                     setMessage('Waiting for an active Buy Long or Sell Short signal from the dashboard ECI.');
@@ -5207,8 +5466,8 @@ setInterval(refreshMultiTimeframePanel, 60000);
                                 limitPrice, tolerance, atr, startedAt: Date.now(),
                                 triggerCandleTime: null, lastEvaluatedTime: null
                             };
-                            logEvent(`${marketName(market)} PAPER ${signalDirection.toUpperCase()} LIMIT placed at ${formatPrice(limitPrice)} using ${level.type.toLowerCase()} ${formatPrice(level.price)}. Expires in ${MAX_LIMIT_PENDING_MINUTES} minutes unless signals change or level invalidates.`);
-                            setMessage(`Paper ${signalDirection.toUpperCase()} limit order placed at ${formatPrice(limitPrice)} (${overrideRaw ? 'manual override' : 'nearest confirmed level'}). Waiting for price to reach the limit.`);
+                            logEvent(`${marketName(market)} PAPER ${signalDirection.toUpperCase()} LIMIT pending at ${formatPrice(limitPrice)} using ${level.type.toLowerCase()} ${formatPrice(level.price)}. Expires in ${MAX_LIMIT_PENDING_MINUTES} minutes unless signals change or level invalidates.`);
+                            setMessage(`Paper ${signalDirection.toUpperCase()} limit order pending at ${formatPrice(limitPrice)} (${overrideRaw ? 'manual override' : 'nearest confirmed level'}). Waiting for price to touch the limit.`);
                         }
                     } else if (Math.abs(price - level.price) <= tolerance) {
                         const triggerTime = currentCandleStartTime();
@@ -5230,8 +5489,15 @@ setInterval(refreshMultiTimeframePanel, 60000);
         } catch (error) {
             setMessage(`Demo data error: ${error?.message || String(error)} No real orders were sent.`);
         } finally {
+            const shouldRescanAfterClose = state.autoEntryRescanRequested;
+            state.autoEntryRescanRequested = false;
             state.busy = false;
             renderUi();
+            if (shouldRescanAfterClose && state.autoEntry && state.enabled && !state.position) {
+                Promise.resolve().then(() => {
+                    if (state.autoEntry && state.enabled && !state.position) cycle();
+                });
+            }
         }
     }
 
@@ -5320,11 +5586,140 @@ setInterval(refreshMultiTimeframePanel, 60000);
         });
     };
     bindNumericSetting('demoRobotFunding', 'startingFundingUsd', 1);
-    bindNumericSetting('demoRobotAllocation', 'tradeAllocationUsd', 1);
-    bindNumericSetting('demoRobotRisk', 'maxRiskUsd', 0.01);
+    bindNumericSetting('demoRobotAllocation', 'tradeAllocationUsd', 5);
+    bindNumericSetting('demoRobotRisk', 'maxRiskUsd', 0.5);
+    const feeRateInput = $('demoRobotFeeRate');
+    if (feeRateInput) feeRateInput.addEventListener('change', () => {
+        const value = Number(feeRateInput.value);
+        if (!Number.isFinite(value) || value < 0 || value > 1) {
+            feeRateInput.value = String(state.assumedFeeRatePct);
+            setMessage('Estimated fee per side must be between 0% and 1%.');
+            return;
+        }
+        state.assumedFeeRatePct = value;
+        savePersistentState();
+        renderUi();
+        logEvent(`Estimated trading fee assumption set to ${value.toFixed(3)}% per side. Confirm this against your exchange fee tier.`);
+    });
+    const forceLimitModeInput = $('demoRobotForceLimitMode');
+    const autoEntryInput = $('demoRobotAutoEntry');
+    const forceLimitRefreshButton = $('demoRobotForceLimitRefresh');
+    if (autoEntryInput) {
+        autoEntryInput.addEventListener('change', () => {
+            state.autoEntry = Boolean(autoEntryInput.checked);
+            if (!state.autoEntry && state.forceLimitRequest?.automatic) {
+                state.forceLimitRequest = null;
+                setMessage('Auto Entry disabled. Existing open positions and pending limits remain managed; no automatic retry will be started.');
+                logEvent('Auto Entry disabled; automatic limit retry cancelled.');
+            } else if (state.autoEntry) {
+                state.cooldownUntil = 0;
+                setMessage(state.forceLimitMode
+                    ? 'Auto Entry enabled. The bot will automatically create and refresh 5-minute-candle limit attempts.'
+                    : 'Auto Entry enabled. The bot will scan for the next valid setup after a trade closes.');
+                logEvent('Auto Entry enabled.');
+            } else {
+                setMessage('Auto Entry disabled. Existing paper-trading settings remain unchanged.');
+                logEvent('Auto Entry disabled.');
+            }
+            savePersistentState(); renderUi();
+            if (state.autoEntry && state.enabled) cycle();
+        });
+    }
+    const preTp1ProtectionInput = $('demoRobotAutoPreTp1Protection');
+    if (preTp1ProtectionInput) {
+        preTp1ProtectionInput.addEventListener('change', () => {
+            const enabling = Boolean(preTp1ProtectionInput.checked);
+            if (!enabling) {
+                const warning = 'WARNING: You are about to disable automatic pre-TP1 profit protection.\n\nThe bot will no longer move the stop to cover estimated round-trip fees plus a small buffer before TP1. If protection is already active on the open paper trade, its stop will return to the original stop loss, so ordinary price movement will not trigger the tighter fee-covering stop. This also means open profit can be given back and the trade may reach its original stop loss.\n\nTP1 and the post-TP1 breakeven rule are unchanged. This affects paper-trading logic only.\n\nDisable Auto Pre-TP1 Protection?';
+                if (!window.confirm(warning)) {
+                    preTp1ProtectionInput.checked = true;
+                    return;
+                }
+            }
+            state.autoPreTp1Protection = enabling;
+            if (!enabling && state.position && !state.position.hitTP1 && state.position.profitProtectionActive) {
+                state.position.activeStop = Number(state.position.initialStop);
+                state.position.profitProtectionActive = false;
+                state.position.profitProtectionStop = null;
+                logEvent('Auto Pre-TP1 Protection disabled by user; active stop returned to the original stop loss for the open paper position.');
+                setMessage('Auto Pre-TP1 Protection is OFF. The open paper trade is back to its original stop loss until TP1 or the original stop is reached.');
+            } else if (enabling) {
+                logEvent('Auto Pre-TP1 Protection enabled.');
+                setMessage('Auto Pre-TP1 Protection is ON. It may activate before TP1 when open profit covers estimated fees plus a small buffer.');
+            } else {
+                logEvent('Auto Pre-TP1 Protection disabled by user.');
+                setMessage('Auto Pre-TP1 Protection is OFF for the current and future pre-TP1 paper trade management.');
+            }
+            savePersistentState();
+            renderUi();
+        });
+    }
+
+    function requestForceLimitEntry(waitForNextCandle) {
+        if (!state.forceLimitMode) {
+            setMessage('Enable Force Limit Entry first.'); renderUi(); return;
+        }
+        if (state.position) {
+            setMessage('Force Limit Entry is unavailable while a paper position is open. Manage or close the current position first.'); renderUi(); return;
+        }
+        if (state.pending && state.pending.kind !== 'force-limit') {
+            setMessage('Cancel or finish the existing pending setup before using Force Limit Entry.'); renderUi(); return;
+        }
+        if (state.pending?.kind === 'force-limit') resetPending('force limit entry refreshed by user');
+        const direction = directionFromSignal(lastScalpSignal);
+        if (!direction) {
+            setMessage('Force Limit Entry needs an active dashboard Buy Long or Sell Short signal.'); renderUi(); return;
+        }
+        const now = Date.now();
+        state.forceLimitRequest = {
+            market: selectedMarket,
+            direction,
+            requestedAt: now,
+            // For a refresh, wait for a candle whose start is at/after the currently forming 5m bucket.
+            minCandleTime: waitForNextCandle ? Math.floor(now / 300000) * 300000 : null
+        };
+        savePersistentState();
+        setMessage(waitForNextCandle
+            ? 'Refresh requested. Waiting for the current 5-minute candle to close before setting a new limit.'
+            : 'Force Limit Entry requested. Preparing a limit from the latest closed 5-minute candle.');
+        logEvent(waitForNextCandle
+            ? 'Force Limit Entry refresh requested; waiting for the next 5-minute candle close.'
+            : 'Force Limit Entry enabled; using the latest fully closed 5-minute candle for the first limit.');
+        renderUi();
+        cycle();
+    }
+    if (forceLimitModeInput) {
+        forceLimitModeInput.addEventListener('change', () => {
+            const enabled = Boolean(forceLimitModeInput.checked);
+            if (enabled && (!state.enabled || state.position || state.pending || state.limitMode)) {
+                forceLimitModeInput.checked = false;
+                setMessage(!state.enabled ? 'Start the Demo Robot before enabling Force Limit Entry.' : state.position ? 'Close the open paper position before enabling Force Limit Entry.' : state.pending ? 'Finish or cancel the existing pending setup before enabling Force Limit Entry.' : 'Turn off Optional Paper Limit Entry Mode before enabling Force Limit Entry.');
+                renderUi(); return;
+            }
+            state.forceLimitMode = enabled;
+            if (!enabled) {
+                state.forceLimitRequest = null;
+                if (state.pending?.kind === 'force-limit') resetPending('Force Limit Entry was switched off');
+                setMessage('Force Limit Entry disabled. The standard entry strategy is active.');
+                logEvent('Force Limit Entry disabled.');
+            } else {
+                logEvent('Force Limit Entry enabled.');
+                requestForceLimitEntry(false);
+                return;
+            }
+            savePersistentState(); renderUi();
+        });
+    }
+    if (forceLimitRefreshButton) forceLimitRefreshButton.addEventListener('click', () => requestForceLimitEntry(true));
+
     const limitModeInput = $('demoRobotLimitMode');
     if (limitModeInput) {
         limitModeInput.addEventListener('change', () => {
+            if (limitModeInput.checked && state.forceLimitMode) {
+                limitModeInput.checked = false;
+                setMessage('Turn off Force Limit Entry before enabling Optional Paper Limit Entry Mode.');
+                renderUi(); return;
+            }
             state.limitMode = Boolean(limitModeInput.checked);
             if (!state.limitMode && state.pending?.kind === 'limit') resetPending('paper limit-entry mode was switched off');
             logEvent(state.limitMode
@@ -5513,6 +5908,8 @@ setInterval(refreshMultiTimeframePanel, 60000);
   const liveBadge = document.getElementById("tradingModeBadge");
   const liveMessage = document.getElementById("tradingModeMessage");
   let liveModeExplicitlyEnabled = false;
+  const LIVE_EXECUTION_LOCKED = true;
+  liveToggle.disabled = true;
   async function submitLiveOrderForPosition(position) {
     if (!liveModeExplicitlyEnabled || !liveToggle.checked || !position) return;
     const client = getClient();
@@ -5526,17 +5923,17 @@ setInterval(refreshMultiTimeframePanel, 60000);
     const stopDistance = Math.abs(Number(position.entry) - Number(position.initialStop));
     if (!Number.isFinite(stopDistance) || stopDistance <= 0) throw new Error("Live order blocked: invalid stop distance.");
     // Live sizing is independent of the paper account allocation and quantity.
-    // Worker still enforces its own hard caps of $5 stop risk and $1,000 notional.
+    // The Worker validates the selected risk and allocation against available margin.
     const liveAllocationUsd = Number(liveAllocationInput.value);
     const liveRiskUsd = Number(liveRiskInput.value);
-    if (!Number.isFinite(liveAllocationUsd) || liveAllocationUsd < 10 || liveAllocationUsd > 100) {
-      throw new Error("Live order blocked: margin allocation must be between $10 and $100 USDT.");
+    if (!Number.isFinite(liveAllocationUsd) || liveAllocationUsd < 5) {
+      throw new Error("Live order blocked: margin allocation must be at least $5 USDT.");
     }
-    if (!Number.isFinite(liveRiskUsd) || liveRiskUsd < 0.5 || liveRiskUsd > 5) {
-      throw new Error("Live order blocked: stop-loss risk must be between $0.50 and $5 per trade.");
+    if (!Number.isFinite(liveRiskUsd) || liveRiskUsd < 0.5) {
+      throw new Error("Live order blocked: maximum stop-loss risk must be at least $0.50.");
     }
-    const liveNotionalUsd = Math.min(liveAllocationUsd * 10, 1000);
-    const liveQuantity = Math.floor(Math.min(liveRiskUsd / stopDistance, liveNotionalUsd / Number(position.entry), 5 / stopDistance) * 10000) / 10000;
+    const liveNotionalUsd = liveAllocationUsd * 10;
+    const liveQuantity = Math.floor(Math.min(liveRiskUsd / stopDistance, liveNotionalUsd / Number(position.entry)) * 10000) / 10000;
     if (!Number.isFinite(liveQuantity) || liveQuantity <= 0) throw new Error("Live order blocked: calculated BTC quantity is below the supported minimum.");
     const response = await fetch(WORKER_AUTH_URL.replace("?auth=supabase", "?live=order"), {
       method: "POST", cache: "no-store",
@@ -5544,7 +5941,10 @@ setInterval(refreshMultiTimeframePanel, 60000);
       body: JSON.stringify({
         confirmLive: true, symbol: "BTC-USDT", direction: position.direction,
         quantity: liveQuantity, entryPrice: position.entry, stopLoss: position.initialStop,
-        takeProfit: position.tp2, signalTimestamp: Number(position.confirmTime || Date.now())
+        takeProfit: position.tp2, orderType: position.liveOrderType || "MARKET",
+        limitPrice: position.liveLimitPrice || null, maxRiskUsd: liveRiskUsd,
+        marginAllocationUsd: liveAllocationUsd, leverage: 10,
+        signalTimestamp: Number(position.confirmTime || Date.now())
       })
     });
     const text = await response.text();
@@ -5554,9 +5954,43 @@ setInterval(refreshMultiTimeframePanel, 60000);
     liveMessage.textContent = `BingX accepted a live ${position.direction.toUpperCase()} order request. Verify fill and stop/TP orders in BingX.`;
     liveMessage.className = "trading-mode-copy live-success";
   }
+  async function liveManageRequest(method, body) {
+    const client = getClient();
+    const { data, error } = await client.auth.getSession();
+    if (error) throw error;
+    const session = data && data.session;
+    if (!session?.access_token) throw new Error("Live account management requires an authenticated Supabase session.");
+    const response = await fetch(WORKER_AUTH_URL.replace("?auth=supabase", "?live=manage"), {
+      method, cache: "no-store",
+      headers: { "Accept": "application/json", "Content-Type": "application/json", "Authorization": "Bearer " + session.access_token },
+      ...(body ? { body: JSON.stringify(body) } : {})
+    });
+    const raw = await response.text();
+    let result; try { result = raw ? JSON.parse(raw) : {}; } catch (_) { result = { error: raw || "Worker returned invalid JSON." }; }
+    if (!response.ok || result.ok !== true) throw new Error(result.error || `Live account request failed (HTTP ${response.status}).`);
+    return result;
+  }
+  async function reconcileLiveAccount() {
+    return liveManageRequest("GET");
+  }
+  async function cancelLiveLimit(order) {
+    if (!order || (!order.orderId && !order.clientOrderId)) throw new Error("A tracked live limit order is required for cancellation.");
+    return liveManageRequest("POST", { confirmLive: true, symbol: "BTC-USDT", action: "cancel-limit", orderId: order.orderId || "", clientOrderId: order.clientOrderId || "" });
+  }
+  async function updateLiveProtectiveStop(position, stopPrice) {
+    if (!position || String(position.market).toUpperCase() !== "BTC") throw new Error("Exchange-side Pre-TP1 protection is currently limited to a tracked BTC-USDT position.");
+    const quantity = Number(position.quantity || position.remainingQuantity);
+    const entryPrice = Number(position.entry);
+    const trigger = Number(stopPrice);
+    if (![quantity, entryPrice, trigger].every(Number.isFinite) || quantity <= 0 || trigger <= 0) throw new Error("Invalid live position or protective-stop values.");
+    return liveManageRequest("POST", { confirmLive: true, symbol: "BTC-USDT", action: "protect-stop", direction: position.direction, quantity, entryPrice, stopPrice: trigger });
+  }
   window.goldEciLiveMode = {
     isEnabled: () => liveModeExplicitlyEnabled && liveToggle.checked,
-    submit: submitLiveOrderForPosition
+    submit: submitLiveOrderForPosition,
+    reconcile: reconcileLiveAccount,
+    cancelLimit: cancelLiveLimit,
+    protectStop: updateLiveProtectiveStop
   };
   function setLiveModeOff(message, kind) {
     liveToggle.checked = false;
@@ -5586,6 +6020,10 @@ setInterval(refreshMultiTimeframePanel, 60000);
         setLiveModeOff((body && body.message) || (body && body.error) || "Live orders are not enabled by the Cloudflare Worker. Paper trading remains available.", "warning");
         return false;
       }
+      if (LIVE_EXECUTION_LOCKED) {
+        setLiveModeOff("Cloudflare authentication can be checked, but live execution remains locked in this build. The live limit-order lifecycle, position monitoring, and exchange-side stop replacement must be completed and tested first.", "warning");
+        return false;
+      }
       liveBadge.textContent = liveToggle.checked ? "LIVE TRADING · ENABLED" : "LIVE READY · OFF UNTIL ENABLED";
       liveBadge.className = "trading-mode-status" + (liveToggle.checked ? " live-active" : "");
       liveMessage.textContent = liveToggle.checked ? "Live BTC-USDT execution is enabled for confirmed robot entries. Gold and Silver remain paper-only." : "Live-order support is ready. The checkbox remains off until you explicitly enable it.";
@@ -5595,7 +6033,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
       return false;
     } finally {
       liveCheckBtn.disabled = false;
-      liveToggle.disabled = false;
+      liveToggle.disabled = LIVE_EXECUTION_LOCKED;
     }
   }
   liveCheckBtn.addEventListener("click", checkLiveReadiness);
