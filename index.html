@@ -996,12 +996,12 @@
     </div>
 
 
-    <!-- Trading mode: live mode remains disabled unless the server confirms order support -->
+    <!-- Live BTC trading is separate from the paper robot and defaults OFF. -->
     <section class="trading-mode-card" id="tradingModeCard" aria-labelledby="tradingModeTitle">
       <div class="trading-mode-head">
         <div>
           <h2 class="trading-mode-title" id="tradingModeTitle">Trading Mode</h2>
-          <p class="trading-mode-copy">Paper trading remains available. The staging backend now includes BTC-USDT order reconciliation, idempotent entry requests, limit-order submission and cancellation, and exchange-side protective-stop requests. Live execution remains locked until the full dashboard lifecycle and exchange behavior pass testing.</p>
+          <p class="trading-mode-copy">Paper trading continues as before. When live mode is enabled and the authorized Worker is ready, qualifying BTC robot entries can submit real BingX orders with attached stop-loss and take-profit orders. Gold and Silver stay paper-only. Turning live mode off blocks new live entries; it does not close an existing BingX position.</p>
         </div>
         <span id="tradingModeBadge" class="trading-mode-status">PAPER MODE · DEFAULT</span>
       </div>
@@ -1019,9 +1019,17 @@
         <label>Maximum stop-loss risk per trade (USDT)
           <input id="liveRiskUsd" type="number" min="0.5" step="0.5" value="5" inputmode="decimal" />
         </label>
-        <p class="trading-mode-copy live-sizing-note">These controls are intended for real BTC-USDT orders only. Minimum margin allocation: $5. Minimum maximum stop-loss risk: $0.50. There is no dashboard upper cap; available BingX margin, 10× leverage, and exchange contract limits determine whether an order can be accepted.</p>
+        <p class="trading-mode-copy live-sizing-note">These controls are intended for real BTC-USDT orders only. Minimum margin allocation: $5. Minimum maximum stop-loss risk: $0.50. The Worker also applies its configured safety caps; available BingX margin, 10× leverage, and exchange contract limits affect acceptance.</p>
       </div>
-      <div id="tradingModeMessage" class="trading-mode-copy" role="status" aria-live="polite" style="margin-top:10px">The checkbox is clickable for readiness checks. Live execution remains locked until pending-order expiry, signal-change cancellation, partial-fill recovery, and live Pre-TP1 protection are validated. Checking this box will not bypass the execution lock or send a real order.</div>
+      <div id="tradingModeMessage" class="trading-mode-copy" role="status" aria-live="polite" style="margin-top:10px">Live mode is OFF. Check readiness, then switch it on to allow qualifying BTC robot entries to submit real orders.</div>
+      <div class="status-box" style="margin-top:14px;margin-bottom:0" aria-live="polite">
+        <div class="status-title">BingX live account</div>
+        <div id="liveExchangeStatus" class="value">Not reconciled</div>
+        <div id="liveExchangePosition" class="small">Position: —</div>
+        <div id="liveExchangeOrders" class="small">Open orders: —</div>
+        <div id="liveExchangeLastChecked" class="small">Last checked: —</div>
+        <button id="refreshLiveAccount" type="button">Refresh BingX status</button>
+      </div>
     </section>
 
     <!-- DEMO ROBOT: PAPER-TRADING ONLY -->
@@ -1030,7 +1038,7 @@
             <div>
                 <div class="section-title" style="margin-bottom:0;">Demo Robot · Support / Resistance Confirmation</div>
                 <div class="demo-robot-subtitle">
-                    Paper trading remains available. Live execution remains separately gated while the BingX order lifecycle and exchange-side protection are being validated. Gold and Silver remain paper-only. The robot waits for ECI direction, 1-minute WMA 100/200 agreement, a confirmed 15-minute swing level, and a closed 1-minute rejection candle.
+                    Paper trading remains available. Live BTC orders require the separate live switch, an authorized account, and a ready Worker. Gold and Silver remain paper-only. The robot waits for ECI direction, 1-minute WMA 100/200 agreement, a confirmed 15-minute swing level, and a closed 1-minute rejection candle.
                 </div>
             </div>
             <span id="demoRobotBadge" class="demo-robot-badge">DEMO OFF</span>
@@ -1192,7 +1200,7 @@
     <section class="card public-beta-notice" aria-label="Public beta notice">
         <div class="public-beta-notice-title">⚠️ PUBLIC BETA · UNDER DEVELOPMENT</div>
         <p>
-            This dashboard is actively being developed. Signals and market-structure levels are experimental and may be inaccurate, delayed, or temporarily unavailable. The paper robot and live BingX execution are separate. Live execution remains disabled until order placement, order cancellation, and exchange-side protection are fully validated.
+            This dashboard is actively being developed. Signals and market-structure levels are experimental and may be inaccurate, delayed, or temporarily unavailable. Paper trading and live BingX execution are separate. Live BTC execution requires the explicit switch and a ready Worker; exchange orders and any open positions must be monitored in BingX as well.
         </p>
     </section>
 
@@ -4986,6 +4994,16 @@ setInterval(refreshMultiTimeframePanel, 60000);
             confirmTime: confirmCandle?.[0] || Date.now()
         };
         state.position = position;
+        // Paper behavior and records continue unchanged. When live mode is
+        // explicitly enabled, this same qualified BTC setup is also submitted
+        // through the authenticated Worker; a live rejection never mutates the
+        // paper position or paper trade accounting.
+        if (market === 'BTC' && window.goldEciLiveMode && window.goldEciLiveMode.isEnabled()) {
+            window.goldEciLiveMode.submit(position).catch(error => {
+                const liveStatus = document.getElementById('liveExchangeStatus');
+                if (liveStatus) liveStatus.textContent = 'Live order failed · ' + (error?.message || 'Worker request failed');
+            });
+        }
         state.positionStructureClosed = Array.isArray(state.structureClosed) ? state.structureClosed.slice() : [];
         state.lastPositionStructureFetch = 0; // refresh from the position market at the next cycle
         state.pending = null;
@@ -5907,8 +5925,15 @@ setInterval(refreshMultiTimeframePanel, 60000);
   const liveCheckBtn = document.getElementById("checkLiveTradingStatus");
   const liveBadge = document.getElementById("tradingModeBadge");
   const liveMessage = document.getElementById("tradingModeMessage");
+  const liveExchangeStatus = document.getElementById("liveExchangeStatus");
+  const liveExchangePosition = document.getElementById("liveExchangePosition");
+  const liveExchangeOrders = document.getElementById("liveExchangeOrders");
+  const liveExchangeLastChecked = document.getElementById("liveExchangeLastChecked");
+  const liveRefreshBtn = document.getElementById("refreshLiveAccount");
   let liveModeExplicitlyEnabled = false;
-  const LIVE_EXECUTION_LOCKED = true;
+  let liveRefreshTimer = null;
+  let trackedLiveOrderId = "";
+  try { trackedLiveOrderId = localStorage.getItem("gold_eci_last_live_order_id") || ""; } catch (_) {}
   liveToggle.disabled = false;
   async function submitLiveOrderForPosition(position) {
     if (!liveModeExplicitlyEnabled || !liveToggle.checked || !position) return;
@@ -5950,9 +5975,12 @@ setInterval(refreshMultiTimeframePanel, 60000);
     const text = await response.text();
     let body; try { body = text ? JSON.parse(text) : {}; } catch (_) { body = { error: text || "Worker returned an invalid response." }; }
     if (!response.ok || body.ok !== true) throw new Error(body.error || "BingX rejected the live order.");
-    logEvent(`LIVE BTC-USDT ${position.direction.toUpperCase()} accepted by BingX. Order ID: ${body.order?.orderId || "not returned"}. Estimated stop risk $${Number(body.estimatedRiskUsd || 0).toFixed(2)}. Verify fill and protection in BingX.`);
-    liveMessage.textContent = `BingX accepted a live ${position.direction.toUpperCase()} order request. Verify fill and stop/TP orders in BingX.`;
+    trackedLiveOrderId = String(body.order?.orderId || body.order?.orderID || "");
+    if (trackedLiveOrderId) { try { localStorage.setItem("gold_eci_last_live_order_id", trackedLiveOrderId); } catch (_) {} }
+    logEvent(`LIVE BTC-USDT ${position.direction.toUpperCase()} order accepted by BingX. Order ID: ${trackedLiveOrderId || "not returned"}. Estimated initial stop risk $${Number(body.estimatedRiskUsd || 0).toFixed(2)}. Exchange status is being reconciled.`);
+    liveMessage.textContent = `BingX accepted the ${position.direction.toUpperCase()} order request. The exchange position, order, and protective orders are being reconciled.`;
     liveMessage.className = "trading-mode-copy live-success";
+    refreshLiveAccount(false).catch(() => {});
   }
   async function liveManageRequest(method, body) {
     const client = getClient();
@@ -5971,7 +5999,51 @@ setInterval(refreshMultiTimeframePanel, 60000);
     return result;
   }
   async function reconcileLiveAccount() {
-    return liveManageRequest("GET");
+    const client = getClient();
+    const { data, error } = await client.auth.getSession();
+    if (error) throw error;
+    const session = data && data.session;
+    if (!session?.access_token) throw new Error("Live account reconciliation requires an authenticated Supabase session.");
+    const url = new URL(WORKER_AUTH_URL);
+    url.searchParams.set("live", "manage");
+    if (trackedLiveOrderId) url.searchParams.set("orderId", trackedLiveOrderId);
+    const response = await fetch(url.toString(), { method: "GET", cache: "no-store", headers: { "Accept": "application/json", "Authorization": "Bearer " + session.access_token } });
+    const raw = await response.text();
+    let result; try { result = raw ? JSON.parse(raw) : {}; } catch (_) { result = { error: raw || "Worker returned invalid JSON." }; }
+    if (!response.ok || result.ok !== true) throw new Error(result.error || `Live account request failed (HTTP ${response.status}).`);
+    return result;
+  }
+  function renderLiveAccountSnapshot(result) {
+    const positions = Array.isArray(result.positions) ? result.positions : [];
+    const orders = Array.isArray(result.openOrders) ? result.openOrders : [];
+    const positionText = positions.length ? positions.map(p => `${String(p.positionSide || (Number(p.positionAmt) < 0 ? "SHORT" : "LONG")).toUpperCase()} ${Math.abs(Number(p.positionAmt) || 0)} BTC · entry ${Number(p.avgPrice || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })} · PnL ${Number(p.unrealizedProfit || 0).toFixed(2)} USDT`).join(" | ") : "No open BTC-USDT position";
+    const orderDetails = orders.length ? orders.map(o => `${o.type || "Order"} ${o.side || ""} · ${o.status || "status unavailable"} · filled ${o.executedQty || "0"}/${o.origQty || "?"}${Number(o.stopPrice) > 0 ? " · trigger " + o.stopPrice : ""}`).join(" | ") : "No open BTC-USDT orders";
+    const protectiveCount = orders.filter(o => ["STOP_MARKET", "TAKE_PROFIT_MARKET", "STOP", "TAKE_PROFIT"].includes(String(o.type || "").toUpperCase())).length;
+    const protectionText = positions.length ? (protectiveCount ? `Exchange protective orders found: ${protectiveCount}.` : "WARNING: no open exchange stop/target order found for the open position; check BingX immediately.") : "";
+    liveExchangeStatus.textContent = result.trackedOrder ? `Reconciled · tracked order ${result.trackedOrder.status || "status unavailable"}` : "Reconciled with BingX";
+    liveExchangePosition.textContent = "Position: " + positionText;
+    liveExchangeOrders.textContent = "Open orders: " + orderDetails + (protectionText ? " · " + protectionText : "");
+    liveExchangeLastChecked.textContent = "Last checked: " + new Date(result.reconciledAt || Date.now()).toLocaleString();
+  }
+  async function refreshLiveAccount(fromMonitor = false) {
+    if (liveRefreshBtn) liveRefreshBtn.disabled = true;
+    try {
+      const result = await reconcileLiveAccount();
+      renderLiveAccountSnapshot(result);
+      return result;
+    } catch (error) {
+      liveExchangeStatus.textContent = "Reconciliation failed · " + (error?.message || "unknown error");
+      if (fromMonitor && liveModeExplicitlyEnabled) {
+        liveModeExplicitlyEnabled = false;
+        setLiveModeOff("Live entries paused because BingX position and order status could not be reconciled. Existing exchange positions and protection remain in BingX.", "warning");
+      }
+      throw error;
+    } finally { if (liveRefreshBtn) liveRefreshBtn.disabled = false; }
+  }
+  function startLiveReconciliation() {
+    if (liveRefreshTimer) clearInterval(liveRefreshTimer);
+    refreshLiveAccount(true).catch(() => {});
+    liveRefreshTimer = setInterval(() => refreshLiveAccount(true).catch(() => {}), 12000);
   }
   async function cancelLiveLimit(order) {
     if (!order || (!order.orderId && !order.clientOrderId)) throw new Error("A tracked live limit order is required for cancellation.");
@@ -5993,6 +6065,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
     protectStop: updateLiveProtectiveStop
   };
   function setLiveModeOff(message, kind) {
+    if (liveRefreshTimer) { clearInterval(liveRefreshTimer); liveRefreshTimer = null; }
     liveToggle.checked = false;
     liveBadge.textContent = "PAPER MODE · DEFAULT";
     liveBadge.className = "trading-mode-status" + (kind ? " " + kind : "");
@@ -6020,10 +6093,6 @@ setInterval(refreshMultiTimeframePanel, 60000);
         setLiveModeOff((body && body.message) || (body && body.error) || "Live orders are not enabled by the Cloudflare Worker. Paper trading remains available.", "warning");
         return false;
       }
-      if (LIVE_EXECUTION_LOCKED) {
-        setLiveModeOff("Cloudflare authentication can be checked, but live execution remains locked in this build. The live limit-order lifecycle, position monitoring, and exchange-side stop replacement must be completed and tested first.", "warning");
-        return false;
-      }
       liveBadge.textContent = liveToggle.checked ? "LIVE TRADING · ENABLED" : "LIVE READY · OFF UNTIL ENABLED";
       liveBadge.className = "trading-mode-status" + (liveToggle.checked ? " live-active" : "");
       liveMessage.textContent = liveToggle.checked ? "Live BTC-USDT execution is enabled for confirmed robot entries. Gold and Silver remain paper-only." : "Live-order support is ready. The checkbox remains off until you explicitly enable it.";
@@ -6037,13 +6106,13 @@ setInterval(refreshMultiTimeframePanel, 60000);
     }
   }
   liveCheckBtn.addEventListener("click", checkLiveReadiness);
+  liveRefreshBtn?.addEventListener("click", () => refreshLiveAccount(false).catch(() => {}));
   liveToggle.addEventListener("change", async () => {
     if (!liveToggle.checked) {
       liveModeExplicitlyEnabled = false;
       setLiveModeOff("New live entries are disabled. Any existing BingX position remains open and must be managed or closed in BingX.");
       return;
     }
-    // Fail closed: this Worker currently advertises orderSubmissionAvailable=false.
     const ready = await checkLiveReadiness();
     if (!ready) {
       liveModeExplicitlyEnabled = false;
@@ -6054,6 +6123,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
       liveBadge.className = "trading-mode-status live-active";
       liveMessage.textContent = "Live BTC-USDT execution is enabled for confirmed robot entries. Gold and Silver remain paper-only. Real orders may be submitted when the robot confirms a valid entry.";
       liveMessage.className = "trading-mode-copy live-success";
+      startLiveReconciliation();
     }
   });
 
@@ -6064,6 +6134,8 @@ setInterval(refreshMultiTimeframePanel, 60000);
       const client = getClient();
       const { error } = await client.auth.signOut();
       if (error) throw error;
+      liveModeExplicitlyEnabled = false;
+      setLiveModeOff("Signed out. New live entries are disabled; manage any existing BingX position in the exchange account.");
       verifiedUserId = null;
       showConnected(false);
       setStatus("Signed out. No verified Supabase session is active.", "");
