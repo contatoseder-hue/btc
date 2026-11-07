@@ -764,7 +764,10 @@
 /* Restored market scanner and robot controls */
 .demo-robot-scanning { display:flex; align-items:center; gap:11px; border:1px solid rgba(96,165,250,.42); background:rgba(38,110,170,.10); color:#dbeafe; border-radius:10px; padding:12px 14px; margin:12px 0; }
 .demo-robot-scanning-icon { display:flex; align-items:center; justify-content:center; flex:0 0 42px; width:42px; height:42px; border:1px solid rgba(74,222,128,.65); border-radius:50%; background:radial-gradient(circle,rgba(34,197,94,.18) 0 2px,transparent 3px),rgba(2,18,20,.8); box-shadow:0 0 12px rgba(34,197,94,.16),inset 0 0 10px rgba(34,197,94,.12); font-size:22px; animation:demoRadarSpin 1.8s linear infinite; }
-.demo-robot-scan-gif { display:none; flex:0 0 64px; width:64px; height:64px; object-fit:contain; border-radius:8px; }
+.demo-robot-scan-gif { display:block; flex:0 0 64px; width:64px; height:64px; object-fit:contain; border-radius:8px; transform-origin:center; animation:demoScanGifSpin 2.2s linear infinite; }
+@keyframes demoScanGifSpin { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
+.demo-robot-scanning[hidden] { display:none !important; }
+@media(prefers-reduced-motion:reduce){.demo-robot-scan-gif{animation:none;}}
 @keyframes demoRadarSpin { from { transform:rotate(0deg); box-shadow:0 0 8px rgba(34,197,94,.12); } to { transform:rotate(360deg); box-shadow:0 0 16px rgba(34,197,94,.32); } }
 @media(prefers-reduced-motion:reduce){.demo-robot-scanning-icon{animation:none;}}
 .demo-robot-scanning strong { display:block; font-size:13px; font-weight:800; }
@@ -1098,8 +1101,8 @@
             Demo robot is off. Start it to monitor market structure. It cannot place real orders.
         </div>
         <div id="demoRobotScanning" class="demo-robot-scanning" style="display:none;" role="status" aria-live="polite">
-            <img id="demoRobotScanGif" class="demo-robot-scan-gif" src="https://media.tenor.com/Gparo0eD0KIAAAAC/nerd-radar-mayclan.gif" alt="Radar scanning animation" loading="lazy">
-            <span class="demo-robot-scanning-icon" aria-hidden="true">📡</span>
+            <img id="demoRobotScanGif" class="demo-robot-scan-gif" src="https://media.tenor.com/Gparo0eD0KIAAAAC/nerd-radar-mayclan.gif" alt="Radar scanning animation" loading="eager" onerror="this.style.display='none'; const fallback=this.parentElement.querySelector('.demo-robot-scanning-icon'); if(fallback) fallback.style.display='flex';">
+            <span class="demo-robot-scanning-icon" aria-hidden="true" style="display:none">📡</span>
             <span><strong>Scanning the market</strong><small>Looking for the best valid entry point and direction…</small></span>
         </div>
         <div id="demoRobotEntryFound" class="demo-robot-entry-found" role="status" aria-live="polite">
@@ -4651,8 +4654,10 @@ setInterval(refreshMultiTimeframePanel, 60000);
                     : state.forceLimitRequest
                         ? 'Checking for a valid completed 5-minute candle and aligned direction…'
                         : 'Checking direction, support/resistance and entry confirmation…';
-                if (scanGif) scanGif.style.display = state.forceLimitMode ? 'block' : 'none';
-                if (scanIcon) scanIcon.style.display = state.forceLimitMode ? 'none' : 'flex';
+                // Keep the animated GIF visible whenever the robot is actively scanning,
+                // not only when Force Limit Entry is selected.
+                if (scanGif) scanGif.style.display = 'block';
+                if (scanIcon) scanIcon.style.display = 'none';
                 scanningEl.style.display = 'flex';
                 scanningEl.setAttribute('aria-label', state.forceLimitMode ? 'Scanning for a Force Limit Entry' : 'Scanning the market for a valid entry');
             } else {
