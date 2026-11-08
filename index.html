@@ -4340,7 +4340,8 @@ setInterval(refreshMultiTimeframePanel, 60000);
         tradeAllocationUsd: 100,
         maxRiskUsd: 10,
         assumedFeeRatePct: 0.05,
-        cooldownUntil: 0
+        cooldownUntil: 0,
+        sidewaysPaused: false
     };
 
     const STORAGE_KEY = 'goldEciDemoRobotState_v2';
@@ -4853,6 +4854,43 @@ setInterval(refreshMultiTimeframePanel, 60000);
         return { direction: 'neutral', label: 'NEUTRAL', wma100, wma200 };
     }
 
+    // Conservative sideways-market gate for NEW entries only.
+    // Uses closed 1-minute candles, directional efficiency, WMA separation, and ATR.
+    // It fails closed when the data is insufficient; open positions are managed above this gate.
+    function detectSidewaysMarket(closedCandles, trend, atr) {
+        const windowSize = 20;
+        if (!Array.isArray(closedCandles) || closedCandles.length < 200 ||
+            !Number.isFinite(atr) || atr <= 0 ||
+            !Number.isFinite(trend?.wma100) || !Number.isFinite(trend?.wma200)) {
+            return { sideways: true, reason: 'insufficient closed-candle data for sideways filter' };
+        }
+        const window = closedCandles.slice(-windowSize);
+        const closes = window.map(c => Number(c[4]));
+        if (closes.some(v => !Number.isFinite(v) || v <= 0)) {
+            return { sideways: true, reason: 'invalid candle data for sideways filter' };
+        }
+        let path = 0;
+        for (let i = 1; i < closes.length; i++) path += Math.abs(closes[i] - closes[i - 1]);
+        const displacement = Math.abs(closes[closes.length - 1] - closes[0]);
+        const efficiencyRatio = path > 0 ? displacement / path : 0;
+        const highs = window.map(c => Number(c[2])).filter(Number.isFinite);
+        const lows = window.map(c => Number(c[3])).filter(Number.isFinite);
+        if (highs.length !== windowSize || lows.length !== windowSize) {
+            return { sideways: true, reason: 'invalid high/low data for sideways filter' };
+        }
+        const rangeAtr = (Math.max(...highs) - Math.min(...lows)) / atr;
+        const wmaGapAtr = Math.abs(trend.wma100 - trend.wma200) / atr;
+        const lowDirectionalEfficiency = efficiencyRatio < 0.25;
+        const compressedOrUnclearTrend = wmaGapAtr < 1.0 || rangeAtr < 5.5;
+        const sideways = lowDirectionalEfficiency && compressedOrUnclearTrend;
+        return {
+            sideways,
+            reason: sideways
+                ? `low directional efficiency (${efficiencyRatio.toFixed(2)}) with weak trend/range (WMA gap ${wmaGapAtr.toFixed(2)} ATR, range ${rangeAtr.toFixed(1)} ATR)`
+                : `directional efficiency ${efficiencyRatio.toFixed(2)}`
+        };
+    }
+
     function findSwingLevels(closedCandles, price, tolerance) {
         const supports = [];
         const resistances = [];
@@ -5358,6 +5396,24 @@ setInterval(refreshMultiTimeframePanel, 60000);
             const signalDirection = directionFromSignal(lastScalpSignal);
             const latestClosed = state.confirmClosed[state.confirmClosed.length - 1];
             const previousClosed = state.confirmClosed[state.confirmClosed.length - 2];
+
+            // Pause all NEW entry paths (including force-limit and pending limits) in sideways conditions.
+            // Existing positions have already been managed earlier in cycle(), so SL/TP/profit protection continue.
+            const sidewaysCheck = detectSidewaysMarket(state.confirmClosed, trend, atr);
+            if (sidewaysCheck.sideways) {
+                if (state.pending) resetPending('sideways-market filter activated; new entries are paused');
+                if (!state.sidewaysPaused) {
+                    logEvent(`${marketName(market)} sideways-market filter activated. New entries paused: ${sidewaysCheck.reason}.`);
+                }
+                state.sidewaysPaused = true;
+                setMessage(`SIDEWAYS MARKET: new entries paused. ${sidewaysCheck.reason}. Existing-position protection remains active. Waiting for clearer directional movement.`);
+                savePersistentState();
+                return;
+            }
+            if (state.sidewaysPaused) {
+                logEvent(`${marketName(market)} sideways-market filter cleared. Existing ECI, WMA, structure, and candle-confirmation rules must still agree before a new entry.`);
+                state.sidewaysPaused = false;
+            }
 
             // Force Limit Entry: use the close of a fully closed 5-minute candle as the limit price.
             // A refresh request waits for the next 5-minute candle to finish before recalculating.
