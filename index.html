@@ -4441,7 +4441,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
             const raw = localStorage.getItem(STORAGE_KEY);
             if (!raw) return;
             const saved = JSON.parse(raw);
-            if (!saved || ![2, 3].includes(saved.version)) return;
+            if (!saved || ![2, 3, 4].includes(saved.version)) return;
 
             state.enabled = saved.version >= 3 && Boolean(saved.enabled);
             state.activeMarket = saved.activeMarket || null;
@@ -5093,6 +5093,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
         state.cooldownUntil = state.autoEntry ? 0 : Date.now() + 60000;
         setMessage(state.autoEntry ? `Paper trade closed: ${reason}. Result ${fmtR(outcomeR)}. Auto Entry remains enabled and is searching for the next valid setup.` : `Paper trade closed: ${reason}. Result ${fmtR(outcomeR)}. A one-minute cooldown is active.`);
         logEvent(`${marketName(p.market)} PAPER trade closed at ${formatPrice(markPrice)}: ${reason}, ${fmtR(outcomeR)}.`);
+        savePersistentState();
         requestAutoEntryRescanAfterClose();
     }
 
@@ -5121,6 +5122,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
         state.cooldownUntil = state.autoEntry ? 0 : Date.now() + 60000;
         setMessage(state.autoEntry ? `Paper position manually closed at ${formatPrice(mark)}. Realized PnL: ${fmtUsdPnl(cashPnlUsd)}. Auto Entry remains enabled and is searching for the next valid setup.` : `Paper position manually closed at ${formatPrice(mark)}. Realized PnL: ${fmtUsdPnl(cashPnlUsd)}. Added to cumulative closed PnL.`);
         logEvent(`${marketName(p.market)} PAPER ${p.direction.toUpperCase()} manually closed at ${formatPrice(mark)}; realized ${fmtUsdPnl(cashPnlUsd)} (${fmtR(outcomeR)}).`);
+        savePersistentState();
         requestAutoEntryRescanAfterClose();
         renderUi();
     }
@@ -5823,6 +5825,12 @@ setInterval(refreshMultiTimeframePanel, 60000);
         } catch (_) { btcMarkReconnectTimer = setTimeout(connectBtcMarkStream, 10000); }
     }
     if (typeof WebSocket !== 'undefined') connectBtcMarkStream();
+
+    // Best-effort final persistence when the user reloads, closes, or backgrounds the tab.
+    window.addEventListener('pagehide', () => { savePersistentState(); });
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') savePersistentState();
+    });
 
     restorePersistentState();
     renderUi();
