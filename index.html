@@ -1022,12 +1022,12 @@
       </div>
       <div class="live-sizing-controls" aria-label="Live BTC trade sizing">
         <label>Live margin allocation (USDT)
-          <input id="liveAllocationUsd" type="number" min="5" step="1" value="50" inputmode="decimal" />
+          <input id="liveAllocationUsd" type="number" min="2" step="0.01" value="2.00" inputmode="decimal" />
         </label>
         <label>Maximum stop-loss risk per trade (USDT)
-          <input id="liveRiskUsd" type="number" min="0.5" step="0.5" value="5" inputmode="decimal" />
+          <input id="liveRiskUsd" type="number" min="0.20" max="0.20" step="0.01" value="0.20" inputmode="decimal" />
         </label>
-        <p class="trading-mode-copy live-sizing-note">These controls are intended for real BTC-USDT orders only. Minimum margin allocation: $5. Minimum maximum stop-loss risk: $0.50. The Worker also applies its configured safety caps; available BingX margin, 10× leverage, and exchange contract limits affect acceptance.</p>
+        <p class="trading-mode-copy live-sizing-note">These controls are intended for real BTC-USDT orders only. Minimum margin allocation: $2.00. Maximum initial stop-loss risk is capped at $0.20 per trade. At 10× leverage, $2 margin allows up to about $20 notional; BingX margin and contract rules still apply.</p>
       </div>
       <div id="tradingModeMessage" class="trading-mode-copy" role="status" aria-live="polite" style="margin-top:10px">Live mode is OFF. Check readiness, then switch it on to allow qualifying BTC robot entries to submit real orders.</div>
       <div class="status-box" style="margin-top:14px;margin-bottom:0" aria-live="polite">
@@ -6044,11 +6044,11 @@ setInterval(refreshMultiTimeframePanel, 60000);
     // The Worker validates the selected risk and allocation against available margin.
     const liveAllocationUsd = Number(liveAllocationInput.value);
     const liveRiskUsd = Number(liveRiskInput.value);
-    if (!Number.isFinite(liveAllocationUsd) || liveAllocationUsd < 5) {
-      throw new Error("Live order blocked: margin allocation must be at least $5 USDT.");
+    if (!Number.isFinite(liveAllocationUsd) || liveAllocationUsd < 2) {
+      throw new Error("Live order blocked: margin allocation must be at least $2 USDT.");
     }
-    if (!Number.isFinite(liveRiskUsd) || liveRiskUsd < 0.5) {
-      throw new Error("Live order blocked: maximum stop-loss risk must be at least $0.50.");
+    if (!Number.isFinite(liveRiskUsd) || liveRiskUsd < 0.20 || liveRiskUsd > 0.20) {
+      throw new Error("Live order blocked: maximum stop-loss risk is fixed at $0.20 for this initial test.");
     }
     const liveNotionalUsd = liveAllocationUsd * 10;
     const liveQuantity = Math.floor(Math.min(liveRiskUsd / stopDistance, liveNotionalUsd / Number(position.entry)) * 10000) / 10000;
