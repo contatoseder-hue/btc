@@ -1,4 +1,4 @@
-
+2
 
 <!DOCTYPE html>
 <html lang="en">
@@ -4886,7 +4886,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
         const rangeAtr = (Math.max(...highs) - Math.min(...lows)) / atr;
         const wmaGapAtr = Math.abs(trend.wma100 - trend.wma200) / atr;
         const lowDirectionalEfficiency = efficiencyRatio < 0.25;
-        const compressedOrUnclearTrend = wmaGapAtr < 1.0 || rangeAtr < 5.5;
+        const compressedOrUnclearTrend = wmaGapAtr < 1.0 || rangeAtr < 4.0;
         const sideways = lowDirectionalEfficiency && compressedOrUnclearTrend;
         return {
             sideways,
