@@ -1022,12 +1022,12 @@
       </div>
       <div class="live-sizing-controls" aria-label="Live BTC trade sizing">
         <label>Live margin allocation (USDT)
-          <input id="liveAllocationUsd" type="number" min="2" step="0.01" value="2.00" inputmode="decimal" />
+          <input id="liveAllocationUsd" type="number" min="5" step="1" value="50" inputmode="decimal" />
         </label>
         <label>Maximum stop-loss risk per trade (USDT)
-          <input id="liveRiskUsd" type="number" min="0.20" max="0.20" step="0.01" value="0.20" inputmode="decimal" />
+          <input id="liveRiskUsd" type="number" min="0.5" step="0.5" value="5" inputmode="decimal" />
         </label>
-        <p class="trading-mode-copy live-sizing-note">These controls are intended for real BTC-USDT orders only. Minimum margin allocation: $2.00. Maximum initial stop-loss risk is capped at $0.20 per trade. At 10× leverage, $2 margin allows up to about $20 notional; BingX margin and contract rules still apply.</p>
+        <p class="trading-mode-copy live-sizing-note">These controls are intended for real BTC-USDT orders only. Minimum margin allocation: $5. Minimum maximum stop-loss risk: $0.50. The Worker also applies its configured safety caps; available BingX margin, 10× leverage, and exchange contract limits affect acceptance.</p>
       </div>
       <div id="tradingModeMessage" class="trading-mode-copy" role="status" aria-live="polite" style="margin-top:10px">Live mode is OFF. Check readiness, then switch it on to allow qualifying BTC robot entries to submit real orders.</div>
       <div class="status-box" style="margin-top:14px;margin-bottom:0" aria-live="polite">
@@ -1046,7 +1046,7 @@
             <div>
                 <div class="section-title" style="margin-bottom:0;">Demo Robot · Support / Resistance Confirmation</div>
                 <div class="demo-robot-subtitle">
-                    Paper trading remains available. Live BTC orders require the separate live switch, an authorized account, and a ready Worker. Gold and Silver remain paper-only. The robot waits for ECI direction, 1-minute WMA 100/200 agreement, a confirmed 15-minute swing level, and a closed 1-minute rejection candle. BTC also uses a 1-hour extension guard: near the previous closed 1-hour high/low, entries wait for a 15-minute pullback and rejection-confirmation candle.
+                    Paper trading remains available. Live BTC orders require the separate live switch, an authorized account, and a ready Worker. Gold and Silver remain paper-only. The robot waits for ECI direction, 1-minute WMA 100/200 agreement, a confirmed 15-minute swing level, and a closed 1-minute rejection candle.
                 </div>
             </div>
             <span id="demoRobotBadge" class="demo-robot-badge">DEMO OFF</span>
@@ -1205,7 +1205,7 @@
             </table>
         </div>
         <div class="demo-robot-footnote">
-            Standard mode: ECI direction must match the 1-minute WMA trend, then a closed 1-minute rejection candle confirms the 15-minute swing level. BTC entries near the previous closed 1-hour high/low also require a recent 15-minute pullback and a closed 15-minute rejection/continuation candle. Optional Paper Limit Entry mode skips the rejection-candle requirement and simulates a limit at the nearest confirmed support/resistance (or a nearby manual override); it is higher risk and expires after 30 minutes. Support/resistance stays fixed as price moves, changing only if crossed/invalidated or replaced by a newer confirmed, closer swing. Demo sizing respects both the configured maximum initial stop risk and the configured margin allocation at the 10× paper model; estimated margin is not an exchange simulation and liquidation is not modeled. USD PnL is an estimate and excludes fees, spread, slippage and instrument-specific contract sizing. TP1 is 2R; 50% exits there and the remaining 50% targets 3R, with the stop moved to entry after TP1. State, pending setup/order, levels, open position and trade history are saved locally and an active robot resumes on refresh. JavaScript cannot monitor trades while the browser/page is closed; it resumes only when the dashboard is open again. BTC open-position mark and floating PnL use a public mark-price WebSocket when available; entry decisions still require closed candles. Other market marks continue to use the existing polling feed. Paper trading only; no exchange orders are sent. Custom assets are not enabled in this test.
+            Standard mode: ECI direction must match the 1-minute WMA trend, then a closed 1-minute rejection candle confirms the 15-minute swing level. Optional Paper Limit Entry mode skips the rejection-candle requirement and simulates a limit at the nearest confirmed support/resistance (or a nearby manual override); it is higher risk and expires after 30 minutes. Support/resistance stays fixed as price moves, changing only if crossed/invalidated or replaced by a newer confirmed, closer swing. Demo sizing respects both the configured maximum initial stop risk and the configured margin allocation at the 10× paper model; estimated margin is not an exchange simulation and liquidation is not modeled. USD PnL is an estimate and excludes fees, spread, slippage and instrument-specific contract sizing. TP1 is 2R; 50% exits there and the remaining 50% targets 3R, with the stop moved to entry after TP1. State, pending setup/order, levels, open position and trade history are saved locally and an active robot resumes on refresh. JavaScript cannot monitor trades while the browser/page is closed; it resumes only when the dashboard is open again. BTC open-position mark and floating PnL use a public mark-price WebSocket when available; entry decisions still require closed candles. Other market marks continue to use the existing polling feed. Paper trading only; no exchange orders are sent. Custom assets are not enabled in this test.
         </div>
     </div>
 
@@ -4312,10 +4312,8 @@ setInterval(refreshMultiTimeframePanel, 60000);
         confirmAll: [],
         confirmClosed: [],
         structureClosed: [],
-        hourlyClosed: [],
         lastConfirmFetch: 0,
         lastStructureFetch: 0,
-        lastHourlyFetch: 0,
         // Keep structure candles for the open position's market separately.
         // The selected dashboard market can change while an existing paper trade is managed.
         positionStructureClosed: [],
@@ -4351,7 +4349,6 @@ setInterval(refreshMultiTimeframePanel, 60000);
     const MAX_SAVED_LOG_EVENTS = 100;
     const CONFIRM_INTERVAL_MINUTES = 1;
     const STRUCTURE_INTERVAL_MINUTES = 15;
-    const HOURLY_INTERVAL_MINUTES = 60;
     const CANDLE_LIMIT = 260;
     const SWING_STRENGTH = 2;
     const MAX_PENDING_MINUTES = 5;
@@ -4623,10 +4620,8 @@ setInterval(refreshMultiTimeframePanel, 60000);
         state.confirmAll = [];
         state.confirmClosed = [];
         state.structureClosed = [];
-        state.hourlyClosed = [];
         state.lastConfirmFetch = 0;
         state.lastStructureFetch = 0;
-        state.lastHourlyFetch = 0;
         state.pending = null;
         state.levels = { support: null, resistance: null };
         state.levelsMarket = market;
@@ -5004,12 +4999,6 @@ setInterval(refreshMultiTimeframePanel, 60000);
             setMessage('Entry price is unavailable; no demo entry recorded.');
             return false;
         }
-        const hourlyGuard = checkHourlyPullbackRejection(direction, entryPrice, state.structureClosed, state.hourlyClosed, market);
-        if (hourlyGuard.blocked) {
-            setMessage(`ENTRY FILTER: ${hourlyGuard.reason}`);
-            logEvent(`${marketName(market)} ${direction.toUpperCase()} entry blocked by the 1h pullback/rejection filter: ${hourlyGuard.reason}`);
-            return false;
-        }
         const isLimitFill = options.mode === 'limit';
         const maxChase = tolerance * 2.5;
         if (!isLimitFill && direction === 'long' && (entryPrice < level.price || entryPrice - level.price > maxChase)) {
@@ -5266,52 +5255,6 @@ setInterval(refreshMultiTimeframePanel, 60000);
             candle[4] < previous[3];
     }
 
-    // BTC entry-timing guard. The previous fully closed 1h candle defines its
-    // high/low reference. Near an extreme, require a recent 15m pullback and a
-    // completed 15m rejection/continuation candle before allowing an entry.
-    // This is only an entry gate: it does not change direction, stops, targets,
-    // position management, or any non-BTC market.
-    function checkHourlyPullbackRejection(direction, price, closed15m, closed1h, market) {
-        if (market !== 'BTC') return { blocked: false, reason: 'not-btc' };
-        if (!Number.isFinite(price) || !Array.isArray(closed15m) || closed15m.length < 2 ||
-            !Array.isArray(closed1h) || closed1h.length < 1) {
-            return { blocked: true, reason: 'Waiting for closed 1h and 15m candles for the entry-timing filter.' };
-        }
-        const hour = closed1h[closed1h.length - 1];
-        const range = Number(hour[2]) - Number(hour[3]);
-        if (!Number.isFinite(range) || range <= 0) return { blocked: true, reason: 'The previous closed 1h candle has an invalid range; waiting for fresh data.' };
-
-        const nearFraction = 0.15;
-        const pullbackFraction = 0.15;
-        const nearHigh = price >= Number(hour[2]) - range * nearFraction;
-        const nearLow = price <= Number(hour[3]) + range * nearFraction;
-        const recent = closed15m.slice(-4);
-        const latest = closed15m[closed15m.length - 1];
-        const previous = closed15m[closed15m.length - 2];
-        const candleRange = Math.max(0, Number(latest[2]) - Number(latest[3]));
-        if (!candleRange) {
-            if ((direction === 'long' && nearHigh) || (direction === 'short' && nearLow)) {
-                return { blocked: true, reason: 'Near the previous 1h extreme; waiting for a valid 15m rejection candle.' };
-            }
-            return { blocked: false, reason: 'not-extended' };
-        }
-        const lowerWick = Math.max(0, Math.min(Number(latest[1]), Number(latest[4])) - Number(latest[3]));
-        const upperWick = Math.max(0, Number(latest[2]) - Math.max(Number(latest[1]), Number(latest[4])));
-        const closeLocation = (Number(latest[4]) - Number(latest[3])) / candleRange;
-        const pulledBackFromHigh = recent.some(c => Number(c[3]) <= Number(hour[2]) - range * pullbackFraction);
-        const pulledBackFromLow = recent.some(c => Number(c[2]) >= Number(hour[3]) + range * pullbackFraction);
-        const bullishRejection = Number(latest[4]) > Number(latest[1]) && lowerWick / candleRange >= 0.30 && closeLocation >= 0.60 && Number(latest[4]) > Number(previous[4]);
-        const bearishRejection = Number(latest[4]) < Number(latest[1]) && upperWick / candleRange >= 0.30 && closeLocation <= 0.40 && Number(latest[4]) < Number(previous[4]);
-
-        if (direction === 'long' && nearHigh && !(pulledBackFromHigh && bullishRejection)) {
-            return { blocked: true, reason: 'Price is near the previous closed 1h high. Waiting for a 15m pullback followed by a confirmed bullish rejection before LONG entry.' };
-        }
-        if (direction === 'short' && nearLow && !(pulledBackFromLow && bearishRejection)) {
-            return { blocked: true, reason: 'Price is near the previous closed 1h low. Waiting for a 15m pullback followed by a confirmed bearish rejection before SHORT entry.' };
-        }
-        return { blocked: false, reason: 'Hourly extension guard passed' };
-    }
-
     async function cycle() {
         if (state.busy) return;
         if (!state.enabled && !state.position) {
@@ -5427,12 +5370,6 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 if (market !== selectedMarket) return;
                 state.structureClosed = all15m.filter(c => c[6] !== true);
                 state.lastStructureFetch = Date.now();
-            }
-            if (market === 'BTC' && (!state.hourlyClosed.length || Date.now() - state.lastHourlyFetch >= STRUCTURE_REFRESH_MS)) {
-                const all1h = await fetchDemoBars(market, '1h', HOURLY_INTERVAL_MINUTES, CANDLE_LIMIT);
-                if (market !== selectedMarket) return;
-                state.hourlyClosed = all1h.filter(c => c[6] !== true);
-                state.lastHourlyFetch = Date.now();
             }
 
             const price = selectedMarket === market && Number.isFinite(currentPrice) && currentPrice > 0
@@ -6107,11 +6044,11 @@ setInterval(refreshMultiTimeframePanel, 60000);
     // The Worker validates the selected risk and allocation against available margin.
     const liveAllocationUsd = Number(liveAllocationInput.value);
     const liveRiskUsd = Number(liveRiskInput.value);
-    if (!Number.isFinite(liveAllocationUsd) || liveAllocationUsd < 2) {
-      throw new Error("Live order blocked: margin allocation must be at least $2 USDT.");
+    if (!Number.isFinite(liveAllocationUsd) || liveAllocationUsd < 5) {
+      throw new Error("Live order blocked: margin allocation must be at least $5 USDT.");
     }
-    if (!Number.isFinite(liveRiskUsd) || liveRiskUsd < 0.20 || liveRiskUsd > 0.20) {
-      throw new Error("Live order blocked: maximum stop-loss risk is fixed at $0.20 for this initial test.");
+    if (!Number.isFinite(liveRiskUsd) || liveRiskUsd < 0.5) {
+      throw new Error("Live order blocked: maximum stop-loss risk must be at least $0.50.");
     }
     const liveNotionalUsd = liveAllocationUsd * 10;
     const liveQuantity = Math.floor(Math.min(liveRiskUsd / stopDistance, liveNotionalUsd / Number(position.entry)) * 10000) / 10000;
