@@ -610,10 +610,10 @@
   .demo-position-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .demo-position-pnl { font-size:22px; }
 }
-.demo-history-wrap { overflow-x:auto; margin-top:10px; border:1px solid #263244; border-radius:10px; }
+.demo-history-wrap { max-height:390px; overflow:auto; margin-top:10px; border:1px solid #263244; border-radius:10px; }
 .demo-history-table { width:100%; min-width:1040px; border-collapse:collapse; font-size:12px; }
 .demo-history-table th, .demo-history-table td { padding:9px 10px; border-bottom:1px solid #263244; text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums; }
-.demo-history-table th { color:#9ca3af; background:#101827; font-weight:800; }
+.demo-history-table th { color:#9ca3af; background:#101827; font-weight:800; position:sticky; top:0; z-index:2; }
 .demo-history-table th:first-child, .demo-history-table td:first-child,
 .demo-history-table th:nth-child(2), .demo-history-table td:nth-child(2),
 .demo-history-table th:nth-child(3), .demo-history-table td:nth-child(3),
@@ -5266,10 +5266,10 @@ setInterval(refreshMultiTimeframePanel, 60000);
             candle[4] < previous[3];
     }
 
-    // BTC entry-location gate. A SHORT must be near the previous fully closed 1h
-    // candle's high and show a closed 15m bearish rejection. A LONG must be near
-    // that candle's low and show a closed 15m bullish rejection. This gate does not
-    // generate a direction: all existing ECI/WMA/SR/1m confirmation rules must pass first.
+    // BTC entry-location gate. SHORT requires a bearish previous closed 1h candle
+    // and price near its high, plus closed 15m bearish rejection. LONG requires a
+    // bullish previous closed 1h candle and price near its low, plus closed 15m
+    // bullish rejection. Existing ECI/WMA/SR/1m confirmations must also pass.
     function checkHourlyPullbackRejection(direction, price, closed15m, closed1h, market) {
         if (market !== 'BTC') return { blocked: false, reason: 'not-btc' };
         if (!Number.isFinite(price) || !Array.isArray(closed15m) || closed15m.length < 2 ||
@@ -5277,17 +5277,21 @@ setInterval(refreshMultiTimeframePanel, 60000);
             return { blocked: true, reason: 'Waiting for closed 1h and 15m candles for the entry-location check.' };
         }
         const hour = closed1h[closed1h.length - 1];
+        const hourOpen = Number(hour[1]);
         const hourHigh = Number(hour[2]);
         const hourLow = Number(hour[3]);
+        const hourClose = Number(hour[4]);
         const range = hourHigh - hourLow;
-        if (!Number.isFinite(range) || range <= 0 || !Number.isFinite(hourHigh) || !Number.isFinite(hourLow)) {
+        if (![hourOpen, hourHigh, hourLow, hourClose, range].every(Number.isFinite) || range <= 0 || hourHigh <= hourLow) {
             return { blocked: true, reason: 'The previous closed 1h candle has an invalid range; waiting for fresh data.' };
         }
 
         // Entry zone is the outer 15% of the previous closed 1h candle's range.
         const zoneFraction = 0.15;
-        const nearHigh = price >= hourHigh - range * zoneFraction;
-        const nearLow = price <= hourLow + range * zoneFraction;
+        const nearHigh = price >= hourHigh - range * zoneFraction && price <= hourHigh;
+        const nearLow = price <= hourLow + range * zoneFraction && price >= hourLow;
+        const bearishHour = hourClose < hourOpen;
+        const bullishHour = hourClose > hourOpen;
         const latest = closed15m[closed15m.length - 1];
         const previous = closed15m[closed15m.length - 2];
         const candleHigh = Number(latest[2]);
@@ -5311,11 +5315,13 @@ setInterval(refreshMultiTimeframePanel, 60000);
             closeLocation >= 0.60 && candleClose > previousClose;
 
         if (direction === 'short') {
+            if (!bearishHour) return { blocked: true, reason: 'SHORT requires the previous fully closed 1h candle to be bearish (close below open). Waiting.' };
             if (!nearHigh) return { blocked: true, reason: 'SHORT requires price near the previous closed 1h high; waiting at the top entry zone.' };
             if (!rejectionAtHigh) return { blocked: true, reason: 'Price is in the 1h high zone, but the latest closed 15m candle has not confirmed bearish rejection. Waiting before SHORT entry.' };
             return { blocked: false, reason: '1h high zone and 15m bearish rejection confirmed' };
         }
         if (direction === 'long') {
+            if (!bullishHour) return { blocked: true, reason: 'LONG requires the previous fully closed 1h candle to be bullish/green (close above open). Waiting.' };
             if (!nearLow) return { blocked: true, reason: 'LONG requires price near the previous closed 1h low; waiting at the bottom entry zone.' };
             if (!rejectionAtLow) return { blocked: true, reason: 'Price is in the 1h low zone, but the latest closed 15m candle has not confirmed bullish rejection. Waiting before LONG entry.' };
             return { blocked: false, reason: '1h low zone and 15m bullish rejection confirmed' };
