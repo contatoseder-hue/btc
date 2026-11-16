@@ -1073,7 +1073,7 @@
             <div>
                 <div class="section-title" style="margin-bottom:0;">Demo Robot · Support / Resistance Confirmation</div>
                 <div class="demo-robot-subtitle">
-                    Paper trading remains available. Live BTC orders require the separate live switch, an authorized account, and a ready Worker. Gold and Silver remain paper-only. The robot waits for ECI direction, 1-minute WMA 100/200 agreement, a confirmed 15-minute swing level, and a closed 1-minute rejection candle. BTC also uses a 1-hour extension guard: near the previous closed 1-hour high/low, entries wait for a 15-minute pullback and rejection-confirmation candle.
+                    Paper trading remains available. Live BTC orders require the separate live switch, an authorized account, and a ready Worker. Gold and Silver remain paper-only. The robot waits for ECI direction, 1-minute WMA 100/200 agreement, a confirmed 15-minute swing level, and a closed 1-minute rejection candle. BTC's test entry filter uses a 15-minute smoothed CCI (CCI 20, SMA smoothing 5): SHORT only after the smoothed line crosses below zero; LONG only after it crosses above zero.
                 </div>
             </div>
             <span id="demoRobotBadge" class="demo-robot-badge">DEMO OFF</span>
@@ -1232,7 +1232,7 @@
             </table>
         </div>
         <div class="demo-robot-footnote">
-            Standard mode: ECI direction must match the 1-minute WMA trend, then a closed 1-minute rejection candle confirms the 15-minute swing level. BTC entries near the previous closed 1-hour high/low also require a recent 15-minute pullback and a closed 15-minute rejection/continuation candle. Optional Paper Limit Entry mode skips the rejection-candle requirement and simulates a limit at the nearest confirmed support/resistance (or a nearby manual override); it is higher risk and expires after 30 minutes. Support/resistance stays fixed as price moves, changing only if crossed/invalidated or replaced by a newer confirmed, closer swing. Demo sizing respects both the configured maximum initial stop risk and the configured margin allocation at the 10× paper model; estimated margin is not an exchange simulation and liquidation is not modeled. USD PnL is an estimate and excludes fees, spread, slippage and instrument-specific contract sizing. TP1 is 2R; 50% exits there and the remaining 50% targets 3R, with the stop moved to entry after TP1. State, pending setup/order, levels, open position and trade history are saved locally and an active robot resumes on refresh. JavaScript cannot monitor trades while the browser/page is closed; it resumes only when the dashboard is open again. BTC open-position mark and floating PnL use a public mark-price WebSocket when available; entry decisions still require closed candles. Other market marks continue to use the existing polling feed. Paper trading only; no exchange orders are sent. Custom assets are not enabled in this test.
+            Standard mode: ECI direction must match the 1-minute WMA trend, then a closed 1-minute rejection candle confirms the 15-minute swing level. In this test edition, BTC also requires a fresh zero-line crossover from the smoothed 15-minute CCI (CCI period 20, SMA smoothing 5): below zero for SHORT, above zero for LONG. The previous 1-hour candle-location filter is replaced for this test. Optional Paper Limit Entry mode skips the rejection-candle requirement and simulates a limit at the nearest confirmed support/resistance (or a nearby manual override); it is higher risk and expires after 30 minutes. Support/resistance stays fixed as price moves, changing only if crossed/invalidated or replaced by a newer confirmed, closer swing. Demo sizing respects both the configured maximum initial stop risk and the configured margin allocation at the 10× paper model; estimated margin is not an exchange simulation and liquidation is not modeled. USD PnL is an estimate and excludes fees, spread, slippage and instrument-specific contract sizing. TP1 is 2R; 50% exits there and the remaining 50% targets 3R, with the stop moved to entry after TP1. State, pending setup/order, levels, open position and trade history are saved locally and an active robot resumes on refresh. JavaScript cannot monitor trades while the browser/page is closed; it resumes only when the dashboard is open again. BTC open-position mark and floating PnL use a public mark-price WebSocket when available; entry decisions still require closed candles. Other market marks continue to use the existing polling feed. Paper trading only; no exchange orders are sent. Custom assets are not enabled in this test.
         </div>
     </div>
 
@@ -5031,10 +5031,10 @@ setInterval(refreshMultiTimeframePanel, 60000);
             setMessage('Entry price is unavailable; no demo entry recorded.');
             return false;
         }
-        const hourlyGuard = checkHourlyPullbackRejection(direction, entryPrice, state.structureClosed, state.hourlyClosed, market);
-        if (hourlyGuard.blocked) {
-            setMessage(`ENTRY FILTER: ${hourlyGuard.reason}`);
-            logEvent(`${marketName(market)} ${direction.toUpperCase()} entry blocked by the 1h pullback/rejection filter: ${hourlyGuard.reason}`);
+        const cciGuard = check15mSmoothedCCIZeroCross(direction, state.structureClosed, market);
+        if (cciGuard.blocked) {
+            setMessage(`ENTRY FILTER: ${cciGuard.reason}`);
+            logEvent(`${marketName(market)} ${direction.toUpperCase()} entry blocked by the 15m smoothed CCI filter: ${cciGuard.reason}`);
             return false;
         }
         const isLimitFill = options.mode === 'limit';
@@ -5293,65 +5293,46 @@ setInterval(refreshMultiTimeframePanel, 60000);
             candle[4] < previous[3];
     }
 
-    // BTC entry-location gate. SHORT requires a bearish previous closed 1h candle
-    // and price near its high, plus closed 15m bearish rejection. LONG requires a
-    // bullish previous closed 1h candle and price near its low, plus closed 15m
-    // bullish rejection. Existing ECI/WMA/SR/1m confirmations must also pass.
-    function checkHourlyPullbackRejection(direction, price, closed15m, closed1h, market) {
+    // BTC experimental entry gate: use a closed 15m smoothed CCI zero-line crossover.
+    // CCI period 20, then SMA(5) of CCI. SHORT only on a fresh cross below zero;
+    // LONG only on a fresh cross above zero. This replaces the previous 1h candle-location gate.
+    function check15mSmoothedCCIZeroCross(direction, closed15m, market) {
         if (market !== 'BTC') return { blocked: false, reason: 'not-btc' };
-        if (!Number.isFinite(price) || !Array.isArray(closed15m) || closed15m.length < 2 ||
-            !Array.isArray(closed1h) || closed1h.length < 1) {
-            return { blocked: true, reason: 'Waiting for closed 1h and 15m candles for the entry-location check.' };
-        }
-        const hour = closed1h[closed1h.length - 1];
-        const hourOpen = Number(hour[1]);
-        const hourHigh = Number(hour[2]);
-        const hourLow = Number(hour[3]);
-        const hourClose = Number(hour[4]);
-        const range = hourHigh - hourLow;
-        if (![hourOpen, hourHigh, hourLow, hourClose, range].every(Number.isFinite) || range <= 0 || hourHigh <= hourLow) {
-            return { blocked: true, reason: 'The previous closed 1h candle has an invalid range; waiting for fresh data.' };
+        const CCI_PERIOD = 20;
+        const SMOOTH_PERIOD = 5;
+        if (!Array.isArray(closed15m) || closed15m.length < CCI_PERIOD + SMOOTH_PERIOD) {
+            return { blocked: true, reason: `Waiting for at least ${CCI_PERIOD + SMOOTH_PERIOD} closed 15m candles to calculate smoothed CCI.` };
         }
 
-        // Entry zone is the outer 15% of the previous closed 1h candle's range.
-        const zoneFraction = 0.15;
-        const nearHigh = price >= hourHigh - range * zoneFraction && price <= hourHigh;
-        const nearLow = price <= hourLow + range * zoneFraction && price >= hourLow;
-        const bearishHour = hourClose < hourOpen;
-        const bullishHour = hourClose > hourOpen;
-        const latest = closed15m[closed15m.length - 1];
-        const previous = closed15m[closed15m.length - 2];
-        const candleHigh = Number(latest[2]);
-        const candleLow = Number(latest[3]);
-        const candleOpen = Number(latest[1]);
-        const candleClose = Number(latest[4]);
-        const previousClose = Number(previous[4]);
-        const candleRange = candleHigh - candleLow;
-        if (![candleHigh, candleLow, candleOpen, candleClose, previousClose].every(Number.isFinite) || candleRange <= 0) {
-            return { blocked: true, reason: 'The latest closed 15m candle is invalid; waiting for a valid rejection candle.' };
+        const typicalPrices = closed15m.map(c => {
+            const high = Number(c[2]), low = Number(c[3]), close = Number(c[4]);
+            return [high, low, close].every(Number.isFinite) ? (high + low + close) / 3 : NaN;
+        });
+        const cciValues = new Array(typicalPrices.length).fill(NaN);
+        for (let i = CCI_PERIOD - 1; i < typicalPrices.length; i++) {
+            const window = typicalPrices.slice(i - CCI_PERIOD + 1, i + 1);
+            if (window.some(v => !Number.isFinite(v))) continue;
+            const mean = window.reduce((sum, v) => sum + v, 0) / CCI_PERIOD;
+            const meanDeviation = window.reduce((sum, v) => sum + Math.abs(v - mean), 0) / CCI_PERIOD;
+            cciValues[i] = meanDeviation > 0 ? (typicalPrices[i] - mean) / (0.015 * meanDeviation) : 0;
         }
-
-        const lowerWick = Math.max(0, Math.min(candleOpen, candleClose) - candleLow);
-        const upperWick = Math.max(0, candleHigh - Math.max(candleOpen, candleClose));
-        const closeLocation = (candleClose - candleLow) / candleRange;
-        const rejectionAtHigh = candleHigh >= hourHigh - range * zoneFraction &&
-            candleClose < candleOpen && upperWick / candleRange >= 0.30 &&
-            closeLocation <= 0.40 && candleClose < previousClose;
-        const rejectionAtLow = candleLow <= hourLow + range * zoneFraction &&
-            candleClose > candleOpen && lowerWick / candleRange >= 0.30 &&
-            closeLocation >= 0.60 && candleClose > previousClose;
-
+        const smoothed = new Array(cciValues.length).fill(NaN);
+        for (let i = CCI_PERIOD - 1 + SMOOTH_PERIOD - 1; i < cciValues.length; i++) {
+            const window = cciValues.slice(i - SMOOTH_PERIOD + 1, i + 1);
+            if (window.every(Number.isFinite)) smoothed[i] = window.reduce((sum, v) => sum + v, 0) / SMOOTH_PERIOD;
+        }
+        const latest = smoothed[smoothed.length - 1];
+        const previous = smoothed[smoothed.length - 2];
+        if (!Number.isFinite(latest) || !Number.isFinite(previous)) {
+            return { blocked: true, reason: 'Smoothed 15m CCI is not ready; waiting for valid closed candles.' };
+        }
         if (direction === 'short') {
-            if (!bearishHour) return { blocked: true, reason: 'SHORT requires the previous fully closed 1h candle to be bearish (close below open). Waiting.' };
-            if (!nearHigh) return { blocked: true, reason: 'SHORT requires price near the previous closed 1h high; waiting at the top entry zone.' };
-            if (!rejectionAtHigh) return { blocked: true, reason: 'Price is in the 1h high zone, but the latest closed 15m candle has not confirmed bearish rejection. Waiting before SHORT entry.' };
-            return { blocked: false, reason: '1h high zone and 15m bearish rejection confirmed' };
+            if (previous >= 0 && latest < 0) return { blocked: false, reason: `15m smoothed CCI crossed below zero (${previous.toFixed(1)} → ${latest.toFixed(1)})` };
+            return { blocked: true, reason: `SHORT requires the smoothed 15m CCI to cross below zero on the latest closed candle (now ${latest.toFixed(1)}).` };
         }
         if (direction === 'long') {
-            if (!bullishHour) return { blocked: true, reason: 'LONG requires the previous fully closed 1h candle to be bullish/green (close above open). Waiting.' };
-            if (!nearLow) return { blocked: true, reason: 'LONG requires price near the previous closed 1h low; waiting at the bottom entry zone.' };
-            if (!rejectionAtLow) return { blocked: true, reason: 'Price is in the 1h low zone, but the latest closed 15m candle has not confirmed bullish rejection. Waiting before LONG entry.' };
-            return { blocked: false, reason: '1h low zone and 15m bullish rejection confirmed' };
+            if (previous <= 0 && latest > 0) return { blocked: false, reason: `15m smoothed CCI crossed above zero (${previous.toFixed(1)} → ${latest.toFixed(1)})` };
+            return { blocked: true, reason: `LONG requires the smoothed 15m CCI to cross above zero on the latest closed candle (now ${latest.toFixed(1)}).` };
         }
         return { blocked: true, reason: 'Unknown trade direction; entry blocked.' };
     }
@@ -5472,13 +5453,6 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 state.structureClosed = all15m.filter(c => c[6] !== true);
                 state.lastStructureFetch = Date.now();
             }
-            if (market === 'BTC' && (!state.hourlyClosed.length || Date.now() - state.lastHourlyFetch >= STRUCTURE_REFRESH_MS)) {
-                const all1h = await fetchDemoBars(market, '1h', HOURLY_INTERVAL_MINUTES, CANDLE_LIMIT);
-                if (market !== selectedMarket) return;
-                state.hourlyClosed = all1h.filter(c => c[6] !== true);
-                state.lastHourlyFetch = Date.now();
-            }
-
             const price = selectedMarket === market && Number.isFinite(currentPrice) && currentPrice > 0
                 ? currentPrice
                 : null;
