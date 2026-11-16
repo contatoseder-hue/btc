@@ -1,4 +1,4 @@
-2
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -129,11 +129,10 @@
     }
 
     .status-row {
-        display: flex;
-        flex-direction: column;
-        align-items: stretch;
-        justify-content: flex-start;
-        gap: 16px;
+        display: grid;
+        grid-template-columns: minmax(135px, 1fr) minmax(135px, 1fr) minmax(230px, 1.2fr);
+        align-items: center;
+        gap: 18px;
         width: 100%;
         min-width: 0;
     }
@@ -144,6 +143,20 @@
         min-width: 0;
         text-align: left;
     }
+
+    .trend-mini-panel {
+        min-width: 0;
+        background: #0b1118;
+        border: 1px solid #263746;
+        border-radius: 10px;
+        padding: 10px 12px 8px;
+    }
+    .trend-mini-heading { display:flex; justify-content:space-between; align-items:center; gap:8px; color:#a7b4c2; font-size:10px; font-weight:800; letter-spacing:.8px; text-transform:uppercase; }
+    .trend-mini-badge { color:#22c55e; background:rgba(34,197,94,.12); border-radius:5px; padding:3px 6px; letter-spacing:.3px; }
+    .trend-mini-chart { width:100%; height:55px; display:block; margin:5px 0 3px; }
+    .trend-mini-levels { display:flex; justify-content:space-between; gap:10px; font-size:10px; color:#82909e; }
+    .trend-mini-levels strong { display:block; color:#dce5ed; font-size:12px; margin-top:2px; }
+    .trend-mini-levels .low strong { color:#60a5fa; }
 
     .entry-distance-value {
         display: block;
@@ -423,8 +436,10 @@
 
     @media(max-width: 700px) {
         .status-row {
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
             gap: 14px;
         }
+        .trend-mini-panel { grid-column: 1 / -1; }
 
         .status-box {
             padding: 14px;
@@ -903,6 +918,17 @@
                         <span id="entryDistancePercent" class="entry-distance-percent">—</span>
                         <span id="entryDistanceProximity" class="entry-distance-proximity">Waiting</span>
                     </div>
+                </div>
+
+                <div class="trend-mini-panel" aria-label="24 hour trend visual preview">
+                    <div class="trend-mini-heading"><span>24H Price Trend</span><span class="trend-mini-badge">↗ UP / DOWN</span></div>
+                    <svg class="trend-mini-chart" viewBox="0 0 280 55" preserveAspectRatio="none" role="img" aria-label="Illustrative price trend line">
+                        <defs><linearGradient id="trendMiniFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#14b8a6" stop-opacity=".38"/><stop offset="100%" stop-color="#14b8a6" stop-opacity="0"/></linearGradient></defs>
+                        <path d="M0 45 L0 39 L20 28 L35 34 L54 18 L70 24 L89 13 L106 27 L124 21 L144 31 L163 15 L182 22 L201 8 L219 16 L238 5 L256 11 L280 2 L280 45 Z" fill="url(#trendMiniFill)"/>
+                        <path d="M0 39 L20 28 L35 34 L54 18 L70 24 L89 13 L106 27 L124 21 L144 31 L163 15 L182 22 L201 8 L219 16 L238 5 L256 11 L280 2" fill="none" stroke="#2dd4bf" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M0 48 H280" stroke="#344150" stroke-width="1" stroke-dasharray="3 4"/>
+                    </svg>
+                    <div class="trend-mini-levels"><div>24H HIGH<strong id="trend24hHigh">Loading…</strong></div><div class="low" style="text-align:right">24H LOW<strong id="trend24hLow">Loading…</strong></div></div>
                 </div>
 
             </div>
