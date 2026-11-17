@@ -876,6 +876,17 @@
             <div id="btcDirectionAnalysisReason" class="btc-timeframe-note">Select a timeframe and direction to calculate the nearest swing level.</div>
         </div>
 
+        <div class="card" id="fractalObservationCard" style="display:none;margin-bottom:16px;border:1px solid #64748b;">
+            <div class="section-title">Fractal Drift Continuity · Observation Test</div>
+            <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:8px;">
+              <span id="fractalTrendBadge" style="display:inline-block;padding:6px 10px;border-radius:8px;background:#334155;font-weight:800;">CALCULATING</span>
+              <span id="fractalPressureValue" style="font-weight:700;">Pressure: —</span>
+              <span id="fractalDimensionValue" style="font-weight:700;">Dimension: —</span>
+            </div>
+            <div id="fractalConfirmValue" style="font-weight:700;margin-bottom:6px;">Waiting for closed candles…</div>
+            <div id="fractalObservationDetails" class="btc-timeframe-note">Observation only. This test does not change entries, paper trades, or live orders.</div>
+        </div>
+
         <div id="biasLine" class="bias-line waiting">
             XAU/USD - WAITING
         </div>
@@ -6434,6 +6445,116 @@ setInterval(refreshMultiTimeframePanel, 60000);
   window.setInterval(refresh, 60000);
   const selector = document.getElementById("marketSelect");
   if (selector) selector.addEventListener("change", () => window.setTimeout(refresh, 150));
+})();
+</script>
+
+
+<script>
+/* Fractal Drift Continuity observation-only port. It intentionally does not feed the order engine. */
+(() => {
+  const byId = id => document.getElementById(id);
+  const cfg = { fractalLength:24, dimensionSmoothing:3, atrLength:14, driftLength:3,
+    driftInfluence:1.50, displacementInfluence:0.30, pressureSmoothing:3,
+    reversalThreshold:0.18, fractalProtection:0.25, useImpulseOverride:true, impulseThreshold:1.20 };
+  let busy = false;
+  const emaSeries = (values, length) => {
+    const out = Array(values.length).fill(NaN), alpha = 2/(length+1);
+    let prev = NaN;
+    for (let i=0;i<values.length;i++) {
+      if (!Number.isFinite(values[i])) continue;
+      prev = Number.isFinite(prev) ? alpha*values[i]+(1-alpha)*prev : values[i];
+      out[i]=prev;
+    }
+    return out;
+  };
+  const highest = (a, from, to) => { let v=-Infinity; for(let j=from;j<=to;j++) v=Math.max(v,a[j]); return v; };
+  const lowest = (a, from, to) => { let v=Infinity; for(let j=from;j<=to;j++) v=Math.min(v,a[j]); return v; };
+  function calculate(bars) {
+    const candles = bars.filter(c=>!c[6]);
+    const n=candles.length, L=cfg.fractalLength, half=L/2;
+    if(n < Math.max(L,cfg.atrLength)+cfg.driftLength+cfg.pressureSmoothing+5) throw Error('Waiting for enough closed candles');
+    const hi=candles.map(c=>c[2]), lo=candles.map(c=>c[3]), cl=candles.map(c=>c[4]), src=candles.map(c=>(c[2]+c[3])/2);
+    const tr=Array(n).fill(NaN), atr=Array(n).fill(NaN);
+    for(let i=0;i<n;i++) tr[i]=i===0?hi[i]-lo[i]:Math.max(hi[i]-lo[i],Math.abs(hi[i]-cl[i-1]),Math.abs(lo[i]-cl[i-1]));
+    let atrPrev=NaN;
+    for(let i=0;i<n;i++) { if(i===cfg.atrLength-1) atrPrev=tr.slice(0,cfg.atrLength).reduce((a,b)=>a+b,0)/cfg.atrLength; else if(i>=cfg.atrLength) atrPrev=(atrPrev*(cfg.atrLength-1)+tr[i])/cfg.atrLength; if(i>=cfg.atrLength-1) atr[i]=atrPrev; }
+    const dim=Array(n).fill(1.5), trend=Array(n).fill(NaN), drift=Array(n).fill(NaN), disp=Array(n).fill(NaN), pressureRaw=Array(n).fill(NaN);
+    for(let i=0;i<n;i++) {
+      if(i>=L-1) {
+        const r1=highest(hi,i-half+1,i)-lowest(lo,i-half+1,i);
+        const r2=highest(hi,i-L+1,i-half)-lowest(lo,i-L+1,i-half);
+        const r3=highest(hi,i-L+1,i)-lowest(lo,i-L+1,i);
+        const n1=r1/half,n2=r2/half,n3=r3/L;
+        if(n1>0&&n2>0&&n3>0) dim[i]=Math.max(1,Math.min(2,(Math.log(n1+n2)-Math.log(n3))/Math.log(2)));
+        else dim[i]=i?dim[i-1]:1.5;
+      } else if(i) dim[i]=dim[i-1];
+      const alpha=Math.max(.01,Math.min(1,Math.exp(-4.6*(dim[i]-1))));
+      trend[i]=i===0?src[i]:alpha*src[i]+(1-alpha)*trend[i-1];
+      if(i>=cfg.driftLength) {
+        const safe=Math.max(Number.isFinite(atr[i])?atr[i]:hi[i]-lo[i],0.00000001);
+        drift[i]=(trend[i]-trend[i-cfg.driftLength])/(safe*cfg.driftLength);
+        disp[i]=Math.max(-2.5,Math.min(2.5,(cl[i]-trend[i])/safe));
+        pressureRaw[i]=drift[i]*cfg.driftInfluence+disp[i]*cfg.displacementInfluence;
+      }
+    }
+    const pressure=emaSeries(pressureRaw,cfg.pressureSmoothing), stableDim=emaSeries(dim,cfg.dimensionSmoothing);
+    let state=0, longSignal=false, shortSignal=false, lastSignalIndex=-1;
+    const warmup=Math.max(L,cfg.atrLength)+cfg.driftLength+cfg.pressureSmoothing;
+    for(let i=0;i<n;i++) {
+      const ready=i>=warmup && Number.isFinite(atr[i]) && Number.isFinite(pressure[i]);
+      if(!ready) continue;
+      const congestion=Math.max(0,Math.min(1,stableDim[i]-1));
+      const threshold=cfg.reversalThreshold+cfg.fractalProtection*congestion;
+      const bull=pressure[i]>threshold&&cl[i]>trend[i], bear=pressure[i]<-threshold&&cl[i]<trend[i];
+      const safe=Math.max(atr[i],0.00000001);
+      const bullImpulse=cfg.useImpulseOverride&&cl[i]>trend[i]+cfg.impulseThreshold*safe&&cl[i]>hi[i-1];
+      const bearImpulse=cfg.useImpulseOverride&&cl[i]<trend[i]-cfg.impulseThreshold*safe&&cl[i]<lo[i-1];
+      if(state===0) state=pressure[i]>=0?1:-1;
+      else if(state===-1&&(bull||bullImpulse)){state=1;lastSignalIndex=i;}
+      else if(state===1&&(bear||bearImpulse)){state=-1;lastSignalIndex=i;}
+    }
+    const i=n-1, congestion=Math.max(0,Math.min(1,stableDim[i]-1));
+    const threshold=cfg.reversalThreshold+cfg.fractalProtection*congestion;
+    const confirmed=state===1?'BULLISH':state===-1?'BEARISH':'NEUTRAL';
+    return {state:confirmed,pressure:pressure[i],dimension:dim[i],threshold,close:cl[i],trend:trend[i],lastSignalIndex};
+  }
+  async function refresh() {
+    const card=byId('fractalObservationCard');
+    if (!card || typeof selectedMarket==='undefined' || selectedMarket!=='BTC') { if(card) card.style.display='none'; return; }
+    card.style.display='block';
+    if(busy) return; busy=true;
+    try {
+      const tf=(byId('btcSignalTimeframe')?.value||'15m');
+      const mins=({'5m':5,'15m':15,'30m':30,'1h':60,'2h':120,'4h':240})[tf]||15;
+      const raw=await fetchMarketData('BTC',tf,300);
+      const bars=marketBarsToCandles(raw,mins);
+      const result=calculate(bars);
+      const badge=byId('fractalTrendBadge');
+      badge.textContent=result.state;
+      badge.style.background=result.state==='BULLISH'?'#166534':result.state==='BEARISH'?'#6b21a8':'#475569';
+      byId('fractalPressureValue').textContent=`Pressure: ${Number(result.pressure).toFixed(3)} (threshold ±${result.threshold.toFixed(3)})`;
+      byId('fractalDimensionValue').textContent=`Dimension: ${result.dimension.toFixed(3)}`;
+      const direction=(byId('btcTradeDirection')?.value||'short').toUpperCase();
+      const match=(direction==='LONG'&&result.state==='BULLISH')||(direction==='SHORT'&&result.state==='BEARISH');
+      byId('fractalConfirmValue').textContent=`Selected direction ${direction}: ${match?'FRACTAL CONFIRMS':'FRACTAL DOES NOT CONFIRM'}`;
+      byId('fractalConfirmValue').style.color=match?'#22c55e':'#f59e0b';
+      byId('fractalObservationDetails').textContent=`Observation only · ${tf} closed candles · close ${Number(result.close).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})} · trendline ${Number(result.trend).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}. This result is not connected to entry execution.`;
+    } catch(e) {
+      byId('fractalTrendBadge').textContent='WAITING';
+      byId('fractalPressureValue').textContent='Pressure: —';
+      byId('fractalDimensionValue').textContent='Dimension: —';
+      byId('fractalConfirmValue').textContent='Indicator unavailable';
+      byId('fractalObservationDetails').textContent=String(e.message||e)+' · No effect on existing trading logic.';
+    } finally {busy=false;}
+  }
+  window.refreshFractalObservation=refresh;
+  document.addEventListener('DOMContentLoaded',refresh);
+  setInterval(refresh,60000);
+  const market=byId('marketSelect'); if(market) market.addEventListener('change',()=>setTimeout(refresh,250));
+  const tf=byId('btcSignalTimeframe'); if(tf) tf.addEventListener('change',()=>setTimeout(refresh,250));
+  const dir=byId('btcTradeDirection'); if(dir) dir.addEventListener('change',()=>setTimeout(refresh,250));
+  const oldSwitch=window.switchMarket;
+  if(typeof oldSwitch==='function') window.switchMarket=function(v){const r=oldSwitch.apply(this,arguments);setTimeout(refresh,250);return r;};
 })();
 </script>
 
