@@ -921,15 +921,14 @@
                 </div>
 
                 <div class="trend-mini-panel" aria-label="24 hour trend visual preview">
-                    <div class="trend-mini-heading"><span id="trend24hTitle">24H Price Trend</span><span class="trend-mini-badge" id="trend24hBadge">LOADING</span></div>
-                    <svg class="trend-mini-chart" id="trend24hChart" viewBox="0 0 280 55" preserveAspectRatio="none" role="img" aria-label="Live BingX 24-hour price trend">
+                    <div class="trend-mini-heading"><span>24H Price Trend</span><span class="trend-mini-badge">↗ UP / DOWN</span></div>
+                    <svg class="trend-mini-chart" viewBox="0 0 280 55" preserveAspectRatio="none" role="img" aria-label="Illustrative price trend line">
                         <defs><linearGradient id="trendMiniFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#14b8a6" stop-opacity=".38"/><stop offset="100%" stop-color="#14b8a6" stop-opacity="0"/></linearGradient></defs>
-                        <path id="trend24hArea" d="M0 48 H280 V48 Z" fill="url(#trendMiniFill)"/>
-                        <path id="trend24hLine" d="M0 28 H280" fill="none" stroke="#2dd4bf" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M0 45 L0 39 L20 28 L35 34 L54 18 L70 24 L89 13 L106 27 L124 21 L144 31 L163 15 L182 22 L201 8 L219 16 L238 5 L256 11 L280 2 L280 45 Z" fill="url(#trendMiniFill)"/>
+                        <path d="M0 39 L20 28 L35 34 L54 18 L70 24 L89 13 L106 27 L124 21 L144 31 L163 15 L182 22 L201 8 L219 16 L238 5 L256 11 L280 2" fill="none" stroke="#2dd4bf" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         <path d="M0 48 H280" stroke="#344150" stroke-width="1" stroke-dasharray="3 4"/>
                     </svg>
                     <div class="trend-mini-levels"><div>24H HIGH<strong id="trend24hHigh">Loading…</strong></div><div class="low" style="text-align:right">24H LOW<strong id="trend24hLow">Loading…</strong></div></div>
-                    <div id="trend24hUpdated" style="font-size:10px;color:#8fa3b8;margin-top:4px;text-align:right">Waiting for BingX market data…</div>
                 </div>
 
             </div>
@@ -959,7 +958,7 @@
 
             <div class="stat">
                 <div id="marketPriceLabel" class="label">
-                    <span id="marketPriceLabelText">Gold Live Price (Bingx Feature/USDT)</span>
+                    <span id="marketPriceLabelText">Gold Live Price (Binance Spot PAXG/USDT)</span>
                     <span id="marketPriceLive" class="live-indicator" style="margin-left:8px;">
                         <span class="live-dot"></span>
                         <span>LIVE</span>
@@ -1073,7 +1072,7 @@
             <div>
                 <div class="section-title" style="margin-bottom:0;">Demo Robot · Support / Resistance Confirmation</div>
                 <div class="demo-robot-subtitle">
-                    Paper trading remains available. Live BTC orders require the separate live switch, an authorized account, and a ready Worker. Gold and Silver remain paper-only. The robot waits for ECI direction, 1-minute WMA 100/200 agreement, a confirmed 15-minute swing level, and a closed 1-minute rejection candle. BTC's test entry filter uses a 15-minute smoothed CCI (CCI 20, SMA smoothing 5): SHORT only after the smoothed line crosses below zero; LONG only after it crosses above zero.
+                    Paper trading remains available. Live BTC orders require the separate live switch, an authorized account, and a ready Worker. Gold and Silver remain paper-only. The robot scans fully closed 15-minute candles for an impulse at a local extreme, then waits for a retest and a closed 1-minute rejection candle before entering. BTC also uses a 1-hour extension guard: near the previous closed 1-hour high/low, entries wait for a 15-minute pullback and rejection-confirmation candle.
                 </div>
             </div>
             <span id="demoRobotBadge" class="demo-robot-badge">DEMO OFF</span>
@@ -1128,7 +1127,7 @@
             Demo robot is off. Start it to monitor market structure. It cannot place real orders.
         </div>
         <div id="demoRobotScanning" class="demo-robot-scanning" style="display:none;" role="status" aria-live="polite">
-            <img id="demoRobotScanGif" class="demo-robot-scan-gif" src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExb3J6dHlwNDd6aG9vNnVqdWNoMzZjeDFyaTdpeWIxb2kwcHMydHM5ZyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/VuehuL4fMHLgs/giphy.gif" alt="Radar scanning animation" loading="eager" onerror="this.style.display='none'; const fallback=this.parentElement.querySelector('.demo-robot-scanning-icon'); if(fallback) fallback.style.display='flex';">
+            <img id="demoRobotScanGif" class="demo-robot-scan-gif" src="https://media.tenor.com/Gparo0eD0KIAAAAC/nerd-radar-mayclan.gif" alt="Radar scanning animation" loading="eager" onerror="this.style.display='none'; const fallback=this.parentElement.querySelector('.demo-robot-scanning-icon'); if(fallback) fallback.style.display='flex';">
             <span class="demo-robot-scanning-icon" aria-hidden="true" style="display:none">📡</span>
             <span><strong>Scanning the market</strong><small>Looking for the best valid entry point and direction…</small></span>
         </div>
@@ -1232,7 +1231,7 @@
             </table>
         </div>
         <div class="demo-robot-footnote">
-            Standard mode: ECI direction must match the 1-minute WMA trend, then a closed 1-minute rejection candle confirms the 15-minute swing level. In this test edition, BTC also requires a fresh zero-line crossover from the smoothed 15-minute CCI (CCI period 20, SMA smoothing 5): below zero for SHORT, above zero for LONG. The previous 1-hour candle-location filter is replaced for this test. Optional Paper Limit Entry mode skips the rejection-candle requirement and simulates a limit at the nearest confirmed support/resistance (or a nearby manual override); it is higher risk and expires after 30 minutes. Support/resistance stays fixed as price moves, changing only if crossed/invalidated or replaced by a newer confirmed, closer swing. Demo sizing respects both the configured maximum initial stop risk and the configured margin allocation at the 10× paper model; estimated margin is not an exchange simulation and liquidation is not modeled. USD PnL is an estimate and excludes fees, spread, slippage and instrument-specific contract sizing. TP1 is 2R; 50% exits there and the remaining 50% targets 3R, with the stop moved to entry after TP1. State, pending setup/order, levels, open position and trade history are saved locally and an active robot resumes on refresh. JavaScript cannot monitor trades while the browser/page is closed; it resumes only when the dashboard is open again. BTC open-position mark and floating PnL use a public mark-price WebSocket when available; entry decisions still require closed candles. Other market marks continue to use the existing polling feed. Paper trading only; no exchange orders are sent. Custom assets are not enabled in this test.
+            Price-action test mode: a fully closed 15-minute impulse at a local extreme creates a pending setup. The bot waits for price to retest the impulse candle body, then requires a closed 1-minute rejection/continuation candle. If price continues beyond the impulse extreme or no rejection arrives within 45 minutes, the setup is cancelled. ECI and WMA remain displayed but do not trigger entries in this test edition. Optional Paper Limit Entry mode skips the rejection-candle requirement and simulates a limit at the nearest confirmed support/resistance (or a nearby manual override); it is higher risk and expires after 30 minutes. Support/resistance stays fixed as price moves, changing only if crossed/invalidated or replaced by a newer confirmed, closer swing. Demo sizing respects both the configured maximum initial stop risk and the configured margin allocation at the 10× paper model; estimated margin is not an exchange simulation and liquidation is not modeled. USD PnL is an estimate and excludes fees, spread, slippage and instrument-specific contract sizing. TP1 is 2R; 50% exits there and the remaining 50% targets 3R, with the stop moved to entry after TP1. State, pending setup/order, levels, open position and trade history are saved locally and an active robot resumes on refresh. JavaScript cannot monitor trades while the browser/page is closed; it resumes only when the dashboard is open again. BTC open-position mark and floating PnL use a public mark-price WebSocket when available; entry decisions still require closed candles. Other market marks continue to use the existing polling feed. Paper trading only; no exchange orders are sent. Custom assets are not enabled in this test.
         </div>
     </div>
 
@@ -2153,7 +2152,7 @@ function getMarketPriceSourceName(marketCode = selectedMarket) {
         if (asset && /(^|[^a-z])(oil|wti|brent|crude)([^a-z]|$)/i.test(String(asset.name || ""))) return "Yahoo Finance WTI Futures (CL=F)";
         return "Binance Spot";
     }
-    if (marketCode === "GOLD") return "Bingx Feature/USDT";
+    if (marketCode === "GOLD") return "Binance Spot PAXG/USDT";
     if (marketCode === "BTC") return "Binance Futures";
     return "BingX";
 }
@@ -2164,7 +2163,7 @@ function getMarketPriceSourceBadge(marketCode = selectedMarket) {
         if (asset && /(^|[^a-z])(oil|wti|brent|crude)([^a-z]|$)/i.test(String(asset.name || ""))) return "YAHOO FINANCE WTI FUTURES LAST PRICE";
         return "BINANCE SPOT LAST PRICE";
     }
-    if (marketCode === "GOLD") return "BINGX FEATURE/USDT LAST PRICE";
+    if (marketCode === "GOLD") return "BINANCE SPOT PAXG/USDT LAST PRICE";
     if (marketCode === "BTC") return "BINANCE FUTURES LAST PRICE";
     return "BINGX LAST PRICE";
 }
@@ -3385,7 +3384,7 @@ async function fetchMtfCandleHistory(marketCode, frame) {
 
     const request = (async () => {
         // MTF history is served by the Worker from the same source used for live price
-        // and ECI candles Bingx Feature/USDT for Gold; Binance Futures BTCUSDT for BTC;
+        // and ECI candles (Binance Spot PAXG/USDT for Gold; Binance Futures BTCUSDT for BTC;
         // existing BingX feed paths for Silver/NASDAQ in this Worker version).
         const params = new URLSearchParams({
             market: marketCode,
@@ -4348,6 +4347,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
         positionStructureClosed: [],
         lastPositionStructureFetch: 0,
         pending: null,
+        lastRetestScanTime: 0,
         position: null,
         levels: { support: null, resistance: null },
         levelsMarket: null,
@@ -4382,6 +4382,9 @@ setInterval(refreshMultiTimeframePanel, 60000);
     const CANDLE_LIMIT = 260;
     const SWING_STRENGTH = 2;
     const MAX_PENDING_MINUTES = 5;
+    // New paper-test entry model: closed 15m impulse at an extreme, then retest + 1m rejection.
+    const PRICE_ACTION_RETEST_MODE = true;
+    const RETEST_PENDING_MINUTES = 45;
     const MAX_LIMIT_PENDING_MINUTES = 30;
     const CONFIRM_REFRESH_MS = 12000;
     const STRUCTURE_REFRESH_MS = 60000;
@@ -4435,6 +4438,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 enabled: Boolean(state.enabled),
                 activeMarket: state.activeMarket,
                 pending: state.pending,
+                lastRetestScanTime: state.lastRetestScanTime,
                 levels: state.levels,
                 levelsMarket: state.levelsMarket,
                 limitMode: Boolean(state.limitMode),
@@ -4483,9 +4487,8 @@ setInterval(refreshMultiTimeframePanel, 60000);
             // searching after a close. Preserve a user's explicit v4 choice.
             state.autoEntry = saved.version >= 4 ? Boolean(saved.autoEntry) : true;
             state.autoPreTp1Protection = saved.autoPreTp1Protection === undefined ? true : Boolean(saved.autoPreTp1Protection);
-            state.forceLimitRequest = saved.forceLimitRequest && typeof saved.forceLimitRequest === 'object'
-                ? { ...saved.forceLimitRequest, requestedAt: Number(saved.forceLimitRequest.requestedAt) || Date.now(), minCandleTime: Number.isFinite(Number(saved.forceLimitRequest.minCandleTime)) ? Number(saved.forceLimitRequest.minCandleTime) : null }
-                : null;
+            state.forceLimitRequest = null; // Price-action retest mode never uses forced limit entries.
+            state.forceLimitMode = false;
             if (saved.levels && typeof saved.levels === 'object') {
                 const validLevel = (level, side) => level && Number.isFinite(Number(level.price)) && Number(level.price) > 0 && (side === 'support' ? 'Support' : 'Resistance') === level.type
                     ? { price: Number(level.price), time: Number(level.time) || 0, type: level.type }
@@ -4496,7 +4499,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 };
                 state.levelsMarket = saved.levelsMarket || saved.activeMarket || null;
             }
-            if (saved.pending && ['long', 'short'].includes(saved.pending.direction) && Number(saved.pending.level?.price) > 0) {
+            if (saved.pending && saved.pending.kind === 'retest' && ['long', 'short'].includes(saved.pending.direction) && Number(saved.pending.level?.price) > 0) {
                 state.pending = {
                     ...saved.pending,
                     startedAt: Number(saved.pending.startedAt) || Date.now(),
@@ -4524,6 +4527,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
             state.tradeAllocationUsd = Number(saved.tradeAllocationUsd) >= 5 ? Number(saved.tradeAllocationUsd) : 100;
             state.maxRiskUsd = Number(saved.maxRiskUsd) >= 0.5 ? Number(saved.maxRiskUsd) : 10;
             state.assumedFeeRatePct = Number.isFinite(Number(saved.assumedFeeRatePct)) && Number(saved.assumedFeeRatePct) >= 0 && Number(saved.assumedFeeRatePct) <= 1 ? Number(saved.assumedFeeRatePct) : 0.05;
+            state.lastRetestScanTime = Number(saved.lastRetestScanTime) || 0;
             state.cooldownUntil = Number(saved.cooldownUntil) || 0;
             state.logs = Array.isArray(saved.logs) ? saved.logs.slice(0, 12).map(item => ({
                 time: parseDate(item.time),
@@ -4646,6 +4650,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
     }
 
     function resetMarketCaches(market) {
+        state.lastRetestScanTime = 0;
         state.activeMarket = market;
         state.confirmAll = [];
         state.confirmClosed = [];
@@ -5031,20 +5036,20 @@ setInterval(refreshMultiTimeframePanel, 60000);
             setMessage('Entry price is unavailable; no demo entry recorded.');
             return false;
         }
-        const cciGuard = check15mSmoothedCCIZeroCross(direction, state.structureClosed, market);
-        if (cciGuard.blocked) {
-            setMessage(`ENTRY FILTER: ${cciGuard.reason}`);
-            logEvent(`${marketName(market)} ${direction.toUpperCase()} entry blocked by the 15m smoothed CCI filter: ${cciGuard.reason}`);
+        const hourlyGuard = options.mode === 'retest' ? { blocked: false, reason: '15m impulse + retest + 1m rejection setup' } : checkHourlyPullbackRejection(direction, entryPrice, state.structureClosed, state.hourlyClosed, market);
+        if (hourlyGuard.blocked) {
+            setMessage(`ENTRY FILTER: ${hourlyGuard.reason}`);
+            logEvent(`${marketName(market)} ${direction.toUpperCase()} entry blocked by the 1h pullback/rejection filter: ${hourlyGuard.reason}`);
             return false;
         }
         const isLimitFill = options.mode === 'limit';
         const maxChase = tolerance * 2.5;
-        if (!isLimitFill && direction === 'long' && (entryPrice < level.price || entryPrice - level.price > maxChase)) {
+        if (!isLimitFill && options.mode !== 'retest' && direction === 'long' && (entryPrice < level.price || entryPrice - level.price > maxChase)) {
             setMessage('Confirmation candle appeared, but price moved too far from support. No chasing; waiting for another setup.');
             logEvent('No entry: confirmation was valid, but price had moved too far from support.');
             return false;
         }
-        if (!isLimitFill && direction === 'short' && (entryPrice > level.price || level.price - entryPrice > maxChase)) {
+        if (!isLimitFill && options.mode !== 'retest' && direction === 'short' && (entryPrice > level.price || level.price - entryPrice > maxChase)) {
             setMessage('Confirmation candle appeared, but price moved too far from resistance. No chasing; waiting for another setup.');
             logEvent('No entry: confirmation was valid, but price had moved too far from resistance.');
             return false;
@@ -5104,7 +5109,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
             profitProtectionStop: null,
             openedAt: new Date(),
             level: level.price,
-            entryMode: isLimitFill ? 'paper_limit' : 'confirmed_rejection',
+            entryMode: isLimitFill ? 'paper_limit' : (options.mode === 'retest' ? '15m_retest_rejection' : 'confirmed_rejection'),
             confirmTime: confirmCandle?.[0] || Date.now()
         };
         state.position = position;
@@ -5293,46 +5298,113 @@ setInterval(refreshMultiTimeframePanel, 60000);
             candle[4] < previous[3];
     }
 
-    // BTC experimental entry gate: use a closed 15m smoothed CCI zero-line crossover.
-    // CCI period 20, then SMA(5) of CCI. SHORT only on a fresh cross below zero;
-    // LONG only on a fresh cross above zero. This replaces the previous 1h candle-location gate.
-    function check15mSmoothedCCIZeroCross(direction, closed15m, market) {
+    // Price-action entry detector. Uses only fully closed 15m candles to identify
+    // a strong reversal/impulse at a recent extreme, then waits for a retest and
+    // a fully closed 1m rejection candle before entering.
+    function find15mRetestSetup(closed15m, market) {
+        if (!Array.isArray(closed15m) || closed15m.length < 16) return null;
+        const c = closed15m[closed15m.length - 1];
+        const time = Number(c[0]);
+        if (!Number.isFinite(time) || time <= Number(state.lastRetestScanTime || 0)) return null;
+        state.lastRetestScanTime = time;
+        const o = Number(c[1]), h = Number(c[2]), l = Number(c[3]), close = Number(c[4]);
+        const range = h - l, body = Math.abs(close - o);
+        if (![o,h,l,close,range,body].every(Number.isFinite) || range <= 0) return null;
+        const previous = closed15m.slice(-9, -1);
+        if (previous.length < 8) return null;
+        const prevHigh = Math.max(...previous.map(x => Number(x[2])));
+        const prevLow = Math.min(...previous.map(x => Number(x[3])));
+        const localHigh = Math.max(...closed15m.slice(-9).map(x => Number(x[2])));
+        const localLow = Math.min(...closed15m.slice(-9).map(x => Number(x[3])));
+        const closeLocation = (close - l) / range;
+        const bearishImpulse = close < o && body / range >= 0.55 && closeLocation <= 0.32 &&
+            h >= prevHigh && h >= localHigh - range * 0.10;
+        const bullishImpulse = close > o && body / range >= 0.55 && closeLocation >= 0.68 &&
+            l <= prevLow && l <= localLow + range * 0.10;
+        if (!bearishImpulse && !bullishImpulse) return null;
+        const direction = bearishImpulse ? 'short' : 'long';
+        const retestPrice = (o + close) / 2;
+        const level = direction === 'short'
+            ? { type: 'Resistance', price: h }
+            : { type: 'Support', price: l };
+        const atr15 = averageTrueRange(closed15m, 14);
+        const tolerance = Math.max(range * 0.08, Number.isFinite(atr15) ? atr15 * 0.08 : 0, close * 0.00008);
+        return { kind: 'retest', market, direction, level, retestPrice, triggerHigh: h, triggerLow: l,
+            triggerOpen: o, triggerClose: close, triggerRange: range, triggerTime: time,
+            tolerance, atr: atr15, startedAt: Date.now(), lastEvaluatedTime: null };
+    }
+
+    function retestRejectionConfirms(direction, candle, previous, pending) {
+        if (!candle || !previous || !pending) return false;
+        const o = Number(candle[1]), h = Number(candle[2]), l = Number(candle[3]), c = Number(candle[4]);
+        const po = Number(previous[1]), ph = Number(previous[2]), pl = Number(previous[3]), pc = Number(previous[4]);
+        const z = Number(pending.retestPrice), tol = Number(pending.tolerance) || 0;
+        if (![o,h,l,c,po,ph,pl,pc,z,tol].every(Number.isFinite)) return false;
+        if (direction === 'short') {
+            return h >= z - tol && c < z && c < o && c < pc && c < pl;
+        }
+        return l <= z + tol && c > z && c > o && c > pc && c > ph;
+    }
+
+    // BTC entry-location gate. SHORT requires a bearish previous closed 1h candle
+    // and price near its high, plus closed 15m bearish rejection. LONG requires a
+    // bullish previous closed 1h candle and price near its low, plus closed 15m
+    // bullish rejection. Existing ECI/WMA/SR/1m confirmations must also pass.
+    function checkHourlyPullbackRejection(direction, price, closed15m, closed1h, market) {
         if (market !== 'BTC') return { blocked: false, reason: 'not-btc' };
-        const CCI_PERIOD = 20;
-        const SMOOTH_PERIOD = 5;
-        if (!Array.isArray(closed15m) || closed15m.length < CCI_PERIOD + SMOOTH_PERIOD) {
-            return { blocked: true, reason: `Waiting for at least ${CCI_PERIOD + SMOOTH_PERIOD} closed 15m candles to calculate smoothed CCI.` };
+        if (!Number.isFinite(price) || !Array.isArray(closed15m) || closed15m.length < 2 ||
+            !Array.isArray(closed1h) || closed1h.length < 1) {
+            return { blocked: true, reason: 'Waiting for closed 1h and 15m candles for the entry-location check.' };
+        }
+        const hour = closed1h[closed1h.length - 1];
+        const hourOpen = Number(hour[1]);
+        const hourHigh = Number(hour[2]);
+        const hourLow = Number(hour[3]);
+        const hourClose = Number(hour[4]);
+        const range = hourHigh - hourLow;
+        if (![hourOpen, hourHigh, hourLow, hourClose, range].every(Number.isFinite) || range <= 0 || hourHigh <= hourLow) {
+            return { blocked: true, reason: 'The previous closed 1h candle has an invalid range; waiting for fresh data.' };
         }
 
-        const typicalPrices = closed15m.map(c => {
-            const high = Number(c[2]), low = Number(c[3]), close = Number(c[4]);
-            return [high, low, close].every(Number.isFinite) ? (high + low + close) / 3 : NaN;
-        });
-        const cciValues = new Array(typicalPrices.length).fill(NaN);
-        for (let i = CCI_PERIOD - 1; i < typicalPrices.length; i++) {
-            const window = typicalPrices.slice(i - CCI_PERIOD + 1, i + 1);
-            if (window.some(v => !Number.isFinite(v))) continue;
-            const mean = window.reduce((sum, v) => sum + v, 0) / CCI_PERIOD;
-            const meanDeviation = window.reduce((sum, v) => sum + Math.abs(v - mean), 0) / CCI_PERIOD;
-            cciValues[i] = meanDeviation > 0 ? (typicalPrices[i] - mean) / (0.015 * meanDeviation) : 0;
+        // Entry zone is the outer 15% of the previous closed 1h candle's range.
+        const zoneFraction = 0.15;
+        const nearHigh = price >= hourHigh - range * zoneFraction && price <= hourHigh;
+        const nearLow = price <= hourLow + range * zoneFraction && price >= hourLow;
+        const bearishHour = hourClose < hourOpen;
+        const bullishHour = hourClose > hourOpen;
+        const latest = closed15m[closed15m.length - 1];
+        const previous = closed15m[closed15m.length - 2];
+        const candleHigh = Number(latest[2]);
+        const candleLow = Number(latest[3]);
+        const candleOpen = Number(latest[1]);
+        const candleClose = Number(latest[4]);
+        const previousClose = Number(previous[4]);
+        const candleRange = candleHigh - candleLow;
+        if (![candleHigh, candleLow, candleOpen, candleClose, previousClose].every(Number.isFinite) || candleRange <= 0) {
+            return { blocked: true, reason: 'The latest closed 15m candle is invalid; waiting for a valid rejection candle.' };
         }
-        const smoothed = new Array(cciValues.length).fill(NaN);
-        for (let i = CCI_PERIOD - 1 + SMOOTH_PERIOD - 1; i < cciValues.length; i++) {
-            const window = cciValues.slice(i - SMOOTH_PERIOD + 1, i + 1);
-            if (window.every(Number.isFinite)) smoothed[i] = window.reduce((sum, v) => sum + v, 0) / SMOOTH_PERIOD;
-        }
-        const latest = smoothed[smoothed.length - 1];
-        const previous = smoothed[smoothed.length - 2];
-        if (!Number.isFinite(latest) || !Number.isFinite(previous)) {
-            return { blocked: true, reason: 'Smoothed 15m CCI is not ready; waiting for valid closed candles.' };
-        }
+
+        const lowerWick = Math.max(0, Math.min(candleOpen, candleClose) - candleLow);
+        const upperWick = Math.max(0, candleHigh - Math.max(candleOpen, candleClose));
+        const closeLocation = (candleClose - candleLow) / candleRange;
+        const rejectionAtHigh = candleHigh >= hourHigh - range * zoneFraction &&
+            candleClose < candleOpen && upperWick / candleRange >= 0.30 &&
+            closeLocation <= 0.40 && candleClose < previousClose;
+        const rejectionAtLow = candleLow <= hourLow + range * zoneFraction &&
+            candleClose > candleOpen && lowerWick / candleRange >= 0.30 &&
+            closeLocation >= 0.60 && candleClose > previousClose;
+
         if (direction === 'short') {
-            if (previous >= 0 && latest < 0) return { blocked: false, reason: `15m smoothed CCI crossed below zero (${previous.toFixed(1)} → ${latest.toFixed(1)})` };
-            return { blocked: true, reason: `SHORT requires the smoothed 15m CCI to cross below zero on the latest closed candle (now ${latest.toFixed(1)}).` };
+            if (!bearishHour) return { blocked: true, reason: 'SHORT requires the previous fully closed 1h candle to be bearish (close below open). Waiting.' };
+            if (!nearHigh) return { blocked: true, reason: 'SHORT requires price near the previous closed 1h high; waiting at the top entry zone.' };
+            if (!rejectionAtHigh) return { blocked: true, reason: 'Price is in the 1h high zone, but the latest closed 15m candle has not confirmed bearish rejection. Waiting before SHORT entry.' };
+            return { blocked: false, reason: '1h high zone and 15m bearish rejection confirmed' };
         }
         if (direction === 'long') {
-            if (previous <= 0 && latest > 0) return { blocked: false, reason: `15m smoothed CCI crossed above zero (${previous.toFixed(1)} → ${latest.toFixed(1)})` };
-            return { blocked: true, reason: `LONG requires the smoothed 15m CCI to cross above zero on the latest closed candle (now ${latest.toFixed(1)}).` };
+            if (!bullishHour) return { blocked: true, reason: 'LONG requires the previous fully closed 1h candle to be bullish/green (close above open). Waiting.' };
+            if (!nearLow) return { blocked: true, reason: 'LONG requires price near the previous closed 1h low; waiting at the bottom entry zone.' };
+            if (!rejectionAtLow) return { blocked: true, reason: 'Price is in the 1h low zone, but the latest closed 15m candle has not confirmed bullish rejection. Waiting before LONG entry.' };
+            return { blocked: false, reason: '1h low zone and 15m bullish rejection confirmed' };
         }
         return { blocked: true, reason: 'Unknown trade direction; entry blocked.' };
     }
@@ -5453,6 +5525,13 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 state.structureClosed = all15m.filter(c => c[6] !== true);
                 state.lastStructureFetch = Date.now();
             }
+            if (market === 'BTC' && (!state.hourlyClosed.length || Date.now() - state.lastHourlyFetch >= STRUCTURE_REFRESH_MS)) {
+                const all1h = await fetchDemoBars(market, '1h', HOURLY_INTERVAL_MINUTES, CANDLE_LIMIT);
+                if (market !== selectedMarket) return;
+                state.hourlyClosed = all1h.filter(c => c[6] !== true);
+                state.lastHourlyFetch = Date.now();
+            }
+
             const price = selectedMarket === market && Number.isFinite(currentPrice) && currentPrice > 0
                 ? currentPrice
                 : null;
@@ -5495,6 +5574,9 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 logEvent(`${marketName(market)} sideways-market filter cleared. Existing ECI, WMA, structure, and candle-confirmation rules must still agree before a new entry.`);
                 state.sidewaysPaused = false;
             }
+
+            // Price-action retest test mode intentionally bypasses Force Limit Entry.
+            if (PRICE_ACTION_RETEST_MODE) { state.forceLimitRequest = null; state.forceLimitMode = false; }
 
             // Force Limit Entry: use the close of a fully closed 5-minute candle as the limit price.
             // A refresh request waits for the next 5-minute candle to finish before recalculating.
@@ -5564,7 +5646,43 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 }
             }
 
-            if (state.pending) {
+            if (state.pending && state.pending.kind === 'retest') {
+                const pending = state.pending;
+                const latest15 = state.structureClosed[state.structureClosed.length - 1];
+                const latest15Time = Number(latest15?.[0]);
+                const latest15Close = Number(latest15?.[4]);
+                const latest15High = Number(latest15?.[2]);
+                const latest15Low = Number(latest15?.[3]);
+                const expired = Date.now() - pending.startedAt > RETEST_PENDING_MINUTES * 60000;
+                const invalidated = pending.direction === 'short'
+                    ? (price > pending.triggerHigh + pending.tolerance || (latest15Time > pending.triggerTime && latest15Close > pending.triggerHigh))
+                    : (price < pending.triggerLow - pending.tolerance || (latest15Time > pending.triggerTime && latest15Close < pending.triggerLow));
+                if (pending.market !== market) {
+                    resetPending('market changed');
+                } else if (expired) {
+                    resetPending('15m retest setup expired without rejection');
+                    setMessage('Retest setup expired. No trade was entered; waiting for a new closed 15-minute impulse.');
+                } else if (invalidated) {
+                    resetPending('price continued through the impulse extreme; setup invalidated');
+                    setMessage('Setup invalidated: price continued beyond the 15-minute impulse extreme. No entry taken.');
+                } else if (latestClosed && latestClosed[0] !== pending.lastEvaluatedTime) {
+                    pending.lastEvaluatedTime = latestClosed[0];
+                    const touched = pending.direction === 'short'
+                        ? latestClosed[2] >= pending.retestPrice - pending.tolerance
+                        : latestClosed[3] <= pending.retestPrice + pending.tolerance;
+                    if (touched && retestRejectionConfirms(pending.direction, latestClosed, previousClosed, pending)) {
+                        const entry = Number(latestClosed[4]);
+                        const opened = openPaperPosition(pending.direction, pending.level, latestClosed, atr, pending.tolerance, entry, market, { mode: 'retest' });
+                        if (!opened) state.pending = null;
+                    } else if (touched) {
+                        setMessage(`${pending.direction.toUpperCase()} retest touched ${formatPrice(pending.retestPrice)} but the 1m rejection did not confirm. Waiting; no entry.`);
+                    } else {
+                        setMessage(`15m ${pending.direction.toUpperCase()} impulse found at ${formatPrice(pending.direction === 'short' ? pending.triggerHigh : pending.triggerLow)}. Waiting for price to retest ${formatPrice(pending.retestPrice)} and reject. If price continues through the extreme, the setup is cancelled.`);
+                    }
+                } else {
+                    setMessage(`Waiting for ${pending.direction.toUpperCase()} retest at ${formatPrice(pending.retestPrice)} and a closed 1m rejection candle. No entry yet.`);
+                }
+            } else if (state.pending) {
                 const pending = state.pending;
                 const isLimitOrder = pending.kind === 'limit' || pending.kind === 'force-limit';
                 const maxAgeMinutes = isLimitOrder ? MAX_LIMIT_PENDING_MINUTES : MAX_PENDING_MINUTES;
@@ -5610,6 +5728,18 @@ setInterval(refreshMultiTimeframePanel, 60000);
                     }
                 } else {
                     setMessage(`Setup detected at ${formatPrice(pending.level.price)}. Waiting for the 1-minute candle to close with confirmation.`);
+                }
+            } else if (PRICE_ACTION_RETEST_MODE) {
+                // In this test edition, price action is the entry trigger. ECI/WMA remain visible
+                // on the dashboard but cannot force an entry before the 15m retest/rejection sequence.
+                const setup = find15mRetestSetup(state.structureClosed, market);
+                if (setup) {
+                    state.pending = setup;
+                    logEvent(`${marketName(market)} 15m ${setup.direction.toUpperCase()} impulse found. Retest at ${formatPrice(setup.retestPrice)} required; waiting for rejection on a closed 1m candle.`);
+                    setMessage(`15m ${setup.direction.toUpperCase()} impulse found. Waiting for price to return to ${formatPrice(setup.retestPrice)}, reject, and close in the trade direction on 1m. No entry yet.`);
+                    savePersistentState();
+                } else {
+                    setMessage('Scanning closed 15m candles for a strong impulse at a local extreme. The bot will wait for a retest and a closed 1m rejection before entering.');
                 }
             } else {
                 const aligned = signalDirection && signalDirection === trend.direction;
@@ -6334,70 +6464,6 @@ setInterval(refreshMultiTimeframePanel, 60000);
 })();
 </script>
 
-
-<script>
-(function initBingX24hTrend() {
-  const API = "https://gold-eci-api.contatoseder.workers.dev";
-  const panel = document.querySelector(".trend-mini-panel");
-  if (!panel) return;
-  const highEl = document.getElementById("trend24hHigh");
-  const lowEl = document.getElementById("trend24hLow");
-  const lineEl = document.getElementById("trend24hLine");
-  const areaEl = document.getElementById("trend24hArea");
-  const badgeEl = document.getElementById("trend24hBadge");
-  const titleEl = document.getElementById("trend24hTitle");
-  const updatedEl = document.getElementById("trend24hUpdated");
-  let busy = false;
-  const money = (n, market) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: market === "BTC" ? 2 : 3 }).format(n);
-  function renderChart(candles) {
-    const values = candles.map(c => Number(c.close)).filter(v => Number.isFinite(v) && v > 0);
-    if (values.length < 2) throw new Error("Not enough 1-hour candles to draw the trend");
-    const min = Math.min(...values), max = Math.max(...values), span = Math.max(max - min, max * 0.0001);
-    const pts = values.map((v, i) => `${(i * 280 / (values.length - 1)).toFixed(2)},${(47 - ((v - min) / span) * 39).toFixed(2)}`);
-    const d = "M" + pts.join(" L");
-    lineEl.setAttribute("d", d);
-    areaEl.setAttribute("d", `${d} L280 49 L0 49 Z`);
-    const rising = values[values.length - 1] >= values[0];
-    const stroke = rising ? "#2dd4bf" : "#fb7185";
-    lineEl.setAttribute("stroke", stroke);
-    const stop = document.querySelector("#trendMiniFill stop");
-    if (stop) stop.setAttribute("stop-color", rising ? "#14b8a6" : "#f43f5e");
-    badgeEl.textContent = rising ? "↗ UP" : "↘ DOWN";
-    badgeEl.style.color = rising ? "#2dd4bf" : "#fb7185";
-  }
-  async function refresh() {
-    if (busy) return;
-    const market = (document.getElementById("marketSelect")?.value || window.selectedMarket || "GOLD").toUpperCase();
-    if (!["BTC", "GOLD"].includes(market)) {
-      panel.style.display = "none";
-      return;
-    }
-    panel.style.display = "block";
-    busy = true;
-    titleEl.textContent = `${market === "BTC" ? "BTC" : "GOLD"} 24H Price Trend`;
-    try {
-      const response = await fetch(`${API}?trend24h=1&market=${encodeURIComponent(market)}&t=${Date.now()}`, { cache: "no-store", headers: { "Accept": "application/json" } });
-      const data = await response.json();
-      if (!response.ok || !data.ok) throw new Error(data.error || `Worker returned HTTP ${response.status}`);
-      highEl.textContent = money(data.high, market);
-      lowEl.textContent = money(data.low, market);
-      renderChart(data.candles || []);
-      updatedEl.textContent = `BingX perpetual · Updated ${new Date(data.updatedAt || Date.now()).toLocaleTimeString()}`;
-    } catch (error) {
-      badgeEl.textContent = "DATA UNAVAILABLE";
-      badgeEl.style.color = "#fbbf24";
-      updatedEl.textContent = `BingX data unavailable: ${String(error.message || error).slice(0, 90)}`;
-      if (highEl.textContent === "Loading…") highEl.textContent = "Unavailable";
-      if (lowEl.textContent === "Loading…") lowEl.textContent = "Unavailable";
-    } finally { busy = false; }
-  }
-  window.refreshBingX24hTrend = refresh;
-  refresh();
-  window.setInterval(refresh, 60000);
-  const selector = document.getElementById("marketSelect");
-  if (selector) selector.addEventListener("change", () => window.setTimeout(refresh, 150));
-})();
-</script>
 
 </body>
 </html>
