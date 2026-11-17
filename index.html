@@ -1231,7 +1231,7 @@
             </table>
         </div>
         <div class="demo-robot-footnote">
-            Price-action test mode: a fully closed 15-minute impulse at a local extreme creates a pending setup. The bot waits for price to retest the impulse candle body, then requires a closed 1-minute rejection/continuation candle. If price continues beyond the impulse extreme or no rejection arrives within 45 minutes, the setup is cancelled. ECI and WMA remain displayed but do not trigger entries in this test edition. Optional Paper Limit Entry mode skips the rejection-candle requirement and simulates a limit at the nearest confirmed support/resistance (or a nearby manual override); it is higher risk and expires after 30 minutes. Support/resistance stays fixed as price moves, changing only if crossed/invalidated or replaced by a newer confirmed, closer swing. Demo sizing respects both the configured maximum initial stop risk and the configured margin allocation at the 10× paper model; estimated margin is not an exchange simulation and liquidation is not modeled. USD PnL is an estimate and excludes fees, spread, slippage and instrument-specific contract sizing. TP1 is 2R; 50% exits there and the remaining 50% targets 3R, with the stop moved to entry after TP1. State, pending setup/order, levels, open position and trade history are saved locally and an active robot resumes on refresh. JavaScript cannot monitor trades while the browser/page is closed; it resumes only when the dashboard is open again. BTC open-position mark and floating PnL use a public mark-price WebSocket when available; entry decisions still require closed candles. Other market marks continue to use the existing polling feed. Paper trading only; no exchange orders are sent. Custom assets are not enabled in this test.
+            Price-action test mode: a fully closed 15-minute impulse near a local extreme creates a pending setup. The bot waits for price to touch the impulse candle body retest zone (touch may occur before the rejection candle), then requires a closed 1-minute rejection/continuation candle. The sideways filter pauses entries but preserves an existing retest setup until conditions clear. If price continues beyond the impulse extreme or no rejection arrives within 45 minutes, the setup is cancelled. ECI and WMA remain displayed but do not trigger entries in this test edition. Optional Paper Limit Entry mode skips the rejection-candle requirement and simulates a limit at the nearest confirmed support/resistance (or a nearby manual override); it is higher risk and expires after 30 minutes. Support/resistance stays fixed as price moves, changing only if crossed/invalidated or replaced by a newer confirmed, closer swing. Demo sizing respects both the configured maximum initial stop risk and the configured margin allocation at the 10× paper model; estimated margin is not an exchange simulation and liquidation is not modeled. USD PnL is an estimate and excludes fees, spread, slippage and instrument-specific contract sizing. TP1 is 2R; 50% exits there and the remaining 50% targets 3R, with the stop moved to entry after TP1. State, pending setup/order, levels, open position and trade history are saved locally and an active robot resumes on refresh. JavaScript cannot monitor trades while the browser/page is closed; it resumes only when the dashboard is open again. BTC open-position mark and floating PnL use a public mark-price WebSocket when available; entry decisions still require closed candles. Other market marks continue to use the existing polling feed. Paper trading only; no exchange orders are sent. Custom assets are not enabled in this test.
         </div>
     </div>
 
@@ -5317,10 +5317,13 @@ setInterval(refreshMultiTimeframePanel, 60000);
         const localHigh = Math.max(...closed15m.slice(-9).map(x => Number(x[2])));
         const localLow = Math.min(...closed15m.slice(-9).map(x => Number(x[3])));
         const closeLocation = (close - l) / range;
-        const bearishImpulse = close < o && body / range >= 0.55 && closeLocation <= 0.32 &&
-            h >= prevHigh && h >= localHigh - range * 0.10;
-        const bullishImpulse = close > o && body / range >= 0.55 && closeLocation >= 0.68 &&
-            l <= prevLow && l <= localLow + range * 0.10;
+        // Avoid requiring a strict breakout/sweep: a strong rejection near a recent
+        // extreme is also a valid setup. This was too restrictive and missed many
+        // ordinary reversal impulses in the first test build.
+        const nearLocalHigh = h >= localHigh - range * 0.25;
+        const nearLocalLow = l <= localLow + range * 0.25;
+        const bearishImpulse = close < o && body / range >= 0.45 && closeLocation <= 0.40 && nearLocalHigh;
+        const bullishImpulse = close > o && body / range >= 0.45 && closeLocation >= 0.60 && nearLocalLow;
         if (!bearishImpulse && !bullishImpulse) return null;
         const direction = bearishImpulse ? 'short' : 'long';
         const retestPrice = (o + close) / 2;
@@ -5340,10 +5343,16 @@ setInterval(refreshMultiTimeframePanel, 60000);
         const po = Number(previous[1]), ph = Number(previous[2]), pl = Number(previous[3]), pc = Number(previous[4]);
         const z = Number(pending.retestPrice), tol = Number(pending.tolerance) || 0;
         if (![o,h,l,c,po,ph,pl,pc,z,tol].every(Number.isFinite)) return false;
+        // Confirm a real rejection in the trade direction without demanding that
+        // the close also break the prior candle's full extreme (overly restrictive).
         if (direction === 'short') {
-            return h >= z - tol && c < z && c < o && c < pc && c < pl;
+            const upperRejection = h >= z - tol && c < z && c < o;
+            const continuation = c < pc || c < (po + pc) / 2;
+            return upperRejection && continuation;
         }
-        return l <= z + tol && c > z && c > o && c > pc && c > ph;
+        const lowerRejection = l <= z + tol && c > z && c > o;
+        const continuation = c > pc || c > (po + pc) / 2;
+        return lowerRejection && continuation;
     }
 
     // BTC entry-location gate. SHORT requires a bearish previous closed 1h candle
@@ -5561,7 +5570,9 @@ setInterval(refreshMultiTimeframePanel, 60000);
             // Existing positions have already been managed earlier in cycle(), so SL/TP/profit protection continue.
             const sidewaysCheck = detectSidewaysMarket(state.confirmClosed, trend, atr);
             if (sidewaysCheck.sideways) {
-                if (state.pending) resetPending('sideways-market filter activated; new entries are paused');
+                // Keep an already-formed 15m retest setup alive while the filter pauses
+                // entries. It can be evaluated after conditions improve; do not discard it.
+                if (state.pending && state.pending.kind !== 'retest') resetPending('sideways-market filter activated; new entries are paused');
                 if (!state.sidewaysPaused) {
                     logEvent(`${marketName(market)} sideways-market filter activated. New entries paused: ${sidewaysCheck.reason}.`);
                 }
@@ -5667,15 +5678,16 @@ setInterval(refreshMultiTimeframePanel, 60000);
                     setMessage('Setup invalidated: price continued beyond the 15-minute impulse extreme. No entry taken.');
                 } else if (latestClosed && latestClosed[0] !== pending.lastEvaluatedTime) {
                     pending.lastEvaluatedTime = latestClosed[0];
-                    const touched = pending.direction === 'short'
+                    const touchedNow = pending.direction === 'short'
                         ? latestClosed[2] >= pending.retestPrice - pending.tolerance
                         : latestClosed[3] <= pending.retestPrice + pending.tolerance;
-                    if (touched && retestRejectionConfirms(pending.direction, latestClosed, previousClosed, pending)) {
+                    if (touchedNow) pending.retestTouched = true;
+                    if (pending.retestTouched && retestRejectionConfirms(pending.direction, latestClosed, previousClosed, pending)) {
                         const entry = Number(latestClosed[4]);
                         const opened = openPaperPosition(pending.direction, pending.level, latestClosed, atr, pending.tolerance, entry, market, { mode: 'retest' });
                         if (!opened) state.pending = null;
-                    } else if (touched) {
-                        setMessage(`${pending.direction.toUpperCase()} retest touched ${formatPrice(pending.retestPrice)} but the 1m rejection did not confirm. Waiting; no entry.`);
+                    } else if (pending.retestTouched) {
+                        setMessage(`${pending.direction.toUpperCase()} retest zone touched. Waiting for a closed 1m rejection/continuation candle at ${formatPrice(pending.retestPrice)}; no entry yet.`);
                     } else {
                         setMessage(`15m ${pending.direction.toUpperCase()} impulse found at ${formatPrice(pending.direction === 'short' ? pending.triggerHigh : pending.triggerLow)}. Waiting for price to retest ${formatPrice(pending.retestPrice)} and reject. If price continues through the extreme, the setup is cancelled.`);
                     }
@@ -5739,7 +5751,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
                     setMessage(`15m ${setup.direction.toUpperCase()} impulse found. Waiting for price to return to ${formatPrice(setup.retestPrice)}, reject, and close in the trade direction on 1m. No entry yet.`);
                     savePersistentState();
                 } else {
-                    setMessage('Scanning closed 15m candles for a strong impulse at a local extreme. The bot will wait for a retest and a closed 1m rejection before entering.');
+                    setMessage('Scanning closed 15m candles for a strong impulse near a local extreme. The bot will wait for a retest and a closed 1m rejection before entering. The sideways filter may pause entries while a setup remains pending.');
                 }
             } else {
                 const aligned = signalDirection && signalDirection === trend.direction;
