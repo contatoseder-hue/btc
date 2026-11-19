@@ -3414,11 +3414,26 @@ async function fetchDirectBtcCandlePayload(frame) {
 // A brief cache reduces duplicate calls without making the chart meaningfully stale.
 const mtfHistoryInFlight = new Map();
 const mtfHistoryCache = new Map();
-const MTF_HISTORY_CACHE_MS = 5000;
+const MTF_HISTORY_CACHE_MS = 60000;
+// Honor BingX rate-limit errors instead of hammering the upstream feed on every refresh.
+const marketDataCooldownUntil = new Map();
+function getRateLimitRetryTime(message) {
+    const text = String(message || "");
+    if (!/(?:100410|109429|109415|rate.?limit|too many requests)/i.test(text)) return 0;
+    const timestampMatch = text.match(/(?:retry after time|retry after|until)\s*:?\s*(\d{13})/i);
+    const providerTime = timestampMatch ? Number(timestampMatch[1]) : 0;
+    return providerTime > Date.now() ? providerTime : Date.now() + 15 * 60 * 1000;
+}
 
 async function fetchMtfCandleHistory(marketCode, frame) {
     const cacheKey = `${marketCode}|${frame.interval}`;
     const now = Date.now();
+    for (const [key, until] of marketDataCooldownUntil) if (until <= now) marketDataCooldownUntil.delete(key);
+    const cooldownUntil = marketDataCooldownUntil.get(marketCode) || 0;
+    if (now < cooldownUntil) {
+        const seconds = Math.ceil((cooldownUntil - now) / 1000);
+        throw new Error(`BingX market-data rate limit cooldown for ${marketCode}; retrying in about ${seconds}s. No real orders were sent.`);
+    }
     const cached = mtfHistoryCache.get(cacheKey);
     if (cached && now - cached.savedAt < MTF_HISTORY_CACHE_MS) {
         return cached.value;
@@ -3446,9 +3461,11 @@ async function fetchMtfCandleHistory(marketCode, frame) {
             });
             payload = await response.json().catch(() => ({}));
             if (!response.ok) {
+                const providerDetail = `${payload?.message || payload?.error || "no error details"}`;
+                const retryAt = getRateLimitRetryTime(providerDetail);
+                if (retryAt) marketDataCooldownUntil.set(marketCode, retryAt);
                 throw new Error(
-                    `Cloudflare MTF history request failed (${response.status}): ` +
-                    `${payload?.message || payload?.error || "no error details"}`
+                    `Cloudflare MTF history request failed (${response.status}): ${providerDetail}`
                 );
             }
             if (!Array.isArray(payload?.bars) || !payload.bars.length) {
@@ -3461,6 +3478,8 @@ async function fetchMtfCandleHistory(marketCode, frame) {
             workerFailure = error;
             if (marketCode !== "BTC") {
                 const detail = error?.message || String(error);
+                const retryAt = getRateLimitRetryTime(detail);
+                if (retryAt) marketDataCooldownUntil.set(marketCode, retryAt);
                 if (/failed to fetch|networkerror|load failed/i.test(detail)) {
                     const pageOrigin = window.location && window.location.origin ? window.location.origin : "unknown";
                     console.error("[Dashboard candle feed] Browser fetch failed", {
@@ -3804,6 +3823,12 @@ const CLOUDFLARE_API =
 
 async function fetchCloudflareData() {
     const requestMarket = selectedMarket;
+    const cooldownUntil = marketDataCooldownUntil.get(requestMarket) || 0;
+    if (Date.now() < cooldownUntil) {
+        const seconds = Math.ceil((cooldownUntil - Date.now()) / 1000);
+        setCloudflareOffline(new Error(`Market-data cooldown active for ${requestMarket}; retrying in about ${seconds}s. No real orders were sent.`));
+        return;
+    }
     const requestSignalInterval = requestMarket === "BTC" ? selectedBtcSignalInterval : "15m";
     const requestId = ++cloudflareRequestSequence;
 
@@ -3856,6 +3881,9 @@ async function fetchCloudflareData() {
             return;
         }
         console.error("Cloudflare API error:", error);
+        const detail = error?.message || String(error);
+        const retryAt = getRateLimitRetryTime(detail);
+        if (retryAt) marketDataCooldownUntil.set(requestMarket, retryAt);
         setCloudflareOffline(error);
         // Keep the live price available through the independent quote endpoint
         // if only the Cloudflare ECI/signal endpoint is failing.
@@ -5057,10 +5085,12 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 return recent;
             } catch (error) {
                 lastError = error;
+                const detail = error?.message || String(error);
+                // Never repeat a known provider rate-limit error in this refresh cycle.
+                if (getRateLimitRetryTime(detail)) break;
                 if (attempt < maxAttempts) {
-                    // Brief retry for transient fetch/network failures. If CORS or
-                    // Worker configuration is wrong, the final error remains visible.
-                    await new Promise(resolve => setTimeout(resolve, 350 * attempt));
+                    // Retry only transient failures, with a modest backoff.
+                    await new Promise(resolve => setTimeout(resolve, 750 * attempt));
                 }
             }
         }
