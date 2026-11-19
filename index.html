@@ -842,6 +842,101 @@
 }
 #demoRobotEarlyReversalControls .demo-limit-note { overflow-wrap:anywhere; }
 
+
+
+/* === Professional terminal visual layer: presentation only === */
+:root {
+  color-scheme: dark;
+  --pt-bg: #050b14;
+  --pt-panel: rgba(8, 18, 31, .94);
+  --pt-panel-2: rgba(10, 24, 40, .92);
+  --pt-line: rgba(56, 189, 248, .27);
+  --pt-cyan: #38bdf8;
+  --pt-green: #22e68a;
+  --pt-red: #fb6677;
+  --pt-text: #e6f0ff;
+  --pt-muted: #93a8c2;
+}
+html { background: var(--pt-bg); }
+body {
+  color: var(--pt-text);
+  background:
+    radial-gradient(ellipse at 12% 0%, rgba(0, 143, 180, .13), transparent 34%),
+    radial-gradient(ellipse at 90% 14%, rgba(20, 110, 170, .10), transparent 30%),
+    linear-gradient(180deg, #050b14 0%, #07111e 52%, #050b14 100%);
+  background-attachment: fixed;
+}
+body::before {
+  content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image: linear-gradient(rgba(80, 150, 190, .035) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(80, 150, 190, .035) 1px, transparent 1px);
+  background-size: 36px 36px;
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,.7), transparent 88%);
+}
+.container { position: relative; z-index: 1; }
+.card, .supabase-auth-card, .status-box, .stat, .trend-mini-panel,
+.demo-robot-stat, .demo-robot-log, .mtf-panel, .demo-limit-controls {
+  background-color: var(--pt-panel);
+  border-color: var(--pt-line);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, .18), inset 0 1px 0 rgba(180, 225, 255, .035);
+  transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease, transform .18s ease;
+}
+.card { border-radius: 15px; backdrop-filter: blur(10px); }
+.section-title { color: #eaf6ff; letter-spacing: .015em; }
+.label, .status-title { color: var(--pt-muted); }
+input, select, textarea, button {
+  accent-color: var(--pt-green);
+}
+input, select, textarea {
+  border-color: rgba(75, 150, 190, .38) !important;
+  background-color: rgba(3, 11, 21, .88) !important;
+  color: var(--pt-text) !important;
+}
+button {
+  transition: transform .14s ease, filter .14s ease, box-shadow .14s ease;
+}
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--pt-cyan); outline-offset: 2px;
+}
+.buy, .bullish, .demo-position-side.long { color: var(--pt-green); }
+.sell, .bearish, .demo-position-side.short { color: var(--pt-red); }
+#ptMouseGlow {
+  position: fixed; z-index: 9999; left: 0; top: 0; width: 250px; height: 250px;
+  border-radius: 50%; pointer-events: none; opacity: 0;
+  transform: translate3d(-50%, -50%, 0);
+  background: radial-gradient(circle, rgba(56, 189, 248, .10) 0%, rgba(56, 189, 248, .045) 28%, transparent 70%);
+  transition: opacity .2s ease; will-change: transform;
+}
+#ptMouseGlow.pt-visible { opacity: 1; }
+#ptClickFlash {
+  position: fixed; z-index: 9998; width: 10px; height: 10px; border-radius: 50%;
+  pointer-events: none; border: 1px solid rgba(56, 189, 248, .75);
+  transform: translate(-50%, -50%) scale(.25); opacity: 0;
+}
+#ptClickFlash.pt-flash { animation: ptClickPulse .42s ease-out forwards; }
+@keyframes ptClickPulse {
+  0% { opacity: .85; transform: translate(-50%, -50%) scale(.25); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(7); }
+}
+@media (hover: hover) and (pointer: fine) {
+  .card:hover, .supabase-auth-card:hover {
+    border-color: rgba(56, 189, 248, .43);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .22), 0 0 0 1px rgba(56, 189, 248, .045), inset 0 1px 0 rgba(180, 225, 255, .05);
+  }
+  button:hover:not(:disabled) { filter: brightness(1.08); }
+  button:active:not(:disabled) { transform: translateY(1px) scale(.99); }
+}
+@media (max-width: 700px) {
+  body { background-attachment: scroll; }
+  body::before { background-size: 28px 28px; }
+  .card, .supabase-auth-card { backdrop-filter: none; }
+  #ptMouseGlow, #ptClickFlash { display: none !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+  #ptMouseGlow, #ptClickFlash { display: none !important; }
+}
+
 </style>
 </head>
 
@@ -3414,26 +3509,11 @@ async function fetchDirectBtcCandlePayload(frame) {
 // A brief cache reduces duplicate calls without making the chart meaningfully stale.
 const mtfHistoryInFlight = new Map();
 const mtfHistoryCache = new Map();
-const MTF_HISTORY_CACHE_MS = 60000;
-// Honor BingX rate-limit errors instead of hammering the upstream feed on every refresh.
-const marketDataCooldownUntil = new Map();
-function getRateLimitRetryTime(message) {
-    const text = String(message || "");
-    if (!/(?:100410|109429|109415|rate.?limit|too many requests)/i.test(text)) return 0;
-    const timestampMatch = text.match(/(?:retry after time|retry after|until)\s*:?\s*(\d{13})/i);
-    const providerTime = timestampMatch ? Number(timestampMatch[1]) : 0;
-    return providerTime > Date.now() ? providerTime : Date.now() + 15 * 60 * 1000;
-}
+const MTF_HISTORY_CACHE_MS = 5000;
 
 async function fetchMtfCandleHistory(marketCode, frame) {
     const cacheKey = `${marketCode}|${frame.interval}`;
     const now = Date.now();
-    for (const [key, until] of marketDataCooldownUntil) if (until <= now) marketDataCooldownUntil.delete(key);
-    const cooldownUntil = marketDataCooldownUntil.get(marketCode) || 0;
-    if (now < cooldownUntil) {
-        const seconds = Math.ceil((cooldownUntil - now) / 1000);
-        throw new Error(`BingX market-data rate limit cooldown for ${marketCode}; retrying in about ${seconds}s. No real orders were sent.`);
-    }
     const cached = mtfHistoryCache.get(cacheKey);
     if (cached && now - cached.savedAt < MTF_HISTORY_CACHE_MS) {
         return cached.value;
@@ -3461,11 +3541,9 @@ async function fetchMtfCandleHistory(marketCode, frame) {
             });
             payload = await response.json().catch(() => ({}));
             if (!response.ok) {
-                const providerDetail = `${payload?.message || payload?.error || "no error details"}`;
-                const retryAt = getRateLimitRetryTime(providerDetail);
-                if (retryAt) marketDataCooldownUntil.set(marketCode, retryAt);
                 throw new Error(
-                    `Cloudflare MTF history request failed (${response.status}): ${providerDetail}`
+                    `Cloudflare MTF history request failed (${response.status}): ` +
+                    `${payload?.message || payload?.error || "no error details"}`
                 );
             }
             if (!Array.isArray(payload?.bars) || !payload.bars.length) {
@@ -3478,8 +3556,6 @@ async function fetchMtfCandleHistory(marketCode, frame) {
             workerFailure = error;
             if (marketCode !== "BTC") {
                 const detail = error?.message || String(error);
-                const retryAt = getRateLimitRetryTime(detail);
-                if (retryAt) marketDataCooldownUntil.set(marketCode, retryAt);
                 if (/failed to fetch|networkerror|load failed/i.test(detail)) {
                     const pageOrigin = window.location && window.location.origin ? window.location.origin : "unknown";
                     console.error("[Dashboard candle feed] Browser fetch failed", {
@@ -3823,12 +3899,6 @@ const CLOUDFLARE_API =
 
 async function fetchCloudflareData() {
     const requestMarket = selectedMarket;
-    const cooldownUntil = marketDataCooldownUntil.get(requestMarket) || 0;
-    if (Date.now() < cooldownUntil) {
-        const seconds = Math.ceil((cooldownUntil - Date.now()) / 1000);
-        setCloudflareOffline(new Error(`Market-data cooldown active for ${requestMarket}; retrying in about ${seconds}s. No real orders were sent.`));
-        return;
-    }
     const requestSignalInterval = requestMarket === "BTC" ? selectedBtcSignalInterval : "15m";
     const requestId = ++cloudflareRequestSequence;
 
@@ -3881,9 +3951,6 @@ async function fetchCloudflareData() {
             return;
         }
         console.error("Cloudflare API error:", error);
-        const detail = error?.message || String(error);
-        const retryAt = getRateLimitRetryTime(detail);
-        if (retryAt) marketDataCooldownUntil.set(requestMarket, retryAt);
         setCloudflareOffline(error);
         // Keep the live price available through the independent quote endpoint
         // if only the Cloudflare ECI/signal endpoint is failing.
@@ -5085,12 +5152,10 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 return recent;
             } catch (error) {
                 lastError = error;
-                const detail = error?.message || String(error);
-                // Never repeat a known provider rate-limit error in this refresh cycle.
-                if (getRateLimitRetryTime(detail)) break;
                 if (attempt < maxAttempts) {
-                    // Retry only transient failures, with a modest backoff.
-                    await new Promise(resolve => setTimeout(resolve, 750 * attempt));
+                    // Brief retry for transient fetch/network failures. If CORS or
+                    // Worker configuration is wrong, the final error remains visible.
+                    await new Promise(resolve => setTimeout(resolve, 350 * attempt));
                 }
             }
         }
@@ -6572,6 +6637,46 @@ setInterval(refreshMultiTimeframePanel, 60000);
   window.setInterval(refresh, 60000);
   const selector = document.getElementById("marketSelect");
   if (selector) selector.addEventListener("change", () => window.setTimeout(refresh, 150));
+})();
+</script>
+
+
+<script>
+/* Decorative pointer effects only. No market data, signals, login, or order state is touched. */
+(function initProfessionalPointerFX() {
+  try {
+    const finePointer = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!finePointer || reduceMotion) return;
+    const glow = document.createElement('div');
+    glow.id = 'ptMouseGlow';
+    glow.setAttribute('aria-hidden', 'true');
+    const flash = document.createElement('div');
+    flash.id = 'ptClickFlash';
+    flash.setAttribute('aria-hidden', 'true');
+    document.body.append(glow, flash);
+    let queued = false, px = -500, py = -500;
+    document.addEventListener('pointermove', function (event) {
+      px = event.clientX; py = event.clientY;
+      if (!queued) {
+        queued = true;
+        window.requestAnimationFrame(function () {
+          glow.style.transform = `translate3d(${px}px, ${py}px, 0) translate(-50%, -50%)`;
+          glow.classList.add('pt-visible');
+          queued = false;
+        });
+      }
+    }, { passive: true });
+    document.addEventListener('pointerleave', function () { glow.classList.remove('pt-visible'); }, { passive: true });
+    document.addEventListener('pointerdown', function (event) {
+      if (event.pointerType !== 'mouse') return;
+      flash.style.left = `${event.clientX}px`;
+      flash.style.top = `${event.clientY}px`;
+      flash.classList.remove('pt-flash');
+      void flash.offsetWidth;
+      flash.classList.add('pt-flash');
+    }, { passive: true });
+  } catch (_) { /* Visual effects must never interfere with dashboard operation. */ }
 })();
 </script>
 
