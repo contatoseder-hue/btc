@@ -5,7 +5,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>XAU/USD Gold 15m Scalp Dashboard</title>
+<title>BTC/USDT BingX Professional Trading Terminal</title>
 
 <style>
     * {
@@ -808,381 +808,54 @@
 #demoRobotForceLimitControls .demo-robot-controls button { flex:0 1 auto; max-width:100%; white-space:normal; }
 @media(max-width:600px){#demoRobotForceLimitControls .demo-robot-controls button{flex:1 1 100%;width:100%;}}
 
-/* Layout fix: keep Early Reversal Protection checkbox and copy inside the panel. */
-#demoRobotEarlyReversalControls,
-#demoRobotEarlyReversalControls * { box-sizing: border-box; }
-#demoRobotEarlyReversalControls { display:block; width:100%; min-width:0; }
-#demoRobotEarlyReversalControls .demo-limit-toggle {
-    display:grid;
-    grid-template-columns:18px minmax(0, 1fr);
-    align-items:start;
-    gap:10px;
-    width:100%;
-    min-width:0;
-    margin:0;
-}
-#demoRobotEarlyReversalControls .demo-limit-toggle input {
-    position:static;
-    display:block;
-    width:14px;
-    height:14px;
-    margin:3px 0 0;
-}
-#demoRobotEarlyReversalControls .demo-limit-toggle > span {
-    display:block;
-    width:100%;
-    min-width:0;
-    overflow-wrap:anywhere;
-}
-#demoRobotEarlyReversalControls .demo-limit-toggle strong,
-#demoRobotEarlyReversalControls .demo-limit-toggle small {
-    display:block;
-    white-space:normal;
-    overflow-wrap:anywhere;
-}
-#demoRobotEarlyReversalControls .demo-limit-note { overflow-wrap:anywhere; }
 
-
-
-/* === Professional terminal visual layer: presentation only === */
-:root {
-  color-scheme: dark;
-  --pt-bg: #050b14;
-  --pt-panel: rgba(8, 18, 31, .94);
-  --pt-panel-2: rgba(10, 24, 40, .92);
-  --pt-line: rgba(56, 189, 248, .27);
-  --pt-cyan: #38bdf8;
-  --pt-green: #22e68a;
-  --pt-red: #fb6677;
-  --pt-text: #e6f0ff;
-  --pt-muted: #93a8c2;
-}
-html { background: var(--pt-bg); }
-body {
-  color: var(--pt-text);
-  background:
-    radial-gradient(ellipse at 12% 0%, rgba(0, 143, 180, .13), transparent 34%),
-    radial-gradient(ellipse at 90% 14%, rgba(20, 110, 170, .10), transparent 30%),
-    linear-gradient(180deg, #050b14 0%, #07111e 52%, #050b14 100%);
-  background-attachment: fixed;
-}
-body::before {
-  content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
-  background-image: linear-gradient(rgba(80, 150, 190, .035) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(80, 150, 190, .035) 1px, transparent 1px);
-  background-size: 36px 36px;
-  mask-image: linear-gradient(to bottom, rgba(0,0,0,.7), transparent 88%);
-}
-.container { position: relative; z-index: 1; }
-.card, .supabase-auth-card, .status-box, .stat, .trend-mini-panel,
-.demo-robot-stat, .demo-robot-log, .mtf-panel, .demo-limit-controls {
-  background-color: var(--pt-panel);
-  border-color: var(--pt-line);
-  box-shadow: 0 8px 28px rgba(0, 0, 0, .18), inset 0 1px 0 rgba(180, 225, 255, .035);
-  transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease, transform .18s ease;
-}
-.card { border-radius: 15px; backdrop-filter: blur(10px); }
-.section-title { color: #eaf6ff; letter-spacing: .015em; }
-.label, .status-title { color: var(--pt-muted); }
-input, select, textarea, button {
-  accent-color: var(--pt-green);
-}
-input, select, textarea {
-  border-color: rgba(75, 150, 190, .38) !important;
-  background-color: rgba(3, 11, 21, .88) !important;
-  color: var(--pt-text) !important;
-}
-button {
-  transition: transform .14s ease, filter .14s ease, box-shadow .14s ease;
-}
-button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
-  outline: 2px solid var(--pt-cyan); outline-offset: 2px;
-}
-.buy, .bullish, .demo-position-side.long { color: var(--pt-green); }
-.sell, .bearish, .demo-position-side.short { color: var(--pt-red); }
-#ptMouseGlow {
-  position: fixed; z-index: 9999; left: 0; top: 0; width: 250px; height: 250px;
-  border-radius: 50%; pointer-events: none; opacity: 0;
-  transform: translate3d(-50%, -50%, 0);
-  background: radial-gradient(circle, rgba(56, 189, 248, .10) 0%, rgba(56, 189, 248, .045) 28%, transparent 70%);
-  transition: opacity .2s ease; will-change: transform;
-}
-#ptMouseGlow.pt-visible { opacity: 1; }
-#ptClickFlash {
-  position: fixed; z-index: 9998; width: 10px; height: 10px; border-radius: 50%;
-  pointer-events: none; border: 1px solid rgba(56, 189, 248, .75);
-  transform: translate(-50%, -50%) scale(.25); opacity: 0;
-}
-#ptClickFlash.pt-flash { animation: ptClickPulse .42s ease-out forwards; }
-@keyframes ptClickPulse {
-  0% { opacity: .85; transform: translate(-50%, -50%) scale(.25); }
-  100% { opacity: 0; transform: translate(-50%, -50%) scale(7); }
-}
-@media (hover: hover) and (pointer: fine) {
-  .card:hover, .supabase-auth-card:hover {
-    border-color: rgba(56, 189, 248, .43);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, .22), 0 0 0 1px rgba(56, 189, 248, .045), inset 0 1px 0 rgba(180, 225, 255, .05);
-  }
-  button:hover:not(:disabled) { filter: brightness(1.08); }
-  button:active:not(:disabled) { transform: translateY(1px) scale(.99); }
-}
-@media (max-width: 700px) {
-  body { background-attachment: scroll; }
-  body::before { background-size: 28px 28px; }
-  .card, .supabase-auth-card { backdrop-filter: none; }
-  #ptMouseGlow, #ptClickFlash { display: none !important; }
-}
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
-  #ptMouseGlow, #ptClickFlash { display: none !important; }
-}
-
-</style>
-<style id="professionalTerminalVisualLayer">
-
-/* === Professional terminal visual layer: presentation only === */
-:root{color-scheme:dark;--pt-bg:#070b12;--pt-panel:#0e1623;--pt-panel2:#111d2d;--pt-border:rgba(116,160,205,.20);--pt-cyan:#45d7f5;--pt-muted:#8da3bc;--pt-green:#35d49a;--pt-red:#ff647c;--pt-glow:rgba(55,205,245,.12)}
-html{background:var(--pt-bg);scroll-behavior:smooth}
-body{background:radial-gradient(ellipse at 50% -15%,rgba(24,91,128,.22),transparent 52%),var(--pt-bg)!important;color:#e7f0fb!important;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;letter-spacing:.01em}
-body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.14;background-image:linear-gradient(rgba(103,151,190,.09) 1px,transparent 1px),linear-gradient(90deg,rgba(103,151,190,.09) 1px,transparent 1px);background-size:36px 36px;mask-image:linear-gradient(to bottom,black,transparent 85%)}
-.container{position:relative;z-index:1;max-width:1440px!important;padding:clamp(12px,2vw,28px)!important}
-.card,.supabase-auth-card,.panel,.section,.trade-card{background:linear-gradient(145deg,rgba(17,29,45,.97),rgba(10,17,28,.98))!important;border:1px solid var(--pt-border)!important;border-radius:16px!important;box-shadow:0 12px 32px rgba(0,0,0,.20),inset 0 1px rgba(255,255,255,.025)!important;transition:border-color .22s ease,box-shadow .22s ease,transform .22s ease}
-.card:hover,.supabase-auth-card:hover{border-color:rgba(69,215,245,.35)!important;box-shadow:0 14px 38px rgba(0,0,0,.25),0 0 24px rgba(69,215,245,.045)!important}
-.header{position:relative;overflow:hidden;background:linear-gradient(135deg,rgba(16,34,52,.98),rgba(9,17,29,.98))!important;border-color:rgba(69,215,245,.26)!important}
-.header:after{content:"";position:absolute;top:0;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,var(--pt-cyan),transparent);opacity:.65;pointer-events:none}
-h1,h2,h3,.section-title{letter-spacing:.025em}
-.label,.btc-timeframe-note,.supabase-auth-note{color:var(--pt-muted)!important}
-button,select,input,textarea{font:inherit;transition:background-color .18s ease,border-color .18s ease,box-shadow .18s ease,transform .18s ease}
-button{border:1px solid rgba(90,173,211,.32)!important;border-radius:9px!important;box-shadow:0 3px 10px rgba(0,0,0,.16)}
-button:hover{border-color:rgba(69,215,245,.72)!important;box-shadow:0 0 0 3px rgba(69,215,245,.09),0 5px 16px rgba(0,0,0,.2)!important;transform:translateY(-1px)}
-button:active{transform:translateY(0) scale(.985)}
-select,input,textarea{background-color:#091321!important;color:#e7f0fb!important;border-color:rgba(116,160,205,.30)!important;border-radius:9px!important;max-width:100%}
-select:focus,input:focus,textarea:focus{outline:none!important;border-color:var(--pt-cyan)!important;box-shadow:0 0 0 3px rgba(69,215,245,.11)!important}
-.bias-line,.overall,.signal-time{border-radius:10px}
-#supabaseAuthStatus,[role="status"]{overflow-wrap:anywhere}
-/* Cursor halo is decorative only and never intercepts clicks. */
-#ptMouseHalo{position:fixed;left:0;top:0;width:260px;height:260px;border-radius:50%;pointer-events:none;z-index:9999;opacity:0;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(52,194,238,.10) 0%,rgba(52,194,238,.045) 34%,transparent 70%);mix-blend-mode:screen;transition:opacity .2s ease;will-change:left,top}
-.pt-ripple{position:absolute;border-radius:50%;pointer-events:none;width:10px;height:10px;background:rgba(69,215,245,.25);transform:translate(-50%,-50%) scale(0);animation:ptRipple .55s ease-out forwards}
-@keyframes ptRipple{to{transform:translate(-50%,-50%) scale(15);opacity:0}}
-@media(hover:none),(pointer:coarse){#ptMouseHalo{display:none}.card:hover,.supabase-auth-card:hover{transform:none!important}}
-@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}#ptMouseHalo{display:none}}
-@media(max-width:700px){.container{padding:10px!important}.card,.supabase-auth-card{border-radius:12px!important}.header{padding:14px!important}button{min-height:40px}select,input,textarea{font-size:16px!important}.supabase-auth-grid,.supabase-auth-actions{grid-template-columns:minmax(0,1fr)!important;display:grid;gap:9px}}
-
-
-
-/* === Refined trading-terminal layout, visual-only overrides === */
-:root {
-  --pt-bg: #070b12;
-  --pt-panel: #0b1320;
-  --pt-panel2: #101c2b;
-  --pt-border: rgba(111, 153, 196, .20);
-  --pt-cyan: #54d9f3;
-  --pt-muted: #8da3bc;
-  --pt-green: #35d49a;
-  --pt-red: #ff647c;
-  --pt-glow: rgba(55,205,245,.12);
-}
-* { box-sizing: border-box; }
-body {
-  background:
-    radial-gradient(ellipse at 50% -12%, rgba(26, 107, 151, .22), transparent 47%),
-    linear-gradient(180deg, #070b12 0%, #080e17 60%, #060a10 100%) !important;
-  color: #e5edf7 !important;
-  font-size: 13px;
-  line-height: 1.48;
-}
-body:before {
-  opacity: .19 !important;
-  background-size: 32px 32px !important;
-  mask-image: linear-gradient(to bottom, #000 0%, transparent 78%) !important;
-}
-.container {
-  width: min(100%, 1580px) !important;
-  max-width: 1580px !important;
-  padding: 22px clamp(12px, 2.1vw, 32px) 36px !important;
-}
-.card, .supabase-auth-card, .trading-mode-card, .demo-position-card {
-  background: linear-gradient(145deg, rgba(15, 25, 39, .98), rgba(9, 16, 27, .98)) !important;
-  border: 1px solid rgba(120, 157, 197, .19) !important;
-  border-radius: 14px !important;
-  box-shadow: 0 10px 30px rgba(0,0,0,.20), inset 0 1px 0 rgba(255,255,255,.025) !important;
-}
-.card { padding: clamp(15px, 1.5vw, 23px) !important; margin-bottom: 14px !important; }
-.supabase-auth-card { padding: 16px 20px !important; margin-bottom: 14px !important; }
-.header {
-  text-align: left !important;
-  padding: clamp(18px, 2vw, 28px) !important;
-  background: linear-gradient(115deg, rgba(14, 31, 48, .99), rgba(9, 17, 29, .99) 58%, rgba(10, 28, 42, .99)) !important;
-  border-color: rgba(72, 199, 230, .29) !important;
-  box-shadow: 0 14px 38px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.04) !important;
-}
-.header:after {
-  content: "MARKET TERMINAL  /  LIVE MONITOR";
-  display: block;
-  margin-top: 16px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(128, 169, 207, .15);
-  color: #66839f;
-  font: 600 10px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  letter-spacing: .16em;
-}
-.header > div[style*="max-width:420px"] {
-  max-width: 100% !important;
-  margin: 0 0 20px !important;
-  display: grid;
-  grid-template-columns: minmax(150px, 220px) minmax(180px, 300px);
-  gap: 8px 14px;
-  align-items: center;
-}
-.header > div[style*="max-width:420px"] .label { margin: 0 !important; }
-.header select, select, input, textarea {
-  background-color: #0a1421 !important;
-  color: #e6f1fb !important;
-  border: 1px solid rgba(119, 159, 199, .28) !important;
-  border-radius: 8px !important;
-  min-height: 39px;
-}
-.header select:focus, select:focus, input:focus, textarea:focus {
-  border-color: rgba(84,217,243,.8) !important;
-  box-shadow: 0 0 0 3px rgba(84,217,243,.10) !important;
-  outline: none !important;
-}
-.bias-line {
-  font-size: clamp(22px, 2.3vw, 32px) !important;
-  font-weight: 800 !important;
-  letter-spacing: -.025em !important;
-  margin: 0 0 6px !important;
-}
-.overall { font-size: 12px !important; letter-spacing: .075em; text-transform: uppercase; }
-.signal-time { color: #8da3bc !important; font-size: 11px !important; }
-.section-title {
-  font-size: 13px !important;
-  text-transform: uppercase;
-  letter-spacing: .105em !important;
-  color: #a9bfd4 !important;
-  margin-bottom: 15px !important;
-}
-.label, .status-title, .demo-position-stat-label, .accuracy-mini-label {
-  color: #8098b1 !important;
-  font-size: 10px !important;
-  font-weight: 700 !important;
-  letter-spacing: .09em !important;
-  text-transform: uppercase !important;
-}
-.status-box, .stat, .mtf-cell, .mtf-guidance-card, .demo-account-stat, .demo-robot-stat, .demo-position-stat, .accuracy-mini {
-  background: linear-gradient(145deg, rgba(11, 21, 34, .98), rgba(8, 15, 25, .98)) !important;
-  border: 1px solid rgba(111, 153, 196, .16) !important;
-  border-radius: 11px !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.018) !important;
-}
-.status-box { padding: 16px !important; }
-.stat { padding: 16px !important; min-width: 0; }
-.value, .price, .entry-distance-value, .demo-position-stat-value, .accuracy-mini-value {
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -.025em;
-}
-.value { font-size: clamp(19px, 1.7vw, 25px) !important; }
-.price { font-size: clamp(24px, 2.4vw, 34px) !important; font-weight: 800 !important; }
-.grid { gap: 12px !important; }
-.status-row { gap: 16px !important; }
-.trend-mini-panel {
-  padding: 12px 13px !important;
-  border: 1px solid rgba(91, 151, 190, .18) !important;
-  border-radius: 10px !important;
-  background: rgba(5, 13, 23, .65) !important;
-}
-.trend-mini-heading { color: #9db4ca !important; font-size: 10px !important; letter-spacing: .07em; }
-.trend-mini-levels strong { color: #e2edf8 !important; font-size: 12px !important; }
-.trading-mode-card { padding: 18px !important; }
-.demo-robot-card { border-color: rgba(84,217,243,.25) !important; }
-.demo-robot-top, .demo-position-header, .accuracy-header {
-  border-bottom: 1px solid rgba(111,153,196,.15);
-  padding-bottom: 12px;
-}
-.demo-robot-badge, .trading-mode-status, .trend-mini-badge, .live-indicator, .supabase-connected-badge {
-  border-radius: 999px !important;
-  letter-spacing: .06em;
-}
-button {
-  border-radius: 8px !important;
-  border: 1px solid rgba(123, 163, 201, .25) !important;
-  background: linear-gradient(180deg, #17263a, #101c2b) !important;
-  color: #e7f1fb !important;
-  font-weight: 650 !important;
-  transition: border-color .16s ease, background .16s ease, box-shadow .16s ease, transform .16s ease !important;
-}
-button.primary, .primary {
-  background: linear-gradient(135deg, #087f9b, #0d607e) !important;
-  border-color: rgba(84,217,243,.52) !important;
-  box-shadow: 0 5px 16px rgba(0, 132, 168, .16) !important;
-}
-button:disabled { opacity: .48; cursor: not-allowed; }
-button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
-  outline: 2px solid var(--pt-cyan) !important; outline-offset: 2px;
-}
-.buy, .bullish, .demo-position-side.long { color: #35d49a !important; }
-.sell, .bearish, .demo-position-side.short { color: #ff647c !important; }
-#multiTimeframePanel .mtf-cell { padding: 12px 8px !important; }
-#chartTitle { margin-bottom: 12px !important; }
-.chart-container { border: 1px solid rgba(111,153,196,.17); background: #080f19; }
-#supabaseAuthTitle { margin-top: 0; color: #dbe9f7; font-size: 14px; letter-spacing: .02em; }
-.supabase-auth-note { color: #8da3bc !important; font-size: 12px !important; max-width: 1000px; }
-#supabaseAuthStatus { color: #a9bfd4; font-size: 12px; margin-top: 10px; }
-@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  .card, .supabase-auth-card, .trading-mode-card { transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease !important; }
-  .card:hover, .supabase-auth-card:hover, .trading-mode-card:hover {
-    border-color: rgba(84,217,243,.34) !important;
-    box-shadow: 0 14px 36px rgba(0,0,0,.26), 0 0 0 1px rgba(84,217,243,.035), inset 0 1px 0 rgba(255,255,255,.035) !important;
-  }
-  button:hover:not(:disabled) { border-color: rgba(84,217,243,.55) !important; box-shadow: 0 0 0 3px rgba(84,217,243,.06); }
-}
-@media (max-width: 900px) {
-  .container { padding: 12px !important; }
-  .status-row { grid-template-columns: minmax(0,1fr) minmax(0,1fr) !important; }
-  .trend-mini-panel { grid-column: 1 / -1; }
-  .demo-robot-grid { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
-}
-@media (max-width: 600px) {
-  .container { padding: 8px !important; }
-  .card { padding: 13px !important; border-radius: 11px !important; }
-  .header { padding: 15px !important; }
-  .header > div[style*="max-width:420px"] { grid-template-columns: 1fr !important; gap: 6px; }
-  .status-row { grid-template-columns: minmax(0,1fr) !important; gap: 11px !important; }
-  .grid { grid-template-columns: repeat(2,minmax(0,1fr)) !important; gap: 8px !important; }
-  .stat { padding: 12px !important; }
-  .value { font-size: 18px !important; overflow-wrap: anywhere; }
-  .price { font-size: 25px !important; }
-  .demo-robot-grid, .demo-position-grid, .supabase-auth-grid, .supabase-auth-actions { grid-template-columns: minmax(0,1fr) !important; }
-  .demo-robot-controls, .demo-position-actions, .trading-mode-controls { gap: 8px !important; }
-  button { min-height: 42px; }
-  select, input, textarea { font-size: 16px !important; max-width: 100%; }
-  .header:after { font-size: 9px; letter-spacing: .11em; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .card, .supabase-auth-card, .trading-mode-card, button { transition: none !important; }
-}
+/* === Professional BTC terminal skin: presentation-only overrides === */
+:root{color-scheme:dark;--term-bg:#020914;--term-panel:rgba(4,15,30,.94);--term-panel2:#061326;--term-border:#164a6b;--term-cyan:#28baff;--term-green:#00ef83;--term-red:#ff4c5e;--term-muted:#9db1c8;--term-glow:rgba(0,196,255,.13)}
+html{background:var(--term-bg);scroll-behavior:smooth}
+body{min-height:100vh;background:radial-gradient(ellipse at 50% -20%,rgba(0,129,190,.16),transparent 48%),linear-gradient(180deg,#020711 0%,#04101f 55%,#020813 100%);color:#e8f3ff;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:.05px}
+.container{width:min(100%,1720px);max-width:1720px;margin:0 auto;padding:14px;}
+.card,.trading-mode-card,.supabase-auth-card,.accuracy-card,.stat,.status-box,.trend-mini-panel,.accuracy-mini,.mtf-grid>div,.demo-account-controls,.demo-robot-scanning,.demo-robot-entry-found{background:linear-gradient(145deg,rgba(5,20,39,.97),rgba(2,11,24,.98));border:1px solid rgba(48,133,177,.58);border-radius:13px;box-shadow:0 8px 24px rgba(0,0,0,.24),inset 0 1px 0 rgba(154,224,255,.035);position:relative;}
+.card,.trading-mode-card,.supabase-auth-card{padding:16px;margin-bottom:12px;overflow:hidden;}
+.card:after,.trading-mode-card:after,.supabase-auth-card:after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;background:radial-gradient(230px circle at var(--mouse-x,50%) var(--mouse-y,0%),rgba(0,198,255,.10),transparent 70%);opacity:0;transition:opacity .2s ease}
+.card:hover:after,.trading-mode-card:hover:after,.supabase-auth-card:hover:after{opacity:1}
+.header{padding:18px 20px;text-align:left;background:linear-gradient(110deg,#041326,#061b2c 55%,#03101e);border-color:#1a638b;box-shadow:0 0 24px rgba(0,169,255,.08),inset 0 -2px 0 rgba(0,232,155,.22)}
+.header:before{content:"BTC / USDT  •  BINGX PERPETUAL FUTURES";display:block;color:#c9eaff;font-size:clamp(17px,2.2vw,27px);font-weight:850;letter-spacing:.6px;margin:0 0 12px;padding:0 0 12px;border-bottom:1px solid rgba(54,138,182,.35)}
+.section-title,.accuracy-header,.trading-mode-title{color:#e7f5ff;text-shadow:0 0 16px rgba(37,173,255,.12);letter-spacing:.1px}
+.section-title{font-size:clamp(16px,1.5vw,20px);font-weight:800}
+.label,.status-title,.accuracy-mini-label{color:#a8bdd2;letter-spacing:.35px}
+.value,.price,.status-value,.entry-distance-value,.entry-distance-percent,.entry-distance-proximity{font-variant-numeric:tabular-nums}
+.price,.value{color:#eff8ff}
+.price{font-size:clamp(24px,3vw,34px);text-shadow:0 0 18px rgba(0,202,255,.12)}
+.buy,.bullish,.positive{color:var(--term-green)!important}.sell,.bearish,.negative{color:var(--term-red)!important}.neutral,.neutral-text{color:#ffd45b!important}
+.grid{gap:10px}.stat{padding:13px;transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease}.stat:hover{border-color:#35bfff;box-shadow:0 0 18px rgba(0,176,255,.09);transform:translateY(-1px)}
+.status-box{padding:15px}.status-row{gap:14px}.trend-mini-panel{background:#020b18;border-color:#1c4c6c}
+input,select,textarea{background:#020b18!important;color:#edf7ff!important;border:1px solid #245273!important;border-radius:8px!important;outline:none;transition:border-color .16s ease,box-shadow .16s ease}
+input:focus,select:focus,textarea:focus{border-color:#32bdff!important;box-shadow:0 0 0 3px rgba(32,179,255,.12)!important}
+button{background:linear-gradient(135deg,#0878c9,#0752a0);border:1px solid #298ed0;color:#fff;border-radius:8px;transition:transform .16s ease,filter .16s ease,box-shadow .16s ease;box-shadow:0 3px 12px rgba(0,91,171,.15)}
+button:hover{opacity:1;filter:brightness(1.12);box-shadow:0 0 16px rgba(0,176,255,.18);transform:translateY(-1px)}
+button:active{transform:translateY(0) scale(.99)}
+.trading-mode-card{border-color:#235878;background:linear-gradient(145deg,#07182a,#030d1b)}
+.supabase-auth-card{border-color:#235878;background:linear-gradient(145deg,#07182a,#030d1b)}
+.supabase-auth-actions button.primary{background:linear-gradient(135deg,#087e52,#065b42);border-color:#00b978}
+.trading-mode-status{color:var(--term-green)}
+.live-dot{background:var(--term-green);box-shadow:0 0 12px rgba(0,239,131,.45)}
+.demo-robot-scanning{border-color:rgba(0,239,131,.48);background:linear-gradient(100deg,rgba(0,239,131,.08),rgba(0,102,154,.08))}
+.demo-robot-scanning-icon{border-color:rgba(0,239,131,.72);box-shadow:0 0 20px rgba(0,239,131,.15),inset 0 0 16px rgba(0,239,131,.12)}
+.accuracy-percent{color:var(--term-green)}
+#exchangeFrameContainer:fullscreen{background:#020914}
+iframe{background:#020914}
+/* small live top-edge accent without changing the content or data feed */
+.header{border-top-color:rgba(0,239,131,.55)}
+.header:after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,#00ef83,#22baff,transparent);background-size:200% 100%;animation:terminalEdgeSweep 6s linear infinite;pointer-events:none}
+@keyframes terminalEdgeSweep{0%{background-position:100% 0}100%{background-position:-100% 0}}
+@media(min-width:1100px){.container{padding:18px}.header{padding:22px 24px}.card{padding:18px}}
+@media(max-width:700px){.container{padding:8px}.card,.trading-mode-card,.supabase-auth-card{padding:12px;border-radius:10px;margin-bottom:9px}.header{padding:14px 12px}.header:before{font-size:17px;line-height:1.3;padding-bottom:10px}.status-row{grid-template-columns:minmax(0,1fr)}.trend-mini-panel{grid-column:auto}.grid,.simulator{grid-template-columns:1fr}.accuracy-main{grid-template-columns:1fr}.accuracy-stats{grid-template-columns:repeat(3,minmax(0,1fr))}.accuracy-mini{padding:9px}.accuracy-mini-value{font-size:15px}.section-title{font-size:16px}.value{font-size:20px}.price{font-size:25px}.card:hover{transform:none}.supabase-connected-badge{max-width:calc(100% - 20px)}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
 
 </style>
 </head>
 
 <body>
-
-<script id="professionalTerminalMouseEffects">
-(function(){
-  'use strict';
-  try {
-    if (window.matchMedia('(hover: hover) and (pointer: fine)').matches && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      var halo=document.createElement('div'); halo.id='ptMouseHalo'; halo.setAttribute('aria-hidden','true'); document.body.appendChild(halo);
-      var scheduled=false, mx=0, my=0;
-      document.addEventListener('mousemove',function(e){mx=e.clientX;my=e.clientY;if(!scheduled){scheduled=true;requestAnimationFrame(function(){halo.style.left=mx+'px';halo.style.top=my+'px';halo.style.opacity='1';scheduled=false;});}},{passive:true});
-      document.addEventListener('mouseleave',function(){halo.style.opacity='0';});
-      document.addEventListener('mouseenter',function(){halo.style.opacity='1';});
-      document.addEventListener('click',function(e){var target=e.target;if(!target||!target.closest)return;var el=target.closest('button');if(!el)return;var rect=el.getBoundingClientRect();var ripple=document.createElement('span');ripple.className='pt-ripple';ripple.style.left=(e.clientX-rect.left)+'px';ripple.style.top=(e.clientY-rect.top)+'px';if(getComputedStyle(el).position==='static')el.style.position='relative';el.style.overflow='hidden';el.appendChild(ripple);window.setTimeout(function(){if(ripple.parentNode)ripple.parentNode.removeChild(ripple);},650);},{passive:true});
-    }
-  } catch (_) { /* Visual effects must never interfere with dashboard operation. */ }
-})();
-</script>
-
 
 <div class="container">
 
@@ -1246,6 +919,17 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
             <div id="btcDirectionAnalysisTitle" style="font-weight:700;margin-bottom:8px;">Waiting for BTC data…</div>
             <div id="btcDirectionAnalysisLevel" style="font-size:24px;font-weight:800;margin-bottom:8px;">—</div>
             <div id="btcDirectionAnalysisReason" class="btc-timeframe-note">Select a timeframe and direction to calculate the nearest swing level.</div>
+        </div>
+
+        <div class="card" id="fractalObservationCard" style="display:none;margin-bottom:16px;border:1px solid #64748b;">
+            <div class="section-title">Fractal Drift Continuity · Observation Test</div>
+            <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:8px;">
+              <span id="fractalTrendBadge" style="display:inline-block;padding:6px 10px;border-radius:8px;background:#334155;font-weight:800;">CALCULATING</span>
+              <span id="fractalPressureValue" style="font-weight:700;">Pressure: —</span>
+              <span id="fractalDimensionValue" style="font-weight:700;">Dimension: —</span>
+            </div>
+            <div id="fractalConfirmValue" style="font-weight:700;margin-bottom:6px;">Waiting for closed candles…</div>
+            <div id="fractalObservationDetails" class="btc-timeframe-note">Observation only. This test does not change entries, paper trades, or live orders.</div>
         </div>
 
         <div id="biasLine" class="bias-line waiting">
@@ -1553,14 +1237,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
                 <span><strong>Auto Pre-TP1 Protection</strong><small>When enabled, move the stop to estimated fee coverage plus a small buffer after the trade has enough open profit. TP1 and the post-TP1 breakeven rule remain unchanged.</small></span>
             </label>
             <div class="demo-limit-note">Disabling this removes the automatic fee-covering stop before TP1. The original stop loss remains in place until TP1 or that stop is reached.</div>
-        </div>
-
-        <div class="demo-limit-controls" id="demoRobotEarlyReversalControls">
-            <label class="demo-limit-toggle" for="demoRobotEarlyReversal">
-                <input id="demoRobotEarlyReversal" type="checkbox" checked>
-                <span><strong>Early Reversal Protection · PAPER TEST</strong><small>After two consecutive closed 5-minute candles oppose the open position and the latest close breaks the prior three-candle structure, close the paper position and resume scanning. Does not reverse automatically.</small></span>
-            </label>
-            <div class="demo-limit-note">The original stop loss remains active. This is a paper-only exit rule and does not send or manage live exchange orders.</div>
         </div>
 
         <div class="demo-limit-controls" id="demoRobotForceLimitControls">
@@ -4736,10 +4412,6 @@ setInterval(refreshMultiTimeframePanel, 60000);
         forceLimitMode: false,
         autoEntry: true,
         autoPreTp1Protection: true,
-        earlyReversalProtection: true,
-        positionReversalCandles: [],
-        lastEarlyReversalCandleTime: 0,
-        lastPositionReversalFetch: 0,
         autoEntryRescanRequested: false,
         forceLimitRequest: null,
         trend: null,
@@ -4757,7 +4429,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
         sidewaysPaused: false
     };
 
-    const STORAGE_KEY = 'goldEciDemoRobotState_earlyReversalFresh_v1';
+    const STORAGE_KEY = 'goldEciDemoRobotState_v2';
     const MAX_SAVED_CLOSED_TRADES = 1000;
     const MAX_SAVED_LOG_EVENTS = 100;
     const CONFIRM_INTERVAL_MINUTES = 1;
@@ -4826,7 +4498,6 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 forceLimitMode: Boolean(state.forceLimitMode),
                 autoEntry: Boolean(state.autoEntry),
                 autoPreTp1Protection: Boolean(state.autoPreTp1Protection),
-                earlyReversalProtection: Boolean(state.earlyReversalProtection),
                 forceLimitRequest: state.forceLimitRequest,
                 position: state.position,
                 closedTrades: state.closedTrades.slice(-MAX_SAVED_CLOSED_TRADES),
@@ -4868,7 +4539,6 @@ setInterval(refreshMultiTimeframePanel, 60000);
             // searching after a close. Preserve a user's explicit v4 choice.
             state.autoEntry = saved.version >= 4 ? Boolean(saved.autoEntry) : true;
             state.autoPreTp1Protection = saved.autoPreTp1Protection === undefined ? true : Boolean(saved.autoPreTp1Protection);
-            state.earlyReversalProtection = saved.earlyReversalProtection === undefined ? true : Boolean(saved.earlyReversalProtection);
             state.forceLimitRequest = saved.forceLimitRequest && typeof saved.forceLimitRequest === 'object'
                 ? { ...saved.forceLimitRequest, requestedAt: Number(saved.forceLimitRequest.requestedAt) || Date.now(), minCandleTime: Number.isFinite(Number(saved.forceLimitRequest.minCandleTime)) ? Number(saved.forceLimitRequest.minCandleTime) : null }
                 : null;
@@ -5120,13 +4790,11 @@ setInterval(refreshMultiTimeframePanel, 60000);
         const forceModeToggle = $('demoRobotForceLimitMode');
         const autoEntryToggle = $('demoRobotAutoEntry');
         const preTp1ProtectionToggle = $('demoRobotAutoPreTp1Protection');
-        const earlyReversalToggle = $('demoRobotEarlyReversal');
         const forceRefreshButton = $('demoRobotForceLimitRefresh');
         if (modeToggle && modeToggle.checked !== state.limitMode) modeToggle.checked = state.limitMode;
         if (forceModeToggle && forceModeToggle.checked !== state.forceLimitMode) forceModeToggle.checked = state.forceLimitMode;
         if (autoEntryToggle && autoEntryToggle.checked !== state.autoEntry) autoEntryToggle.checked = state.autoEntry;
         if (preTp1ProtectionToggle && preTp1ProtectionToggle.checked !== state.autoPreTp1Protection) preTp1ProtectionToggle.checked = state.autoPreTp1Protection;
-        if (earlyReversalToggle && earlyReversalToggle.checked !== state.earlyReversalProtection) earlyReversalToggle.checked = state.earlyReversalProtection;
         if (forceModeToggle) forceModeToggle.disabled = Boolean(state.position || (state.pending && state.pending.kind !== 'force-limit') || state.limitMode);
         if (forceRefreshButton) forceRefreshButton.disabled = !state.forceLimitMode || !state.enabled || Boolean(state.position);
         if (limitPriceInput && limitPriceInput.value !== state.limitPriceOverride) limitPriceInput.value = state.limitPriceOverride;
@@ -5591,36 +5259,6 @@ setInterval(refreshMultiTimeframePanel, 60000);
         renderUi();
     }
 
-    function checkEarlyReversalExit(markPrice) {
-        const p = state.position;
-        const bars = state.positionReversalCandles;
-        if (!state.earlyReversalProtection || !p || !Array.isArray(bars) || bars.length < 5) return false;
-        const closed = bars.filter(c => c && c[6] !== true && Number.isFinite(Number(c[0])) && Number.isFinite(Number(c[1])) && Number.isFinite(Number(c[2])) && Number.isFinite(Number(c[3])) && Number.isFinite(Number(c[4])));
-        if (closed.length < 5) return false;
-        const last = closed[closed.length - 1];
-        if (Number(last[0]) <= Number(state.lastEarlyReversalCandleTime || 0)) return false;
-        state.lastEarlyReversalCandleTime = Number(last[0]);
-        const prev = closed[closed.length - 2];
-        const prior = closed.slice(-5, -2);
-        if (prior.length !== 3) return false;
-        const twoBearish = Number(prev[4]) < Number(prev[1]) && Number(last[4]) < Number(last[1]);
-        const twoBullish = Number(prev[4]) > Number(prev[1]) && Number(last[4]) > Number(last[1]);
-        const priorLow = Math.min(...prior.map(c => Number(c[3])));
-        const priorHigh = Math.max(...prior.map(c => Number(c[2])));
-        const reversalAgainstLong = p.direction === 'long' && twoBearish && Number(last[4]) < priorLow;
-        const reversalAgainstShort = p.direction === 'short' && twoBullish && Number(last[4]) > priorHigh;
-        if (!reversalAgainstLong && !reversalAgainstShort) return false;
-        const qty = Number.isFinite(Number(p.remainingQuantity)) ? Number(p.remainingQuantity) : Number(p.quantity);
-        const realized = Number(p.realizedPnlUsd) || 0;
-        const floating = (p.direction === 'long' ? Number(markPrice) - Number(p.entry) : Number(p.entry) - Number(markPrice)) * qty;
-        const risk = Math.max(0.01, Number(p.riskUsd) || DEMO_RISK_USD);
-        const outcomeR = (realized + floating) / risk;
-        const reason = `early reversal exit: confirmed opposing 5m candles and structure break`;
-        logEvent(`Early Reversal Protection triggered on closed 5m candle ${new Date(Number(last[0])).toLocaleString()}; closing paper ${p.direction.toUpperCase()} and returning to scan mode.`);
-        closePaperPosition(outcomeR, reason, markPrice);
-        return true;
-    }
-
     function managePaperPosition(markPrice) {
         const p = state.position;
         if (!p || !Number.isFinite(markPrice) || markPrice <= 0) return;
@@ -5642,8 +5280,6 @@ setInterval(refreshMultiTimeframePanel, 60000);
             }
             return;
         }
-
-        if (checkEarlyReversalExit(markPrice)) return;
 
         const tp1Hit = p.direction === 'long' ? markPrice >= p.tp1 : markPrice <= p.tp1;
         if (!p.hitTP1 && tp1Hit) {
@@ -5794,18 +5430,6 @@ setInterval(refreshMultiTimeframePanel, 60000);
                     mark = currentPrice;
                 } else {
                     mark = await fetchPriceForMarket(positionMarket);
-                }
-                // Early reversal protection uses only confirmed, closed 5-minute candles.
-                if (state.earlyReversalProtection && state.position && Date.now() - state.lastPositionReversalFetch >= 20000) {
-                    try {
-                        const all5m = await fetchDemoBars(positionMarket, '5m', 5, 80);
-                        if (state.position && state.position.market === positionMarket) {
-                            state.positionReversalCandles = all5m.filter(c => c[6] !== true);
-                            state.lastPositionReversalFetch = Date.now();
-                        }
-                    } catch (reversalError) {
-                        logEvent(`Early Reversal Protection waiting for validated 5m candles: ${reversalError.message || reversalError}`);
-                    }
                 }
                 managePaperPosition(mark);
 
@@ -6294,19 +5918,6 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 logEvent('Auto Pre-TP1 Protection disabled by user.');
                 setMessage('Auto Pre-TP1 Protection is OFF for the current and future pre-TP1 paper trade management.');
             }
-            savePersistentState();
-            renderUi();
-        });
-    }
-
-    const earlyReversalInput = $('demoRobotEarlyReversal');
-    if (earlyReversalInput) {
-        earlyReversalInput.addEventListener('change', () => {
-            state.earlyReversalProtection = Boolean(earlyReversalInput.checked);
-            logEvent(`Early Reversal Protection ${state.earlyReversalProtection ? 'enabled' : 'disabled'} for paper trades.`);
-            setMessage(state.earlyReversalProtection
-                ? 'Early Reversal Protection ON: a confirmed opposing 5m candle pair plus a structure break can close a paper position early. The original stop remains active.'
-                : 'Early Reversal Protection OFF. Existing stop-loss and take-profit rules remain unchanged.');
             savePersistentState();
             renderUi();
         });
@@ -6884,41 +6495,140 @@ setInterval(refreshMultiTimeframePanel, 60000);
 
 
 <script>
-/* Decorative pointer effects only. No market data, signals, login, or order state is touched. */
-(function initProfessionalPointerFX() {
-  try {
-    const finePointer = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-    const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (!finePointer || reduceMotion) return;
-    const glow = document.createElement('div');
-    glow.id = 'ptMouseGlow';
-    glow.setAttribute('aria-hidden', 'true');
-    const flash = document.createElement('div');
-    flash.id = 'ptClickFlash';
-    flash.setAttribute('aria-hidden', 'true');
-    document.body.append(glow, flash);
-    let queued = false, px = -500, py = -500;
-    document.addEventListener('pointermove', function (event) {
-      px = event.clientX; py = event.clientY;
-      if (!queued) {
-        queued = true;
-        window.requestAnimationFrame(function () {
-          glow.style.transform = `translate3d(${px}px, ${py}px, 0) translate(-50%, -50%)`;
-          glow.classList.add('pt-visible');
-          queued = false;
-        });
+/* Fractal Drift Continuity observation-only port. It intentionally does not feed the order engine. */
+(() => {
+  const byId = id => document.getElementById(id);
+  const cfg = { fractalLength:24, dimensionSmoothing:3, atrLength:14, driftLength:3,
+    driftInfluence:1.50, displacementInfluence:0.30, pressureSmoothing:3,
+    reversalThreshold:0.18, fractalProtection:0.25, useImpulseOverride:true, impulseThreshold:1.20 };
+  let busy = false;
+  const emaSeries = (values, length) => {
+    const out = Array(values.length).fill(NaN), alpha = 2/(length+1);
+    let prev = NaN;
+    for (let i=0;i<values.length;i++) {
+      if (!Number.isFinite(values[i])) continue;
+      prev = Number.isFinite(prev) ? alpha*values[i]+(1-alpha)*prev : values[i];
+      out[i]=prev;
+    }
+    return out;
+  };
+  const highest = (a, from, to) => { let v=-Infinity; for(let j=from;j<=to;j++) v=Math.max(v,a[j]); return v; };
+  const lowest = (a, from, to) => { let v=Infinity; for(let j=from;j<=to;j++) v=Math.min(v,a[j]); return v; };
+  function calculate(bars) {
+    const candles = bars.filter(c=>!c[6]);
+    const n=candles.length, L=cfg.fractalLength, half=L/2;
+    if(n < Math.max(L,cfg.atrLength)+cfg.driftLength+cfg.pressureSmoothing+5) throw Error('Waiting for enough closed candles');
+    const hi=candles.map(c=>c[2]), lo=candles.map(c=>c[3]), cl=candles.map(c=>c[4]), src=candles.map(c=>(c[2]+c[3])/2);
+    const tr=Array(n).fill(NaN), atr=Array(n).fill(NaN);
+    for(let i=0;i<n;i++) tr[i]=i===0?hi[i]-lo[i]:Math.max(hi[i]-lo[i],Math.abs(hi[i]-cl[i-1]),Math.abs(lo[i]-cl[i-1]));
+    let atrPrev=NaN;
+    for(let i=0;i<n;i++) { if(i===cfg.atrLength-1) atrPrev=tr.slice(0,cfg.atrLength).reduce((a,b)=>a+b,0)/cfg.atrLength; else if(i>=cfg.atrLength) atrPrev=(atrPrev*(cfg.atrLength-1)+tr[i])/cfg.atrLength; if(i>=cfg.atrLength-1) atr[i]=atrPrev; }
+    const dim=Array(n).fill(1.5), trend=Array(n).fill(NaN), drift=Array(n).fill(NaN), disp=Array(n).fill(NaN), pressureRaw=Array(n).fill(NaN);
+    for(let i=0;i<n;i++) {
+      if(i>=L-1) {
+        const r1=highest(hi,i-half+1,i)-lowest(lo,i-half+1,i);
+        const r2=highest(hi,i-L+1,i-half)-lowest(lo,i-L+1,i-half);
+        const r3=highest(hi,i-L+1,i)-lowest(lo,i-L+1,i);
+        const n1=r1/half,n2=r2/half,n3=r3/L;
+        if(n1>0&&n2>0&&n3>0) dim[i]=Math.max(1,Math.min(2,(Math.log(n1+n2)-Math.log(n3))/Math.log(2)));
+        else dim[i]=i?dim[i-1]:1.5;
+      } else if(i) dim[i]=dim[i-1];
+      const alpha=Math.max(.01,Math.min(1,Math.exp(-4.6*(dim[i]-1))));
+      trend[i]=i===0?src[i]:alpha*src[i]+(1-alpha)*trend[i-1];
+      if(i>=cfg.driftLength) {
+        const safe=Math.max(Number.isFinite(atr[i])?atr[i]:hi[i]-lo[i],0.00000001);
+        drift[i]=(trend[i]-trend[i-cfg.driftLength])/(safe*cfg.driftLength);
+        disp[i]=Math.max(-2.5,Math.min(2.5,(cl[i]-trend[i])/safe));
+        pressureRaw[i]=drift[i]*cfg.driftInfluence+disp[i]*cfg.displacementInfluence;
       }
-    }, { passive: true });
-    document.addEventListener('pointerleave', function () { glow.classList.remove('pt-visible'); }, { passive: true });
-    document.addEventListener('pointerdown', function (event) {
-      if (event.pointerType !== 'mouse') return;
-      flash.style.left = `${event.clientX}px`;
-      flash.style.top = `${event.clientY}px`;
-      flash.classList.remove('pt-flash');
-      void flash.offsetWidth;
-      flash.classList.add('pt-flash');
-    }, { passive: true });
-  } catch (_) { /* Visual effects must never interfere with dashboard operation. */ }
+    }
+    const pressure=emaSeries(pressureRaw,cfg.pressureSmoothing), stableDim=emaSeries(dim,cfg.dimensionSmoothing);
+    let state=0, longSignal=false, shortSignal=false, lastSignalIndex=-1;
+    const warmup=Math.max(L,cfg.atrLength)+cfg.driftLength+cfg.pressureSmoothing;
+    for(let i=0;i<n;i++) {
+      const ready=i>=warmup && Number.isFinite(atr[i]) && Number.isFinite(pressure[i]);
+      if(!ready) continue;
+      const congestion=Math.max(0,Math.min(1,stableDim[i]-1));
+      const threshold=cfg.reversalThreshold+cfg.fractalProtection*congestion;
+      const bull=pressure[i]>threshold&&cl[i]>trend[i], bear=pressure[i]<-threshold&&cl[i]<trend[i];
+      const safe=Math.max(atr[i],0.00000001);
+      const bullImpulse=cfg.useImpulseOverride&&cl[i]>trend[i]+cfg.impulseThreshold*safe&&cl[i]>hi[i-1];
+      const bearImpulse=cfg.useImpulseOverride&&cl[i]<trend[i]-cfg.impulseThreshold*safe&&cl[i]<lo[i-1];
+      if(state===0) state=pressure[i]>=0?1:-1;
+      else if(state===-1&&(bull||bullImpulse)){state=1;lastSignalIndex=i;}
+      else if(state===1&&(bear||bearImpulse)){state=-1;lastSignalIndex=i;}
+    }
+    const i=n-1, congestion=Math.max(0,Math.min(1,stableDim[i]-1));
+    const threshold=cfg.reversalThreshold+cfg.fractalProtection*congestion;
+    const confirmed=state===1?'BULLISH':state===-1?'BEARISH':'NEUTRAL';
+    return {state:confirmed,pressure:pressure[i],dimension:dim[i],threshold,close:cl[i],trend:trend[i],lastSignalIndex};
+  }
+  async function refresh() {
+    const card=byId('fractalObservationCard');
+    if (!card || typeof selectedMarket==='undefined' || selectedMarket!=='BTC') { if(card) card.style.display='none'; return; }
+    card.style.display='block';
+    if(busy) return; busy=true;
+    try {
+      const tf=(byId('btcSignalTimeframe')?.value||'15m');
+      const mins=({'5m':5,'15m':15,'30m':30,'1h':60,'2h':120,'4h':240})[tf]||15;
+      const raw=await fetchMarketData('BTC',tf,300);
+      const bars=marketBarsToCandles(raw,mins);
+      const result=calculate(bars);
+      const badge=byId('fractalTrendBadge');
+      badge.textContent=result.state;
+      badge.style.background=result.state==='BULLISH'?'#166534':result.state==='BEARISH'?'#6b21a8':'#475569';
+      byId('fractalPressureValue').textContent=`Pressure: ${Number(result.pressure).toFixed(3)} (threshold ±${result.threshold.toFixed(3)})`;
+      byId('fractalDimensionValue').textContent=`Dimension: ${result.dimension.toFixed(3)}`;
+      const direction=(byId('btcTradeDirection')?.value||'short').toUpperCase();
+      const match=(direction==='LONG'&&result.state==='BULLISH')||(direction==='SHORT'&&result.state==='BEARISH');
+      byId('fractalConfirmValue').textContent=`Selected direction ${direction}: ${match?'FRACTAL CONFIRMS':'FRACTAL DOES NOT CONFIRM'}`;
+      byId('fractalConfirmValue').style.color=match?'#22c55e':'#f59e0b';
+      byId('fractalObservationDetails').textContent=`Observation only · ${tf} closed candles · close ${Number(result.close).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})} · trendline ${Number(result.trend).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}. This result is not connected to entry execution.`;
+    } catch(e) {
+      byId('fractalTrendBadge').textContent='WAITING';
+      byId('fractalPressureValue').textContent='Pressure: —';
+      byId('fractalDimensionValue').textContent='Dimension: —';
+      byId('fractalConfirmValue').textContent='Indicator unavailable';
+      byId('fractalObservationDetails').textContent=String(e.message||e)+' · No effect on existing trading logic.';
+    } finally {busy=false;}
+  }
+  window.refreshFractalObservation=refresh;
+  document.addEventListener('DOMContentLoaded',refresh);
+  setInterval(refresh,60000);
+  const market=byId('marketSelect'); if(market) market.addEventListener('change',()=>setTimeout(refresh,250));
+  const tf=byId('btcSignalTimeframe'); if(tf) tf.addEventListener('change',()=>setTimeout(refresh,250));
+  const dir=byId('btcTradeDirection'); if(dir) dir.addEventListener('change',()=>setTimeout(refresh,250));
+  const oldSwitch=window.switchMarket;
+  if(typeof oldSwitch==='function') window.switchMarket=function(v){const r=oldSwitch.apply(this,arguments);setTimeout(refresh,250);return r;};
+})();
+</script>
+
+
+<script>
+/* Decorative mouse-follow lighting only. No trading controls or data are touched. */
+(function(){
+  try {
+    if (window.matchMedia('(hover: hover) and (pointer: fine)').matches && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      let raf = 0, last = null;
+      document.addEventListener('pointermove', function(e) {
+        last = e;
+        if (raf) return;
+        raf = requestAnimationFrame(function(){
+          raf = 0;
+          if (!last) return;
+          const card = last.target && last.target.closest ? last.target.closest('.card,.trading-mode-card,.supabase-auth-card') : null;
+          document.querySelectorAll('.mouse-active').forEach(el => { if (el !== card) el.classList.remove('mouse-active'); });
+          if (card) {
+            const r = card.getBoundingClientRect();
+            card.style.setProperty('--mouse-x', (last.clientX-r.left)+'px');
+            card.style.setProperty('--mouse-y', (last.clientY-r.top)+'px');
+            card.classList.add('mouse-active');
+          }
+        });
+      }, {passive:true});
+      document.addEventListener('pointerleave', function(){document.querySelectorAll('.mouse-active').forEach(el=>el.classList.remove('mouse-active'));}, {passive:true});
+    }
+  } catch (_) { /* visual effect is optional */ }
 })();
 </script>
 
