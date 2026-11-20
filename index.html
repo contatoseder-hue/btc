@@ -842,10 +842,531 @@
 }
 #demoRobotEarlyReversalControls .demo-limit-note { overflow-wrap:anywhere; }
 
+
+
+/* === Professional terminal visual layer: presentation only === */
+:root {
+  color-scheme: dark;
+  --pt-bg: #050b14;
+  --pt-panel: rgba(8, 18, 31, .94);
+  --pt-panel-2: rgba(10, 24, 40, .92);
+  --pt-line: rgba(56, 189, 248, .27);
+  --pt-cyan: #38bdf8;
+  --pt-green: #22e68a;
+  --pt-red: #fb6677;
+  --pt-text: #e6f0ff;
+  --pt-muted: #93a8c2;
+}
+html { background: var(--pt-bg); }
+body {
+  color: var(--pt-text);
+  background:
+    radial-gradient(ellipse at 12% 0%, rgba(0, 143, 180, .13), transparent 34%),
+    radial-gradient(ellipse at 90% 14%, rgba(20, 110, 170, .10), transparent 30%),
+    linear-gradient(180deg, #050b14 0%, #07111e 52%, #050b14 100%);
+  background-attachment: fixed;
+}
+body::before {
+  content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image: linear-gradient(rgba(80, 150, 190, .035) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(80, 150, 190, .035) 1px, transparent 1px);
+  background-size: 36px 36px;
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,.7), transparent 88%);
+}
+.container { position: relative; z-index: 1; }
+.card, .supabase-auth-card, .status-box, .stat, .trend-mini-panel,
+.demo-robot-stat, .demo-robot-log, .mtf-panel, .demo-limit-controls {
+  background-color: var(--pt-panel);
+  border-color: var(--pt-line);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, .18), inset 0 1px 0 rgba(180, 225, 255, .035);
+  transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease, transform .18s ease;
+}
+.card { border-radius: 15px; backdrop-filter: blur(10px); }
+.section-title { color: #eaf6ff; letter-spacing: .015em; }
+.label, .status-title { color: var(--pt-muted); }
+input, select, textarea, button {
+  accent-color: var(--pt-green);
+}
+input, select, textarea {
+  border-color: rgba(75, 150, 190, .38) !important;
+  background-color: rgba(3, 11, 21, .88) !important;
+  color: var(--pt-text) !important;
+}
+button {
+  transition: transform .14s ease, filter .14s ease, box-shadow .14s ease;
+}
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--pt-cyan); outline-offset: 2px;
+}
+.buy, .bullish, .demo-position-side.long { color: var(--pt-green); }
+.sell, .bearish, .demo-position-side.short { color: var(--pt-red); }
+#ptMouseGlow {
+  position: fixed; z-index: 9999; left: 0; top: 0; width: 250px; height: 250px;
+  border-radius: 50%; pointer-events: none; opacity: 0;
+  transform: translate3d(-50%, -50%, 0);
+  background: radial-gradient(circle, rgba(56, 189, 248, .10) 0%, rgba(56, 189, 248, .045) 28%, transparent 70%);
+  transition: opacity .2s ease; will-change: transform;
+}
+#ptMouseGlow.pt-visible { opacity: 1; }
+#ptClickFlash {
+  position: fixed; z-index: 9998; width: 10px; height: 10px; border-radius: 50%;
+  pointer-events: none; border: 1px solid rgba(56, 189, 248, .75);
+  transform: translate(-50%, -50%) scale(.25); opacity: 0;
+}
+#ptClickFlash.pt-flash { animation: ptClickPulse .42s ease-out forwards; }
+@keyframes ptClickPulse {
+  0% { opacity: .85; transform: translate(-50%, -50%) scale(.25); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(7); }
+}
+@media (hover: hover) and (pointer: fine) {
+  .card:hover, .supabase-auth-card:hover {
+    border-color: rgba(56, 189, 248, .43);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .22), 0 0 0 1px rgba(56, 189, 248, .045), inset 0 1px 0 rgba(180, 225, 255, .05);
+  }
+  button:hover:not(:disabled) { filter: brightness(1.08); }
+  button:active:not(:disabled) { transform: translateY(1px) scale(.99); }
+}
+@media (max-width: 700px) {
+  body { background-attachment: scroll; }
+  body::before { background-size: 28px 28px; }
+  .card, .supabase-auth-card { backdrop-filter: none; }
+  #ptMouseGlow, #ptClickFlash { display: none !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+  #ptMouseGlow, #ptClickFlash { display: none !important; }
+}
+
 </style>
+<style id="professionalTerminalVisualLayer">
+
+/* === Professional terminal visual layer: presentation only === */
+:root{color-scheme:dark;--pt-bg:#070b12;--pt-panel:#0e1623;--pt-panel2:#111d2d;--pt-border:rgba(116,160,205,.20);--pt-cyan:#45d7f5;--pt-muted:#8da3bc;--pt-green:#35d49a;--pt-red:#ff647c;--pt-glow:rgba(55,205,245,.12)}
+html{background:var(--pt-bg);scroll-behavior:smooth}
+body{background:radial-gradient(ellipse at 50% -15%,rgba(24,91,128,.22),transparent 52%),var(--pt-bg)!important;color:#e7f0fb!important;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;letter-spacing:.01em}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.14;background-image:linear-gradient(rgba(103,151,190,.09) 1px,transparent 1px),linear-gradient(90deg,rgba(103,151,190,.09) 1px,transparent 1px);background-size:36px 36px;mask-image:linear-gradient(to bottom,black,transparent 85%)}
+.container{position:relative;z-index:1;max-width:1440px!important;padding:clamp(12px,2vw,28px)!important}
+.card,.supabase-auth-card,.panel,.section,.trade-card{background:linear-gradient(145deg,rgba(17,29,45,.97),rgba(10,17,28,.98))!important;border:1px solid var(--pt-border)!important;border-radius:16px!important;box-shadow:0 12px 32px rgba(0,0,0,.20),inset 0 1px rgba(255,255,255,.025)!important;transition:border-color .22s ease,box-shadow .22s ease,transform .22s ease}
+.card:hover,.supabase-auth-card:hover{border-color:rgba(69,215,245,.35)!important;box-shadow:0 14px 38px rgba(0,0,0,.25),0 0 24px rgba(69,215,245,.045)!important}
+.header{position:relative;overflow:hidden;background:linear-gradient(135deg,rgba(16,34,52,.98),rgba(9,17,29,.98))!important;border-color:rgba(69,215,245,.26)!important}
+.header:after{content:"";position:absolute;top:0;left:8%;right:8%;height:1px;background:linear-gradient(90deg,transparent,var(--pt-cyan),transparent);opacity:.65;pointer-events:none}
+h1,h2,h3,.section-title{letter-spacing:.025em}
+.label,.btc-timeframe-note,.supabase-auth-note{color:var(--pt-muted)!important}
+button,select,input,textarea{font:inherit;transition:background-color .18s ease,border-color .18s ease,box-shadow .18s ease,transform .18s ease}
+button{border:1px solid rgba(90,173,211,.32)!important;border-radius:9px!important;box-shadow:0 3px 10px rgba(0,0,0,.16)}
+button:hover{border-color:rgba(69,215,245,.72)!important;box-shadow:0 0 0 3px rgba(69,215,245,.09),0 5px 16px rgba(0,0,0,.2)!important;transform:translateY(-1px)}
+button:active{transform:translateY(0) scale(.985)}
+select,input,textarea{background-color:#091321!important;color:#e7f0fb!important;border-color:rgba(116,160,205,.30)!important;border-radius:9px!important;max-width:100%}
+select:focus,input:focus,textarea:focus{outline:none!important;border-color:var(--pt-cyan)!important;box-shadow:0 0 0 3px rgba(69,215,245,.11)!important}
+.bias-line,.overall,.signal-time{border-radius:10px}
+#supabaseAuthStatus,[role="status"]{overflow-wrap:anywhere}
+/* Cursor halo is decorative only and never intercepts clicks. */
+#ptMouseHalo{position:fixed;left:0;top:0;width:260px;height:260px;border-radius:50%;pointer-events:none;z-index:9999;opacity:0;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(52,194,238,.10) 0%,rgba(52,194,238,.045) 34%,transparent 70%);mix-blend-mode:screen;transition:opacity .2s ease;will-change:left,top}
+.pt-ripple{position:absolute;border-radius:50%;pointer-events:none;width:10px;height:10px;background:rgba(69,215,245,.25);transform:translate(-50%,-50%) scale(0);animation:ptRipple .55s ease-out forwards}
+@keyframes ptRipple{to{transform:translate(-50%,-50%) scale(15);opacity:0}}
+@media(hover:none),(pointer:coarse){#ptMouseHalo{display:none}.card:hover,.supabase-auth-card:hover{transform:none!important}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}#ptMouseHalo{display:none}}
+@media(max-width:700px){.container{padding:10px!important}.card,.supabase-auth-card{border-radius:12px!important}.header{padding:14px!important}button{min-height:40px}select,input,textarea{font-size:16px!important}.supabase-auth-grid,.supabase-auth-actions{grid-template-columns:minmax(0,1fr)!important;display:grid;gap:9px}}
+
+
+
+/* === Refined trading-terminal layout, visual-only overrides === */
+:root {
+  --pt-bg: #070b12;
+  --pt-panel: #0b1320;
+  --pt-panel2: #101c2b;
+  --pt-border: rgba(111, 153, 196, .20);
+  --pt-cyan: #54d9f3;
+  --pt-muted: #8da3bc;
+  --pt-green: #35d49a;
+  --pt-red: #ff647c;
+  --pt-glow: rgba(55,205,245,.12);
+}
+* { box-sizing: border-box; }
+body {
+  background:
+    radial-gradient(ellipse at 50% -12%, rgba(26, 107, 151, .22), transparent 47%),
+    linear-gradient(180deg, #070b12 0%, #080e17 60%, #060a10 100%) !important;
+  color: #e5edf7 !important;
+  font-size: 13px;
+  line-height: 1.48;
+}
+body:before {
+  opacity: .19 !important;
+  background-size: 32px 32px !important;
+  mask-image: linear-gradient(to bottom, #000 0%, transparent 78%) !important;
+}
+.container {
+  width: min(100%, 1580px) !important;
+  max-width: 1580px !important;
+  padding: 22px clamp(12px, 2.1vw, 32px) 36px !important;
+}
+.card, .supabase-auth-card, .trading-mode-card, .demo-position-card {
+  background: linear-gradient(145deg, rgba(15, 25, 39, .98), rgba(9, 16, 27, .98)) !important;
+  border: 1px solid rgba(120, 157, 197, .19) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,.20), inset 0 1px 0 rgba(255,255,255,.025) !important;
+}
+.card { padding: clamp(15px, 1.5vw, 23px) !important; margin-bottom: 14px !important; }
+.supabase-auth-card { padding: 16px 20px !important; margin-bottom: 14px !important; }
+.header {
+  text-align: left !important;
+  padding: clamp(18px, 2vw, 28px) !important;
+  background: linear-gradient(115deg, rgba(14, 31, 48, .99), rgba(9, 17, 29, .99) 58%, rgba(10, 28, 42, .99)) !important;
+  border-color: rgba(72, 199, 230, .29) !important;
+  box-shadow: 0 14px 38px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+.header:after {
+  content: "MARKET TERMINAL  /  LIVE MONITOR";
+  display: block;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(128, 169, 207, .15);
+  color: #66839f;
+  font: 600 10px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: .16em;
+}
+.header > div[style*="max-width:420px"] {
+  max-width: 100% !important;
+  margin: 0 0 20px !important;
+  display: grid;
+  grid-template-columns: minmax(150px, 220px) minmax(180px, 300px);
+  gap: 8px 14px;
+  align-items: center;
+}
+.header > div[style*="max-width:420px"] .label { margin: 0 !important; }
+.header select, select, input, textarea {
+  background-color: #0a1421 !important;
+  color: #e6f1fb !important;
+  border: 1px solid rgba(119, 159, 199, .28) !important;
+  border-radius: 8px !important;
+  min-height: 39px;
+}
+.header select:focus, select:focus, input:focus, textarea:focus {
+  border-color: rgba(84,217,243,.8) !important;
+  box-shadow: 0 0 0 3px rgba(84,217,243,.10) !important;
+  outline: none !important;
+}
+.bias-line {
+  font-size: clamp(22px, 2.3vw, 32px) !important;
+  font-weight: 800 !important;
+  letter-spacing: -.025em !important;
+  margin: 0 0 6px !important;
+}
+.overall { font-size: 12px !important; letter-spacing: .075em; text-transform: uppercase; }
+.signal-time { color: #8da3bc !important; font-size: 11px !important; }
+.section-title {
+  font-size: 13px !important;
+  text-transform: uppercase;
+  letter-spacing: .105em !important;
+  color: #a9bfd4 !important;
+  margin-bottom: 15px !important;
+}
+.label, .status-title, .demo-position-stat-label, .accuracy-mini-label {
+  color: #8098b1 !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: .09em !important;
+  text-transform: uppercase !important;
+}
+.status-box, .stat, .mtf-cell, .mtf-guidance-card, .demo-account-stat, .demo-robot-stat, .demo-position-stat, .accuracy-mini {
+  background: linear-gradient(145deg, rgba(11, 21, 34, .98), rgba(8, 15, 25, .98)) !important;
+  border: 1px solid rgba(111, 153, 196, .16) !important;
+  border-radius: 11px !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.018) !important;
+}
+.status-box { padding: 16px !important; }
+.stat { padding: 16px !important; min-width: 0; }
+.value, .price, .entry-distance-value, .demo-position-stat-value, .accuracy-mini-value {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.025em;
+}
+.value { font-size: clamp(19px, 1.7vw, 25px) !important; }
+.price { font-size: clamp(24px, 2.4vw, 34px) !important; font-weight: 800 !important; }
+.grid { gap: 12px !important; }
+.status-row { gap: 16px !important; }
+.trend-mini-panel {
+  padding: 12px 13px !important;
+  border: 1px solid rgba(91, 151, 190, .18) !important;
+  border-radius: 10px !important;
+  background: rgba(5, 13, 23, .65) !important;
+}
+.trend-mini-heading { color: #9db4ca !important; font-size: 10px !important; letter-spacing: .07em; }
+.trend-mini-levels strong { color: #e2edf8 !important; font-size: 12px !important; }
+.trading-mode-card { padding: 18px !important; }
+.demo-robot-card { border-color: rgba(84,217,243,.25) !important; }
+.demo-robot-top, .demo-position-header, .accuracy-header {
+  border-bottom: 1px solid rgba(111,153,196,.15);
+  padding-bottom: 12px;
+}
+.demo-robot-badge, .trading-mode-status, .trend-mini-badge, .live-indicator, .supabase-connected-badge {
+  border-radius: 999px !important;
+  letter-spacing: .06em;
+}
+button {
+  border-radius: 8px !important;
+  border: 1px solid rgba(123, 163, 201, .25) !important;
+  background: linear-gradient(180deg, #17263a, #101c2b) !important;
+  color: #e7f1fb !important;
+  font-weight: 650 !important;
+  transition: border-color .16s ease, background .16s ease, box-shadow .16s ease, transform .16s ease !important;
+}
+button.primary, .primary {
+  background: linear-gradient(135deg, #087f9b, #0d607e) !important;
+  border-color: rgba(84,217,243,.52) !important;
+  box-shadow: 0 5px 16px rgba(0, 132, 168, .16) !important;
+}
+button:disabled { opacity: .48; cursor: not-allowed; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--pt-cyan) !important; outline-offset: 2px;
+}
+.buy, .bullish, .demo-position-side.long { color: #35d49a !important; }
+.sell, .bearish, .demo-position-side.short { color: #ff647c !important; }
+#multiTimeframePanel .mtf-cell { padding: 12px 8px !important; }
+#chartTitle { margin-bottom: 12px !important; }
+.chart-container { border: 1px solid rgba(111,153,196,.17); background: #080f19; }
+#supabaseAuthTitle { margin-top: 0; color: #dbe9f7; font-size: 14px; letter-spacing: .02em; }
+.supabase-auth-note { color: #8da3bc !important; font-size: 12px !important; max-width: 1000px; }
+#supabaseAuthStatus { color: #a9bfd4; font-size: 12px; margin-top: 10px; }
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .card, .supabase-auth-card, .trading-mode-card { transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease !important; }
+  .card:hover, .supabase-auth-card:hover, .trading-mode-card:hover {
+    border-color: rgba(84,217,243,.34) !important;
+    box-shadow: 0 14px 36px rgba(0,0,0,.26), 0 0 0 1px rgba(84,217,243,.035), inset 0 1px 0 rgba(255,255,255,.035) !important;
+  }
+  button:hover:not(:disabled) { border-color: rgba(84,217,243,.55) !important; box-shadow: 0 0 0 3px rgba(84,217,243,.06); }
+}
+@media (max-width: 900px) {
+  .container { padding: 12px !important; }
+  .status-row { grid-template-columns: minmax(0,1fr) minmax(0,1fr) !important; }
+  .trend-mini-panel { grid-column: 1 / -1; }
+  .demo-robot-grid { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
+}
+@media (max-width: 600px) {
+  .container { padding: 8px !important; }
+  .card { padding: 13px !important; border-radius: 11px !important; }
+  .header { padding: 15px !important; }
+  .header > div[style*="max-width:420px"] { grid-template-columns: 1fr !important; gap: 6px; }
+  .status-row { grid-template-columns: minmax(0,1fr) !important; gap: 11px !important; }
+  .grid { grid-template-columns: repeat(2,minmax(0,1fr)) !important; gap: 8px !important; }
+  .stat { padding: 12px !important; }
+  .value { font-size: 18px !important; overflow-wrap: anywhere; }
+  .price { font-size: 25px !important; }
+  .demo-robot-grid, .demo-position-grid, .supabase-auth-grid, .supabase-auth-actions { grid-template-columns: minmax(0,1fr) !important; }
+  .demo-robot-controls, .demo-position-actions, .trading-mode-controls { gap: 8px !important; }
+  button { min-height: 42px; }
+  select, input, textarea { font-size: 16px !important; max-width: 100%; }
+  .header:after { font-size: 9px; letter-spacing: .11em; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card, .supabase-auth-card, .trading-mode-card, button { transition: none !important; }
+}
+
+</style>
+
+<style id="btc-terminal-designer-only">
+/* VISUAL REDESIGN ONLY. Existing HTML controls, IDs, JavaScript, strategy,
+   authentication, data feeds and order handlers are intentionally untouched. */
+:root{
+  color-scheme:dark;
+  --term-bg:#050b15;
+  --term-panel:#091525;
+  --term-panel-2:#0d1b2d;
+  --term-line:rgba(38,210,245,.72);
+  --term-line-soft:rgba(38,210,245,.22);
+  --term-cyan:#38dafa;
+  --term-blue:#48a8ff;
+  --term-purple:#bd78ff;
+  --term-yellow:#f6c94b;
+  --term-green:#16e69a;
+  --term-red:#ff6079;
+  --term-text:#e8f3ff;
+  --term-muted:#91a9c2;
+}
+html{background:var(--term-bg)!important}
+body{
+  margin:0!important;
+  background:
+    radial-gradient(ellipse at 48% -12%,rgba(0,178,255,.12),transparent 42%),
+    linear-gradient(180deg,#050b15 0%,#07101d 54%,#050a13 100%)!important;
+  color:var(--term-text)!important;
+  font-family:Inter,Segoe UI,Roboto,Arial,sans-serif!important;
+  letter-spacing:.01em;
+}
+body:before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.18;
+  background-image:linear-gradient(rgba(56,218,250,.045) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(56,218,250,.045) 1px,transparent 1px);
+  background-size:36px 36px;
+}
+.container{
+  position:relative;z-index:1;
+  width:min(1800px,100%)!important;max-width:1800px!important;
+  margin:0 auto!important;padding:14px!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1.9fr) minmax(320px,.95fr)!important;
+  grid-template-areas:
+    "auth auth"
+    "header header"
+    "chart scalp"
+    "chart mode"
+    "robot robot"
+    "notice notice"
+    "accuracy accuracy"
+    "eci mtf"
+    "asset asset"
+    "sim sim";
+  align-items:stretch;gap:12px!important;
+}
+.container > .supabase-auth-card{grid-area:auth}
+.container > .header{grid-area:header}
+.container > .header + .card{grid-area:scalp;align-self:start}
+.container > .trading-mode-card{grid-area:mode}
+.container > .demo-robot-card{grid-area:robot}
+.container > .public-beta-notice{grid-area:notice}
+.container > .accuracy-card{grid-area:accuracy}
+.container > .card:has(#tvChart){grid-area:chart;min-width:0}
+.container > .card:has(#tvChart) iframe{width:100%!important;max-width:100%}
+.container > .card:has(#tvChart) .exchange-frame-container,
+.container > .card:has(#tvChart) .chart-container{min-height:500px}
+.container > .card:has(#tvChart) iframe#tvChart{min-height:500px!important}
+.container > .card:has(#tvChart) {align-self:stretch}
+.container > .card:has(#simDirection){grid-area:sim}
+.container > #multiTimeframePanel{grid-area:mtf}
+.container > #assetAdminPanel{grid-area:asset}
+.container > .card:has(#simDirection){grid-area:sim}
+.container > .card:has(#simDirection) {min-width:0}
+.container > .card:not(.header):not(.accuracy-card):not(:has(#tvChart)):not(:has(#simDirection)):not(:has(#marketSelect)):not(:has(#simDirection)) {min-width:0}
+.container > .card:has(#btcDirectionAnalysisCard){grid-area:eci}
+.container > .card:has(#btcDirectionAnalysisCard){grid-area:eci}
+.container > .card:has(#btcDirectionAnalysisCard){grid-area:eci}
+.container > .card:has(#marketSelect){grid-area:header}
+.container > .header + .card{grid-area:scalp}
+.container > .card:has(#tvChart){grid-area:chart}
+.container > .card:has(#simDirection){grid-area:sim}
+/* Main cards */
+.card,.supabase-auth-card,.trading-mode-card,.public-beta-notice{
+  color:var(--term-text)!important;
+  background:linear-gradient(145deg,rgba(12,28,47,.97),rgba(5,15,28,.98))!important;
+  border:1px solid var(--term-line-soft)!important;
+  border-radius:16px!important;
+  box-shadow:0 0 0 1px rgba(20,150,210,.05),0 8px 26px rgba(0,0,0,.25),inset 0 1px rgba(255,255,255,.035)!important;
+  padding:16px!important;
+  min-width:0;
+}
+.card:hover,.supabase-auth-card:hover,.trading-mode-card:hover{
+  border-color:rgba(56,218,250,.46)!important;
+  box-shadow:0 0 0 1px rgba(56,218,250,.07),0 0 22px rgba(0,180,240,.08),0 8px 26px rgba(0,0,0,.25)!important;
+}
+h1,h2,h3,h4,.card h2,.card h3{color:#dff6ff!important;letter-spacing:.015em}
+h1{font-weight:750!important}
+h2{font-size:1.12rem!important}
+small,.muted,.subtitle,.help-text{color:var(--term-muted)!important}
+.header{
+  display:flex!important;align-items:center!important;gap:14px!important;flex-wrap:wrap!important;
+  border-color:var(--term-line)!important;
+  background:linear-gradient(100deg,rgba(7,22,39,.98),rgba(8,20,35,.98))!important;
+  box-shadow:0 0 20px rgba(0,198,255,.09),inset 0 0 24px rgba(0,198,255,.025)!important;
+}
+.header > *{min-width:0}
+.header select,#marketSelect,select{
+  color:var(--term-text)!important;background-color:#0b1b2d!important;
+  border:1px solid rgba(56,218,250,.34)!important;border-radius:9px!important;
+}
+select,input,textarea{
+  color:var(--term-text)!important;background-color:#071321!important;
+  border:1px solid rgba(96,150,195,.32)!important;border-radius:8px!important;
+}
+select:focus,input:focus,textarea:focus{
+  outline:1px solid var(--term-cyan)!important;box-shadow:0 0 0 3px rgba(56,218,250,.10)!important;
+}
+button{
+  border-radius:9px!important;border:1px solid rgba(56,218,250,.36)!important;
+  transition:filter .16s ease,box-shadow .16s ease,transform .16s ease!important;
+}
+button:hover{filter:brightness(1.12);box-shadow:0 0 14px rgba(56,218,250,.14)!important}
+button.primary,.primary,.demo-robot-start{
+  background:linear-gradient(135deg,#0b9b78,#0ce6a0)!important;color:#021810!important;
+  font-weight:750!important;border-color:rgba(22,230,154,.72)!important;
+}
+input[type="checkbox"],input[type="radio"]{accent-color:var(--term-green)}
+/* Scalp signal card and live status */
+.container > .header + .card{
+  border-color:rgba(22,230,154,.48)!important;
+  background:linear-gradient(155deg,rgba(8,35,37,.98),rgba(6,18,31,.99))!important;
+}
+.container > .header + .card h2,
+.container > .header + .card h3{color:#9fffd5!important}
+.status,.connected,.live,.positive,.bullish,.success{color:var(--term-green)!important}
+.negative,.bearish,.error{color:var(--term-red)!important}
+.card table{width:100%;border-collapse:collapse}
+.card th{color:#a8dfff!important;background:rgba(22,65,96,.34)!important}
+.card td,.card th{border-color:rgba(56,218,250,.12)!important;padding:8px 7px}
+.card tr:nth-child(even){background:rgba(25,57,82,.15)}
+/* Chart remains the original embedded chart; only its surrounding presentation changes. */
+.container > .card:has(#tvChart){padding:12px!important}
+.container > .card:has(#tvChart) h2{margin-top:2px}
+iframe{border:0;border-radius:9px;max-width:100%}
+.public-beta-notice{border-color:rgba(246,201,75,.28)!important}
+#assetAdminPanel{grid-area:asset}
+#multiTimeframePanel{grid-area:mtf}
+#demoRobotCard,.demo-robot-card{border-color:rgba(56,218,250,.34)!important}
+hr{border:0;border-top:1px solid var(--term-line-soft)!important}
+a{color:#68dfff!important}
+.badge,.pill,.status-badge{border-radius:999px!important}
+@media(max-width:1050px){
+  .container{
+    grid-template-columns:minmax(0,1fr)!important;
+    grid-template-areas:
+      "auth" "header" "scalp" "chart" "mode" "robot" "notice"
+      "accuracy" "eci" "mtf" "asset" "sim";
+    padding:10px!important;gap:10px!important;
+  }
+  .container > .header + .card{grid-area:scalp}
+  .container > .card:has(#tvChart){grid-area:chart}
+  .container > .trading-mode-card{grid-area:mode}
+  .container > .demo-robot-card{grid-area:robot}
+  .container > .public-beta-notice{grid-area:notice}
+  .container > .accuracy-card{grid-area:accuracy}
+  #multiTimeframePanel{grid-area:mtf}
+  #assetAdminPanel{grid-area:asset}
+  .container > .card:has(#simDirection){grid-area:sim}
+}
+@media(max-width:640px){
+  .container{padding:7px!important;gap:8px!important}
+  .card,.supabase-auth-card,.trading-mode-card,.public-beta-notice{padding:12px!important;border-radius:12px!important}
+  .header{gap:9px!important}
+  .header > *{max-width:100%}
+  .container > .card:has(#tvChart) iframe#tvChart{min-height:380px!important}
+  .container > .card:has(#tvChart) .exchange-frame-container,
+  .container > .card:has(#tvChart) .chart-container{min-height:380px}
+  button,select,input{max-width:100%}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*:before,*:after{transition:none!important;animation:none!important;scroll-behavior:auto!important}
+}
+</style>
+
 </head>
 
 <body>
+
+<script id="professionalTerminalMouseEffects">
+(function(){
+  'use strict';
+  try {
+    if (window.matchMedia('(hover: hover) and (pointer: fine)').matches && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      var halo=document.createElement('div'); halo.id='ptMouseHalo'; halo.setAttribute('aria-hidden','true'); document.body.appendChild(halo);
+      var scheduled=false, mx=0, my=0;
+      document.addEventListener('mousemove',function(e){mx=e.clientX;my=e.clientY;if(!scheduled){scheduled=true;requestAnimationFrame(function(){halo.style.left=mx+'px';halo.style.top=my+'px';halo.style.opacity='1';scheduled=false;});}},{passive:true});
+      document.addEventListener('mouseleave',function(){halo.style.opacity='0';});
+      document.addEventListener('mouseenter',function(){halo.style.opacity='1';});
+      document.addEventListener('click',function(e){var target=e.target;if(!target||!target.closest)return;var el=target.closest('button');if(!el)return;var rect=el.getBoundingClientRect();var ripple=document.createElement('span');ripple.className='pt-ripple';ripple.style.left=(e.clientX-rect.left)+'px';ripple.style.top=(e.clientY-rect.top)+'px';if(getComputedStyle(el).position==='static')el.style.position='relative';el.style.overflow='hidden';el.appendChild(ripple);window.setTimeout(function(){if(ripple.parentNode)ripple.parentNode.removeChild(ripple);},650);},{passive:true});
+    }
+  } catch (_) { /* Visual effects must never interfere with dashboard operation. */ }
+})();
+</script>
+
 
 <div class="container">
 
@@ -3414,26 +3935,11 @@ async function fetchDirectBtcCandlePayload(frame) {
 // A brief cache reduces duplicate calls without making the chart meaningfully stale.
 const mtfHistoryInFlight = new Map();
 const mtfHistoryCache = new Map();
-const MTF_HISTORY_CACHE_MS = 60000;
-// Honor BingX rate-limit errors instead of hammering the upstream feed on every refresh.
-const marketDataCooldownUntil = new Map();
-function getRateLimitRetryTime(message) {
-    const text = String(message || "");
-    if (!/(?:100410|109429|109415|rate.?limit|too many requests)/i.test(text)) return 0;
-    const timestampMatch = text.match(/(?:retry after time|retry after|until)\s*:?\s*(\d{13})/i);
-    const providerTime = timestampMatch ? Number(timestampMatch[1]) : 0;
-    return providerTime > Date.now() ? providerTime : Date.now() + 15 * 60 * 1000;
-}
+const MTF_HISTORY_CACHE_MS = 5000;
 
 async function fetchMtfCandleHistory(marketCode, frame) {
     const cacheKey = `${marketCode}|${frame.interval}`;
     const now = Date.now();
-    for (const [key, until] of marketDataCooldownUntil) if (until <= now) marketDataCooldownUntil.delete(key);
-    const cooldownUntil = marketDataCooldownUntil.get(marketCode) || 0;
-    if (now < cooldownUntil) {
-        const seconds = Math.ceil((cooldownUntil - now) / 1000);
-        throw new Error(`BingX market-data rate limit cooldown for ${marketCode}; retrying in about ${seconds}s. No real orders were sent.`);
-    }
     const cached = mtfHistoryCache.get(cacheKey);
     if (cached && now - cached.savedAt < MTF_HISTORY_CACHE_MS) {
         return cached.value;
@@ -3461,11 +3967,9 @@ async function fetchMtfCandleHistory(marketCode, frame) {
             });
             payload = await response.json().catch(() => ({}));
             if (!response.ok) {
-                const providerDetail = `${payload?.message || payload?.error || "no error details"}`;
-                const retryAt = getRateLimitRetryTime(providerDetail);
-                if (retryAt) marketDataCooldownUntil.set(marketCode, retryAt);
                 throw new Error(
-                    `Cloudflare MTF history request failed (${response.status}): ${providerDetail}`
+                    `Cloudflare MTF history request failed (${response.status}): ` +
+                    `${payload?.message || payload?.error || "no error details"}`
                 );
             }
             if (!Array.isArray(payload?.bars) || !payload.bars.length) {
@@ -3478,8 +3982,6 @@ async function fetchMtfCandleHistory(marketCode, frame) {
             workerFailure = error;
             if (marketCode !== "BTC") {
                 const detail = error?.message || String(error);
-                const retryAt = getRateLimitRetryTime(detail);
-                if (retryAt) marketDataCooldownUntil.set(marketCode, retryAt);
                 if (/failed to fetch|networkerror|load failed/i.test(detail)) {
                     const pageOrigin = window.location && window.location.origin ? window.location.origin : "unknown";
                     console.error("[Dashboard candle feed] Browser fetch failed", {
@@ -3823,12 +4325,6 @@ const CLOUDFLARE_API =
 
 async function fetchCloudflareData() {
     const requestMarket = selectedMarket;
-    const cooldownUntil = marketDataCooldownUntil.get(requestMarket) || 0;
-    if (Date.now() < cooldownUntil) {
-        const seconds = Math.ceil((cooldownUntil - Date.now()) / 1000);
-        setCloudflareOffline(new Error(`Market-data cooldown active for ${requestMarket}; retrying in about ${seconds}s. No real orders were sent.`));
-        return;
-    }
     const requestSignalInterval = requestMarket === "BTC" ? selectedBtcSignalInterval : "15m";
     const requestId = ++cloudflareRequestSequence;
 
@@ -3881,9 +4377,6 @@ async function fetchCloudflareData() {
             return;
         }
         console.error("Cloudflare API error:", error);
-        const detail = error?.message || String(error);
-        const retryAt = getRateLimitRetryTime(detail);
-        if (retryAt) marketDataCooldownUntil.set(requestMarket, retryAt);
         setCloudflareOffline(error);
         // Keep the live price available through the independent quote endpoint
         // if only the Cloudflare ECI/signal endpoint is failing.
@@ -5085,12 +5578,10 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 return recent;
             } catch (error) {
                 lastError = error;
-                const detail = error?.message || String(error);
-                // Never repeat a known provider rate-limit error in this refresh cycle.
-                if (getRateLimitRetryTime(detail)) break;
                 if (attempt < maxAttempts) {
-                    // Retry only transient failures, with a modest backoff.
-                    await new Promise(resolve => setTimeout(resolve, 750 * attempt));
+                    // Brief retry for transient fetch/network failures. If CORS or
+                    // Worker configuration is wrong, the final error remains visible.
+                    await new Promise(resolve => setTimeout(resolve, 350 * attempt));
                 }
             }
         }
@@ -6572,6 +7063,46 @@ setInterval(refreshMultiTimeframePanel, 60000);
   window.setInterval(refresh, 60000);
   const selector = document.getElementById("marketSelect");
   if (selector) selector.addEventListener("change", () => window.setTimeout(refresh, 150));
+})();
+</script>
+
+
+<script>
+/* Decorative pointer effects only. No market data, signals, login, or order state is touched. */
+(function initProfessionalPointerFX() {
+  try {
+    const finePointer = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!finePointer || reduceMotion) return;
+    const glow = document.createElement('div');
+    glow.id = 'ptMouseGlow';
+    glow.setAttribute('aria-hidden', 'true');
+    const flash = document.createElement('div');
+    flash.id = 'ptClickFlash';
+    flash.setAttribute('aria-hidden', 'true');
+    document.body.append(glow, flash);
+    let queued = false, px = -500, py = -500;
+    document.addEventListener('pointermove', function (event) {
+      px = event.clientX; py = event.clientY;
+      if (!queued) {
+        queued = true;
+        window.requestAnimationFrame(function () {
+          glow.style.transform = `translate3d(${px}px, ${py}px, 0) translate(-50%, -50%)`;
+          glow.classList.add('pt-visible');
+          queued = false;
+        });
+      }
+    }, { passive: true });
+    document.addEventListener('pointerleave', function () { glow.classList.remove('pt-visible'); }, { passive: true });
+    document.addEventListener('pointerdown', function (event) {
+      if (event.pointerType !== 'mouse') return;
+      flash.style.left = `${event.clientX}px`;
+      flash.style.top = `${event.clientY}px`;
+      flash.classList.remove('pt-flash');
+      void flash.offsetWidth;
+      flash.classList.add('pt-flash');
+    }, { passive: true });
+  } catch (_) { /* Visual effects must never interfere with dashboard operation. */ }
 })();
 </script>
 
