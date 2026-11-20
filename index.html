@@ -1204,46 +1204,44 @@ body:before{
   width:min(1800px,100%)!important;max-width:1800px!important;
   margin:0 auto!important;padding:14px!important;
   display:grid!important;
-  grid-template-columns:minmax(0,1.9fr) minmax(320px,.95fr)!important;
+  grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr)!important;
   grid-template-areas:
     "auth auth"
     "header header"
     "chart scalp"
-    "chart mode"
+    "scanner eci"
+    "mode mode"
     "robot robot"
     "notice notice"
     "accuracy accuracy"
-    "eci mtf"
+    "mtf mtf"
+    "assetbutton assetbutton"
     "asset asset"
     "sim sim";
-  align-items:stretch;gap:12px!important;
+  align-items:start;gap:12px!important;
 }
 .container > .supabase-auth-card{grid-area:auth}
 .container > .header{grid-area:header}
 .container > .header + .card{grid-area:scalp;align-self:start}
-.container > .trading-mode-card{grid-area:mode}
+.container > .trading-mode-card{grid-area:mode;align-self:start}
 .container > .demo-robot-card{grid-area:robot}
 .container > .public-beta-notice{grid-area:notice}
 .container > .accuracy-card{grid-area:accuracy}
-.container > .card:has(#tvChart){grid-area:chart;min-width:0}
+.container > .card:has(#tvChart){grid-area:chart;min-width:0;align-self:start}
 .container > .card:has(#tvChart) iframe{width:100%!important;max-width:100%}
 .container > .card:has(#tvChart) .exchange-frame-container,
 .container > .card:has(#tvChart) .chart-container{min-height:500px}
 .container > .card:has(#tvChart) iframe#tvChart{min-height:500px!important}
-.container > .card:has(#tvChart) {align-self:stretch}
-.container > .card:has(#simDirection){grid-area:sim}
+.container > #marketScannerVisual{grid-area:scanner;align-self:start}
+.container > #eciDetailsCard{grid-area:eci;align-self:start}
+.container > .card:has(#simDirection){grid-area:sim;min-width:0}
 .container > #multiTimeframePanel{grid-area:mtf}
 .container > #assetAdminPanel{grid-area:asset}
-.container > .card:has(#simDirection){grid-area:sim}
-.container > .card:has(#simDirection) {min-width:0}
-.container > .card:not(.header):not(.accuracy-card):not(:has(#tvChart)):not(:has(#simDirection)):not(:has(#marketSelect)):not(:has(#simDirection)) {min-width:0}
-.container > .card:has(#btcDirectionAnalysisCard){grid-area:eci}
-.container > .card:has(#btcDirectionAnalysisCard){grid-area:eci}
-.container > .card:has(#btcDirectionAnalysisCard){grid-area:eci}
+.container > div:has(#toggleAssetAdminPanel){grid-area:assetbutton;align-self:start}
+.container > .card:not(.header):not(.accuracy-card):not(:has(#tvChart)):not(:has(#simDirection)):not(:has(#marketSelect)):not(:has(#simDirection)){min-width:0}
 .container > .card:has(#marketSelect){grid-area:header}
-.container > .header + .card{grid-area:scalp}
-.container > .card:has(#tvChart){grid-area:chart}
-.container > .card:has(#simDirection){grid-area:sim}
+/* Keep market selection anchored at the left edge of the terminal header. */
+.header > div:has(#marketSelect){margin:0 auto 0 0!important;max-width:420px!important}
 /* Main cards */
 .card,.supabase-auth-card,.trading-mode-card,.public-beta-notice{
   color:var(--term-text)!important;
@@ -1314,23 +1312,68 @@ iframe{border:0;border-radius:9px;max-width:100%}
 hr{border:0;border-top:1px solid var(--term-line-soft)!important}
 a{color:#68dfff!important}
 .badge,.pill,.status-badge{border-radius:999px!important}
+/* Market scanner visual module */
+.market-scanner-card{padding:15px!important;border-color:rgba(56,218,250,.3)!important}
+.scanner-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:13px}
+.scanner-title{display:flex;align-items:center;gap:10px;font-weight:750;font-size:1.03rem;color:#e7f8ff}
+.scanner-wifi{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border:1px solid rgba(22,230,154,.42);border-radius:8px;color:var(--term-green);font-size:19px;font-weight:800;letter-spacing:-5px;padding-right:5px;box-shadow:inset 0 0 12px rgba(22,230,154,.12),0 0 8px rgba(22,230,154,.08)}
+.scanner-live{display:flex;align-items:center;gap:7px;color:#8fffd0;font-size:.78rem;font-weight:700;white-space:nowrap}
+.scanner-live-dot{width:7px;height:7px;border-radius:50%;background:var(--term-green);box-shadow:0 0 9px rgba(22,230,154,.85);animation:scannerPulse 1.5s ease-in-out infinite}
+.scanner-track{display:grid;gap:7px}
+.scanner-step{display:grid;grid-template-columns:18px minmax(0,1fr) auto;align-items:center;gap:8px;padding:9px 10px;border:1px solid rgba(56,218,250,.12);border-radius:8px;background:rgba(5,17,30,.68);font-size:.83rem;color:#d7e8f8}
+.scanner-step-icon{font-weight:800;color:var(--term-cyan);font-size:1rem;line-height:1;display:inline-flex;align-items:center;justify-content:center}
+.scanner-step-state{font-size:.63rem;letter-spacing:.08em;color:#91a9c2;font-weight:800}
+.scanner-final{border-color:rgba(22,230,154,.24);background:rgba(10,55,48,.2)}
+.scanner-final .scanner-step-icon,.scanner-final .scanner-step-state{color:var(--term-green)}
+.scanner-footnote{font-size:.68rem;color:#7891aa;margin-top:10px}
+@keyframes scannerPulse{0%,100%{opacity:.55;box-shadow:0 0 3px rgba(22,230,154,.35)}50%{opacity:1;box-shadow:0 0 12px rgba(22,230,154,.9)}}
+#eciDetailsCard .grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+#eciDetailsCard .stat{min-width:0;padding:10px;border:1px solid rgba(56,218,250,.13);border-radius:9px;background:rgba(5,17,30,.55)}
+#eciDetailsCard .value{overflow-wrap:anywhere}
+#assetAdminPanel[hidden]{display:none!important}
 @media(max-width:1050px){
-  .container{
-    grid-template-columns:minmax(0,1fr)!important;
-    grid-template-areas:
-      "auth" "header" "scalp" "chart" "mode" "robot" "notice"
-      "accuracy" "eci" "mtf" "asset" "sim";
-    padding:10px!important;gap:10px!important;
-  }
-  .container > .header + .card{grid-area:scalp}
-  .container > .card:has(#tvChart){grid-area:chart}
-  .container > .trading-mode-card{grid-area:mode}
-  .container > .demo-robot-card{grid-area:robot}
-  .container > .public-beta-notice{grid-area:notice}
-  .container > .accuracy-card{grid-area:accuracy}
-  #multiTimeframePanel{grid-area:mtf}
-  #assetAdminPanel{grid-area:asset}
-  .container > .card:has(#simDirection){grid-area:sim}
+.container{
+  position:relative;z-index:1;
+  width:min(1800px,100%)!important;max-width:1800px!important;
+  margin:0 auto!important;padding:14px!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr)!important;
+  grid-template-areas:
+    "auth auth"
+    "header header"
+    "chart scalp"
+    "scanner eci"
+    "mode mode"
+    "robot robot"
+    "notice notice"
+    "accuracy accuracy"
+    "mtf mtf"
+    "asset asset"
+    "sim sim";
+  align-items:start;gap:12px!important;
+}
+.container > .supabase-auth-card{grid-area:auth}
+.container > .header{grid-area:header}
+.container > .header + .card{grid-area:scalp;align-self:start}
+.container > .trading-mode-card{grid-area:mode;align-self:start}
+.container > .demo-robot-card{grid-area:robot}
+.container > .public-beta-notice{grid-area:notice}
+.container > .accuracy-card{grid-area:accuracy}
+.container > .card:has(#tvChart){grid-area:chart;min-width:0;align-self:start}
+.container > .card:has(#tvChart) iframe{width:100%!important;max-width:100%}
+.container > .card:has(#tvChart) .exchange-frame-container,
+.container > .card:has(#tvChart) .chart-container{min-height:500px}
+.container > .card:has(#tvChart) iframe#tvChart{min-height:500px!important}
+.container > #marketScannerVisual{grid-area:scanner;align-self:start}
+.container > #eciDetailsCard{grid-area:eci;align-self:start}
+.container > .card:has(#simDirection){grid-area:sim;min-width:0}
+.container > #multiTimeframePanel{grid-area:mtf}
+.container > #assetAdminPanel{grid-area:asset}
+.container > .card:not(.header):not(.accuracy-card):not(:has(#tvChart)):not(:has(#simDirection)):not(:has(#marketSelect)):not(:has(#simDirection)){min-width:0}
+.container > .card:has(#marketSelect){grid-area:header}
+/* Keep market selection anchored at the left edge of the terminal header. */
+.header > div:has(#marketSelect){margin:0 auto 0 0!important;max-width:420px!important}
+
 }
 @media(max-width:640px){
   .container{padding:7px!important;gap:8px!important}
@@ -1344,6 +1387,82 @@ a{color:#68dfff!important}
 }
 @media(prefers-reduced-motion:reduce){
   *,*:before,*:after{transition:none!important;animation:none!important;scroll-behavior:auto!important}
+}
+
+/* Scanner progress indicators: driven from existing dashboard status fields. */
+.scanner-radar-icon{width:25px;height:25px;object-fit:contain;border-radius:50%;flex:0 0 25px;filter:drop-shadow(0 0 7px rgba(22,230,154,.45));}
+.scanner-step-icon{display:inline-flex;align-items:center;justify-content:center;min-width:22px;min-height:22px;font-size:17px;}
+.scanner-step.is-done .scanner-step-icon{color:#16e69a;filter:drop-shadow(0 0 5px rgba(22,230,154,.45));}
+.scanner-step.is-done .scanner-step-state{color:#16e69a!important;}
+.scanner-step.is-done{border-color:rgba(22,230,154,.22);}
+</style>
+
+
+<style id="btc-terminal-topbar-v2">
+/* Topbar visual refinement. Existing controls and IDs are reused. */
+.container>.supabase-auth-card{display:none!important}
+.container>.supabase-auth-card.terminal-auth-open{display:block!important;grid-area:auth!important}
+.container{grid-template-areas:"header header" "chart scalp" "scanner eci" "mode mode" "robot robot" "notice notice" "accuracy accuracy" "mtf mtf" "assetbutton assetbutton" "asset asset" "sim sim"!important}
+.container>.header{grid-area:header!important;display:grid!important;grid-template-columns:minmax(220px,285px) minmax(240px,1fr) minmax(230px,320px)!important;grid-template-areas:"left status meta"!important;align-items:center!important;gap:16px!important;padding:13px 16px!important;min-width:0!important;border:1px solid rgba(56,218,250,.2)!important;background:linear-gradient(110deg,rgba(7,20,35,.98),rgba(6,16,29,.98))!important;box-shadow:0 8px 24px rgba(0,0,0,.18)!important}
+.container>.header:after{display:none!important;content:none!important}
+.terminal-left-rail{grid-area:left;display:flex;flex-direction:column;align-items:flex-start;gap:12px;min-width:0}
+.terminal-login-btn{min-width:94px!important;min-height:34px!important;padding:7px 13px!important;font-size:12px!important;font-weight:800!important;letter-spacing:.04em!important;background:#0b1b2d!important;color:#dff6ff!important;border:1px solid rgba(56,218,250,.42)!important;box-shadow:none!important}
+.terminal-market-picker{width:100%;max-width:285px!important;margin:0!important;display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.terminal-market-picker>.label{font-size:10px!important;text-transform:uppercase;letter-spacing:.12em;color:#91a9c2!important;margin:0!important}
+.terminal-market-row{display:flex;align-items:center;gap:9px;width:100%;min-width:0}
+.terminal-market-logo{display:flex;align-items:center;justify-content:center;flex:0 0 32px;width:32px;height:32px;border-radius:50%;font-size:15px;font-weight:900;background:#1b2838;border:1px solid rgba(56,218,250,.28);color:#f6c94b;box-shadow:0 0 12px rgba(56,218,250,.08)}
+.terminal-market-row select{width:100%;min-width:0;max-width:235px!important;margin:0!important;padding:8px 10px!important;font-size:12px!important}
+.terminal-asset-status{grid-area:status;min-width:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:7px}
+#biasLine{font-size:clamp(17px,2vw,25px)!important;font-weight:900!important;line-height:1.2!important;letter-spacing:.025em!important;margin:0!important;padding:0!important;border:0!important;background:transparent!important}
+#overallStatus{font-size:11px!important;font-weight:850!important;letter-spacing:.075em!important;margin:0!important;padding:0!important;background:transparent!important;border:0!important}
+#signalTime{font-size:10px!important;color:#8fa9c2!important;margin:0!important;line-height:1.4!important}
+.terminal-market-meta{grid-area:meta;min-width:0;display:flex;flex-direction:column;gap:8px;align-items:stretch;justify-content:center}
+.terminal-market-meta .trend-mini-panel{display:block!important;width:100%;margin:0!important;padding:10px 11px!important;border:1px solid rgba(56,218,250,.17)!important;border-radius:10px!important;background:rgba(3,12,23,.5)!important;min-width:0}
+.terminal-market-meta .trend-mini-chart{height:32px!important}
+.terminal-market-meta .trend-mini-heading{font-size:10px!important}
+.terminal-volume-note{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 10px;border:1px solid rgba(56,218,250,.13);border-radius:8px;background:rgba(3,12,23,.38);font-size:9px;letter-spacing:.08em;color:#8fa9c2}
+.terminal-volume-note strong{font-size:10px;color:#d9eaf8;letter-spacing:0;text-align:right}
+/* The trend mini panel is visually relocated to the header; keep the original scalp area compact. */
+.container>.header + .card .status-row{align-items:start}
+@media(max-width:900px){
+ .container>.header{grid-template-columns:minmax(180px,.8fr) minmax(0,1.2fr)!important;grid-template-areas:"left status" "meta meta"!important}
+ .terminal-market-picker{max-width:100%!important}
+ .terminal-market-row select{max-width:none!important}
+ .terminal-market-meta{display:grid;grid-template-columns:minmax(0,1fr) minmax(130px,.6fr);align-items:stretch}
+}
+@media(max-width:600px){
+ .container>.header{grid-template-columns:minmax(0,1fr)!important;grid-template-areas:"left" "status" "meta"!important;padding:11px!important;gap:13px!important}
+ .terminal-left-rail{flex-direction:row;align-items:center;justify-content:space-between;gap:10px}
+ .terminal-market-picker{flex:1;max-width:none!important}
+ .terminal-login-btn{flex:0 0 auto}
+ .terminal-market-row select{max-width:none!important}
+ .terminal-market-meta{grid-template-columns:minmax(0,1fr)}
+ #biasLine{font-size:20px!important}
+}
+</style>
+
+
+<style id="btc-terminal-layout-order-v3">
+/* Layout-only adjustment: indicator legend replaces the explanatory iframe text. */
+#exchangeFrameNotice{display:flex!important;align-items:center;min-height:30px;margin:0 0 10px!important;padding:8px 10px;border:1px solid rgba(56,218,250,.14);border-radius:9px;background:rgba(3,12,23,.42)}
+.indicator-legend{display:flex;flex-wrap:wrap;align-items:center;gap:14px;font-size:11px;font-weight:750;letter-spacing:.035em;color:#dbeafa}
+.indicator-legend-item{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.indicator-dot{display:inline-block;width:8px;height:8px;flex:0 0 8px;border-radius:50%}
+.indicator-dot-wma100{background:#48a8ff;box-shadow:0 0 8px rgba(72,168,255,.65)}
+.indicator-dot-wma200{background:#bd78ff;box-shadow:0 0 8px rgba(189,120,255,.6)}
+.indicator-dot-ema20{background:#f6c94b;box-shadow:0 0 8px rgba(246,201,75,.55)}
+/* Move Add Asset controls first, then Demo Robot and Trading Mode below them. */
+.container{grid-template-areas:"header header" "chart scalp" "scanner eci" "accuracy accuracy" "mtf mtf" "assetbutton assetbutton" "asset asset" "robot robot" "mode mode" "notice notice" "sim sim"!important}
+.container>.demo-robot-card{grid-area:robot!important}
+.container>.trading-mode-card{grid-area:mode!important}
+.container>#assetAdminPanel{grid-area:asset!important}
+.container>div:has(#toggleAssetAdminPanel){grid-area:assetbutton!important}
+@media(max-width:1050px){
+ .container{grid-template-areas:"header header" "chart scalp" "scanner eci" "accuracy accuracy" "mtf mtf" "assetbutton assetbutton" "asset asset" "robot robot" "mode mode" "notice notice" "sim sim"!important}
+}
+@media(max-width:640px){
+ .indicator-legend{gap:10px;font-size:10px}
+ #exchangeFrameNotice{padding:8px}
 }
 </style>
 
@@ -1854,8 +1973,24 @@ a{color:#68dfff!important}
         </div>
     </div>
 
+    <!-- MARKET SCANNER: visual-only panel; existing signal logic remains untouched -->
+    <section class="card market-scanner-card" id="marketScannerVisual" aria-label="Market Scanner">
+      <div class="scanner-heading">
+        <div class="scanner-title"><img class="scanner-radar-icon" src="https://media.tenor.com/Gparo0eD0KIAAAAC/nerd-radar-mayclan.gif" alt="" aria-hidden="true"><span>Market Scanner</span></div>
+        <div class="scanner-live"><span class="scanner-live-dot"></span>Scanning</div>
+      </div>
+      <div class="scanner-track">
+        <div class="scanner-step"><span class="scanner-step-icon" aria-label="Pending" data-scan-status="pending">⏳</span><span>ECI signal detected</span><span class="scanner-step-state">WATCH</span></div>
+        <div class="scanner-step"><span class="scanner-step-icon" aria-label="Pending" data-scan-status="pending">⏳</span><span>1m WMA100 agreement</span><span class="scanner-step-state">CHECK</span></div>
+        <div class="scanner-step"><span class="scanner-step-icon" aria-label="Pending" data-scan-status="pending">⏳</span><span>15 minutes structure ok</span><span class="scanner-step-state">CHECK</span></div>
+        <div class="scanner-step"><span class="scanner-step-icon" aria-label="Pending" data-scan-status="pending">⏳</span><span>Rejection candle</span><span class="scanner-step-state">CHECK</span></div>
+        <div class="scanner-step scanner-final"><span class="scanner-step-icon" aria-label="Pending" data-scan-status="pending">⏳</span><span>Final check</span><span class="scanner-step-state">PENDING</span></div>
+      </div>
+      <div class="scanner-footnote">Visual scanner panel · signal rules and execution logic unchanged</div>
+    </section>
+
     <!-- ECI DETAILS -->
-    <div class="card">
+    <div class="card" id="eciDetailsCard">
 
         <div class="section-title" id="eciSectionTitle">
             ECI — 15m
@@ -2038,7 +2173,11 @@ a{color:#68dfff!important}
             </button>
         </div>
         <div id="exchangeFrameNotice" class="small" style="margin-bottom:10px;">
-            Choose an exchange above to try opening its full website in this panel. Some exchanges block iframe embedding.
+            <span class="indicator-legend" aria-label="Chart indicator legend">
+            <span class="indicator-legend-item"><span class="indicator-dot indicator-dot-wma100" aria-hidden="true"></span>WMA 100</span>
+            <span class="indicator-legend-item"><span class="indicator-dot indicator-dot-wma200" aria-hidden="true"></span>WMA 200</span>
+            <span class="indicator-legend-item"><span class="indicator-dot indicator-dot-ema20" aria-hidden="true"></span>EMA 20</span>
+        </span>
         </div>
 
         <div class="chart-container" id="exchangeFrameContainer">
@@ -7103,6 +7242,93 @@ setInterval(refreshMultiTimeframePanel, 60000);
       flash.classList.add('pt-flash');
     }, { passive: true });
   } catch (_) { /* Visual effects must never interfere with dashboard operation. */ }
+})();
+</script>
+
+
+<script id="market-scanner-progress-visual-only">
+(function(){
+  'use strict';
+  const root = document.getElementById('marketScannerVisual');
+  if (!root) return;
+  const steps = Array.from(root.querySelectorAll('.scanner-step'));
+  const text = id => (document.getElementById(id)?.textContent || '').trim().toLowerCase();
+  const hasValue = value => !!value && value !== '—' && value !== '-' && !/loading|waiting|not available|n\/a/.test(value);
+  const bullishOrBearish = value => /bullish|bearish|bull|bear|long|short/.test(value);
+  function update(){
+    const overall = text('overallStatus') + ' ' + text('biasLine') + ' ' + text('signalTime');
+    const signalReady = /buy long|sell short|bullish|bearish|signal detected|signal: long|signal: short/.test(overall) && !/waiting for|overall status: waiting/.test(overall);
+    const trend = text('trendStatusValue');
+    const trendReady = hasValue(trend) && bullishOrBearish(trend) && !/neutral|waiting|loading/.test(trend);
+    const structureTitle = text('btcDirectionAnalysisTitle');
+    const structureLevel = text('btcDirectionAnalysisLevel');
+    const eciStops = hasValue(text('stopLongValue')) && hasValue(text('stopShortValue'));
+    const structureReady = (hasValue(structureTitle) && !/waiting|select a timeframe/.test(structureTitle) && hasValue(structureLevel)) || eciStops;
+    const pullback = text('pullbackStatus') + ' ' + text('entryDistanceProximity');
+    const rejectionReady = /reject|confirmed|confirmation|entry ready|ready to enter/.test(pullback) && !/waiting|not confirmed|no rejection/.test(pullback);
+    const robotStatus = text('demoRobotBadge') + ' ' + text('demoRobotMessage');
+    const finalReady = signalReady && trendReady && structureReady && rejectionReady && (/entry|pending|position|ready/.test(robotStatus));
+    const passed = [signalReady, trendReady, structureReady, rejectionReady, finalReady];
+    steps.forEach((step, i) => {
+      const icon = step.querySelector('.scanner-step-icon');
+      const state = step.querySelector('.scanner-step-state');
+      const done = !!passed[i];
+      step.classList.toggle('is-done', done);
+      if (icon) { const nextIcon = done ? '✅' : '⏳'; const nextLabel = done ? 'Done' : 'Pending'; const nextStatus = done ? 'done' : 'pending'; if (icon.textContent !== nextIcon) icon.textContent = nextIcon; if (icon.getAttribute('aria-label') !== nextLabel) icon.setAttribute('aria-label', nextLabel); if (icon.dataset.scanStatus !== nextStatus) icon.dataset.scanStatus = nextStatus; }
+      if (state) { const nextState = done ? 'DONE' : (i === 0 ? 'WATCH' : i === 4 ? 'PENDING' : 'CHECK'); if (state.textContent !== nextState) state.textContent = nextState; }
+    });
+  }
+  update();
+  const observer = new MutationObserver(update);
+  observer.observe(document.body, {subtree:true, childList:true, characterData:true, attributes:true, attributeFilter:['class','style']});
+  window.addEventListener('load', update, {once:true});
+})();
+</script>
+
+
+<script id="btc-terminal-topbar-v2-script">
+(function initTerminalTopbarV2(){
+  'use strict';
+  try {
+    const header=document.querySelector('.container>.header');
+    const authCard=document.getElementById('supabaseAuthCard');
+    const marketSelect=document.getElementById('marketSelect');
+    const bias=document.getElementById('biasLine');
+    const overall=document.getElementById('overallStatus');
+    const signalTime=document.getElementById('signalTime');
+    if(!header||!marketSelect||!bias||!overall)return;
+    const picker=marketSelect.closest('div');
+    const connectedBadge=document.getElementById('supabaseConnectedBadge');
+    const originalSignIn=document.getElementById('supabaseSignInBtn');
+    const originalSignOut=document.getElementById('supabaseSignOutBtn');
+    const keyInput=document.getElementById('supabasePublishableKey');
+    const left=document.createElement('div');left.className='terminal-left-rail';
+    const login=document.createElement('button');login.type='button';login.id='terminalLoginLogoutBtn';login.className='terminal-login-btn';login.textContent='LOGIN';login.setAttribute('aria-label','Log in or log out');
+    left.appendChild(login);
+    const status=document.createElement('div');status.className='terminal-asset-status';
+    const meta=document.createElement('div');meta.className='terminal-market-meta';
+    const logo=document.createElement('span');logo.className='terminal-market-logo';logo.id='terminalMarketLogo';logo.setAttribute('aria-hidden','true');
+    if(picker){picker.className+=' terminal-market-picker';const label=picker.querySelector('.label');const row=document.createElement('div');row.className='terminal-market-row';picker.appendChild(row);row.appendChild(logo);row.appendChild(marketSelect);left.appendChild(picker);}
+    header.insertBefore(left,header.firstChild);
+    status.append(bias,overall);if(signalTime)status.appendChild(signalTime);header.appendChild(status);
+    const trend=document.querySelector('.trend-mini-panel');if(trend)meta.appendChild(trend);
+    const volume=document.createElement('div');volume.className='terminal-volume-note';volume.innerHTML='<span>24H VOLUME</span><strong id="terminal24hVolume">Not supplied by current feed</strong>';meta.appendChild(volume);header.appendChild(meta);
+    const timeframe=document.getElementById('btcTimeframeControl');if(timeframe)left.appendChild(timeframe);
+    const directionCard=document.getElementById('btcDirectionAnalysisCard');if(directionCard)status.appendChild(directionCard);
+    function selectedMarket(){return (marketSelect.value||'GOLD').toUpperCase();}
+    function updateMarketLogo(){const m=selectedMarket();const map={GOLD:{text:'Au',color:'#f6c94b',bg:'rgba(246,201,75,.12)'},BTC:{text:'₿',color:'#f7931a',bg:'rgba(247,147,26,.13)'},SILVER:{text:'Ag',color:'#d8e4ef',bg:'rgba(216,228,239,.12)'},NASDAQ:{text:'N',color:'#60a5fa',bg:'rgba(96,165,250,.13)'}};const x=map[m]||map.GOLD;logo.textContent=x.text;logo.style.color=x.color;logo.style.background=x.bg;volume.querySelector('strong').textContent='Not supplied by current feed';}
+    function updateLoginLabel(){const connected=!!(connectedBadge&&!connectedBadge.hidden);login.textContent=connected?'LOG OUT':'LOG IN';login.setAttribute('aria-label',connected?'Log out':'Log in');}
+    login.addEventListener('click',function(){
+      const connected=!!(connectedBadge&&!connectedBadge.hidden);
+      if(connected){if(originalSignOut)originalSignOut.click();else document.getElementById('supabaseConnectedSignOutBtn')?.click();return;}
+      const keyPresent=!!(keyInput&&keyInput.value.trim());
+      if(!keyPresent){if(authCard){authCard.classList.add('terminal-auth-open');authCard.scrollIntoView({behavior:'smooth',block:'start'});}return;}
+      if(originalSignIn)originalSignIn.click();
+    });
+    if(connectedBadge&&window.MutationObserver){new MutationObserver(updateLoginLabel).observe(connectedBadge,{attributes:true,attributeFilter:['hidden','class']});}
+    marketSelect.addEventListener('change',updateMarketLogo);
+    updateMarketLogo();updateLoginLabel();
+  } catch(error){console.warn('Terminal topbar visual setup skipped:',error);}
 })();
 </script>
 
