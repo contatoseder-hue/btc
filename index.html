@@ -1411,8 +1411,8 @@ a{color:#68dfff!important}
 .container{grid-template-areas:"header header" "chart scalp" "scanner eci" "mode mode" "robot robot" "notice notice" "accuracy accuracy" "mtf mtf" "assetbutton assetbutton" "asset asset" "sim sim"!important}
 .container>.header{grid-area:header!important;display:grid!important;grid-template-columns:minmax(220px,285px) minmax(240px,1fr) minmax(230px,320px)!important;grid-template-areas:"left status meta"!important;align-items:center!important;gap:16px!important;padding:13px 16px!important;min-width:0!important;border:1px solid rgba(56,218,250,.2)!important;background:linear-gradient(110deg,rgba(7,20,35,.98),rgba(6,16,29,.98))!important;box-shadow:0 8px 24px rgba(0,0,0,.18)!important}
 .container>.header:after{display:none!important;content:none!important}
-.terminal-left-rail{grid-area:left;display:flex;flex-direction:column;align-items:flex-start;gap:12px;min-width:0}
-.terminal-login-btn{min-width:94px!important;min-height:34px!important;padding:7px 13px!important;font-size:12px!important;font-weight:800!important;letter-spacing:.04em!important;background:#0b1b2d!important;color:#dff6ff!important;border:1px solid rgba(56,218,250,.42)!important;box-shadow:none!important}
+.terminal-left-rail{grid-area:left;display:flex;flex-direction:column;align-items:flex-start;align-self:start;gap:6px;min-width:0;margin-top:-4px!important;margin-left:-4px!important}
+.terminal-login-btn{min-width:84px!important;min-height:29px!important;padding:5px 10px!important;margin:0!important;font-size:11px!important;font-weight:800!important;letter-spacing:.04em!important;background:#0b1b2d!important;color:#dff6ff!important;border:1px solid rgba(56,218,250,.42)!important;box-shadow:none!important}
 .terminal-market-picker{width:100%;max-width:285px!important;margin:0!important;display:flex;flex-direction:column;align-items:flex-start;gap:6px}
 .terminal-market-picker>.label{font-size:10px!important;text-transform:uppercase;letter-spacing:.12em;color:#91a9c2!important;margin:0!important}
 .terminal-market-row{display:flex;align-items:center;gap:9px;width:100%;min-width:0}
@@ -1428,6 +1428,10 @@ a{color:#68dfff!important}
 .terminal-market-meta .trend-mini-heading{font-size:10px!important}
 .terminal-volume-note{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 10px;border:1px solid rgba(56,218,250,.13);border-radius:8px;background:rgba(3,12,23,.38);font-size:9px;letter-spacing:.08em;color:#8fa9c2}
 .terminal-volume-note strong{font-size:10px;color:#d9eaf8;letter-spacing:0;text-align:right}
+.terminal-market-cap{display:grid!important;grid-template-columns:1fr;gap:4px!important;align-content:center}
+.terminal-market-cap span{font-size:9px;letter-spacing:.08em;color:#8fa9c2}
+.terminal-market-cap strong{font-size:17px!important;font-weight:850;color:#f3f8ff!important;text-align:left!important}
+.terminal-market-cap .market-cap-change{font-size:10px;font-weight:750;letter-spacing:0;color:#2dd4bf;text-align:left}
 /* The trend mini panel is visually relocated to the header; keep the original scalp area compact. */
 .container>.header + .card .status-row{align-items:start}
 @media(max-width:900px){
@@ -1528,6 +1532,8 @@ a{color:#68dfff!important}
                 <option value="BTC">🟠 Bitcoin / USD (BTC/USD)</option>
                 <option value="SILVER">⚪ Silver / USD (XAG/USD)</option>
                 <option value="NASDAQ">📈 NASDAQ / US Tech 100</option>
+                <option value="OIL_BRENT">🛢️ Oil Brent / USD</option>
+                <option value="OIL_WTI">🛢️ Oil WTI / USD</option>
             </select>
         </div>
 
@@ -2835,6 +2841,14 @@ function getMarketConfig() {
         };
     }
 
+    if (selectedMarket === "OIL_BRENT") {
+        return { label: "Brent Crude / USD", name: "Oil Brent", yahoo: "BZ=F", dataSymbol: null, bingxSymbol: null, binanceSymbol: null, tradingView: "TVC:UKOIL", chartOnly: true, oil: true, chartSymbol: "TVC:UKOIL" };
+    }
+
+    if (selectedMarket === "OIL_WTI") {
+        return { label: "WTI Crude / USD", name: "Oil WTI", yahoo: "CL=F", dataSymbol: null, bingxSymbol: null, binanceSymbol: null, tradingView: "TVC:USOIL", chartOnly: true, oil: true, chartSymbol: "TVC:USOIL" };
+    }
+
     if (selectedMarket === "SILVER") {
         return {
             label: "XAG/USD",
@@ -3022,6 +3036,7 @@ async function fetchCurrentPrice() {
 
         currentPrice = price;
         document.getElementById("marketPrice").textContent = formatPrice(currentPrice);
+        if (selectedMarket === "GOLD") { const capPrice = document.getElementById("terminalMarketCapValue"); if (capPrice) capPrice.textContent = `$${(currentPrice / 1000).toFixed(2)}K`; }
         const marketPriceLive = document.getElementById("marketPriceLive");
         if (marketPriceLive) {
             marketPriceLive.innerHTML = `<span class="live-dot"></span><span>LIVE • ${getMarketPriceSourceBadge()}</span>`;
@@ -3795,7 +3810,7 @@ document.addEventListener("fullscreenchange", () => {
 });
 
 function switchMarket(value) {
-    selectedMarket = (["GOLD", "BTC", "SILVER", "NASDAQ"].includes(value) || String(value).startsWith("CUSTOM:")) ? value : "GOLD";
+    selectedMarket = (["GOLD", "BTC", "SILVER", "NASDAQ", "OIL_BRENT", "OIL_WTI"].includes(value) || String(value).startsWith("CUSTOM:")) ? value : "GOLD";
     // Asset changes should always display that asset's TradingView chart, not leave an exchange website selected.
     exchangeWebsiteMode = false;
     const chartSelector = document.getElementById("exchangeWebsiteSelector");
@@ -3864,8 +3879,8 @@ function switchMarket(value) {
         tv.src =
             `https://s.tradingview.com/widgetembed/` +
             `?frameElementId=tradingview_chart_${cacheBust}` +
-            `&tvwidgetsymbol=${encodeURIComponent(market.tradingView)}` +
-            `&symbol=${encodeURIComponent(market.tradingView)}` +
+            `&tvwidgetsymbol=${encodeURIComponent(market.chartSymbol || market.tradingView)}` +
+            `&symbol=${encodeURIComponent(market.chartSymbol || market.tradingView)}` +
             `&interval=${encodeURIComponent(selectedMarket === "BTC" ? getSignalIntervalOption().tvInterval : "15")}` +
             `&hidesidetoolbar=0` +
             `&symboledit=1` +
@@ -3885,7 +3900,7 @@ function switchMarket(value) {
     if (chartTitle && !exchangeWebsiteMode) {
         chartTitle.textContent = `TradingView — ${market.label} ${getSignalIntervalLabel()}`;
         const chartNotice = document.getElementById("exchangeFrameNotice");
-        if (chartNotice) chartNotice.innerHTML = '<span class="indicator-legend" aria-label="Chart indicator legend"><span class="indicator-legend-item"><span class="indicator-dot indicator-dot-wma100" aria-hidden="true"></span>WMA 100</span><span class="indicator-legend-item"><span class="indicator-dot indicator-dot-wma200" aria-hidden="true"></span>WMA 200</span><span class="indicator-legend-item"><span class="indicator-dot indicator-dot-ema20" aria-hidden="true"></span>EMA 20</span></span>';
+        if (chartNotice) chartNotice.innerHTML = (market.chartOnly ? '<span style="color:#fbbf24;font-size:11px">Oil chart only · no ECI candles or robot execution configured for this asset.</span>' : '<span class="indicator-legend" aria-label="Chart indicator legend"><span class="indicator-legend-item"><span class="indicator-dot indicator-dot-wma100" aria-hidden="true"></span>WMA 100</span><span class="indicator-legend-item"><span class="indicator-dot indicator-dot-wma200" aria-hidden="true"></span>WMA 200</span><span class="indicator-legend-item"><span class="indicator-dot indicator-dot-ema20" aria-hidden="true"></span>EMA 20</span></span>');
     }
 
     initialize();
@@ -3952,7 +3967,7 @@ function changeBtcSignalTimeframe(value) {
         }
         if (title) title.textContent = `TradingView — ${market.label} ${timeframeLabel}`;
         const chartNotice = document.getElementById("exchangeFrameNotice");
-        if (chartNotice) chartNotice.innerHTML = '<span class="indicator-legend" aria-label="Chart indicator legend"><span class="indicator-legend-item"><span class="indicator-dot indicator-dot-wma100" aria-hidden="true"></span>WMA 100</span><span class="indicator-legend-item"><span class="indicator-dot indicator-dot-wma200" aria-hidden="true"></span>WMA 200</span><span class="indicator-legend-item"><span class="indicator-dot indicator-dot-ema20" aria-hidden="true"></span>EMA 20</span></span>';
+        if (chartNotice) chartNotice.innerHTML = (market.chartOnly ? '<span style="color:#fbbf24;font-size:11px">Oil chart only · no ECI candles or robot execution configured for this asset.</span>' : '<span class="indicator-legend" aria-label="Chart indicator legend"><span class="indicator-legend-item"><span class="indicator-dot indicator-dot-wma100" aria-hidden="true"></span>WMA 100</span><span class="indicator-legend-item"><span class="indicator-dot indicator-dot-wma200" aria-hidden="true"></span>WMA 200</span><span class="indicator-legend-item"><span class="indicator-dot indicator-dot-ema20" aria-hidden="true"></span>EMA 20</span></span>');
     }
 
     if (selectedMarket === "BTC") updateBtcDirectionAnalysis();
@@ -7251,7 +7266,22 @@ setInterval(refreshMultiTimeframePanel, 60000);
       if (!response.ok || !data.ok) throw new Error(data.error || `Worker returned HTTP ${response.status}`);
       highEl.textContent = money(data.high, market);
       lowEl.textContent = money(data.low, market);
-      renderChart(data.candles || []);
+      const candles = data.candles || [];
+      renderChart(candles);
+      if (market === "GOLD" && candles.length >= 2) {
+        const first = Number(candles[0].close), last = Number(candles[candles.length - 1].close);
+        const changeEl = document.getElementById("terminalGoldChange");
+        const capLabel = document.getElementById("terminalMarketCapLabel");
+        const capValue = document.getElementById("terminalMarketCapValue");
+        if (capLabel) capLabel.textContent = "GOLD MARKET CAP ESTIMATE · SPOT PRICE";
+        if (capValue && selectedMarket === "GOLD" && Number.isFinite(last) && last > 0) capValue.textContent = `$${(last / 1000).toFixed(2)}K`;
+        if (changeEl && Number.isFinite(first) && first > 0 && Number.isFinite(last)) {
+          const delta = last - first, pct = delta / first * 100;
+          const signedDelta = `${delta >= 0 ? "+" : "-"}$${Math.abs(delta).toFixed(2)}`;
+          changeEl.textContent = `${pct >= 0 ? "+" : ""}${pct.toFixed(2)}% (${signedDelta}) · LIVE`;
+          changeEl.style.color = delta >= 0 ? "#2dd4bf" : "#fb7185";
+        }
+      }
       updatedEl.textContent = `BingX perpetual · Updated ${new Date(data.updatedAt || Date.now()).toLocaleTimeString()}`;
     } catch (error) {
       badgeEl.textContent = "DATA UNAVAILABLE";
@@ -7411,7 +7441,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
     if(picker){picker.className+=' terminal-market-picker';const label=picker.querySelector('.label');const row=document.createElement('div');row.className='terminal-market-row';picker.appendChild(row);row.appendChild(logo);row.appendChild(marketSelect);left.appendChild(picker);}
     header.insertBefore(left,header.firstChild);
     status.append(bias,overall);if(signalTime)status.appendChild(signalTime);header.appendChild(status);
-    const cap=document.createElement('div');cap.className='terminal-volume-note terminal-market-cap';cap.innerHTML='<span id="terminalMarketCapLabel">MARKET CAP</span><strong id="terminalMarketCapValue">Loading BTC market cap…</strong>';meta.appendChild(cap);
+    const cap=document.createElement('div');cap.className='terminal-volume-note terminal-market-cap';cap.innerHTML='<span id="terminalMarketCapLabel">GOLD MARKET CAP ESTIMATE</span><strong id="terminalMarketCapValue">Loading gold spot price…</strong><small id="terminalGoldChange" class="market-cap-change">Waiting for live 24H change…</small>';meta.appendChild(cap);
     const trend=document.querySelector('.trend-mini-panel');if(trend)meta.appendChild(trend);
     const volume=document.createElement('div');volume.className='terminal-volume-note';volume.innerHTML='<span>24H VOLUME</span><strong id="terminal24hVolume">Not supplied by current feed</strong>';meta.appendChild(volume);header.appendChild(meta);
     const timeframe=document.getElementById('btcTimeframeControl');if(timeframe)left.appendChild(timeframe);
@@ -7423,13 +7453,15 @@ setInterval(refreshMultiTimeframePanel, 60000);
         GOLD:{color:'#f6c94b',bg:'rgba(246,201,75,.13)',svg:'<svg viewBox="0 0 48 48" aria-hidden="true"><ellipse cx="24" cy="37" rx="17" ry="5" fill="#8c5d12" opacity=".45"/><path d="M8 18 18 9h20l-8 9z" fill="#ffe38a"/><path d="M8 18h22v17H8z" fill="#d99b20"/><path d="M30 18 38 9v17l-8 9z" fill="#f6c94b"/><path d="M12 22h14M12 27h14" stroke="#fff0b5" stroke-width="1.5" opacity=".8"/></svg>'},
         BTC:{color:'#f7931a',bg:'rgba(247,147,26,.13)',svg:'<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="20" fill="#f7931a"/><circle cx="24" cy="24" r="16" fill="none" stroke="#ffd29a" stroke-width="1.4"/><text x="24" y="32" text-anchor="middle" font-size="27" font-weight="800" fill="white">₿</text></svg>'},
         SILVER:{color:'#d8e4ef',bg:'rgba(216,228,239,.13)',svg:'<svg viewBox="0 0 48 48" aria-hidden="true"><ellipse cx="24" cy="37" rx="17" ry="5" fill="#667789" opacity=".4"/><path d="M8 18 18 9h20l-8 9z" fill="#f7fbff"/><path d="M8 18h22v17H8z" fill="#9eafbf"/><path d="M30 18 38 9v17l-8 9z" fill="#dce6ef"/><path d="M12 22h14M12 27h14" stroke="#fff" stroke-width="1.5" opacity=".85"/></svg>'},
-        NASDAQ:{color:'#60a5fa',bg:'rgba(96,165,250,.13)',svg:'<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="5" width="38" height="38" rx="10" fill="#17345a"/><path d="M11 32 19 24 25 28 36 15" fill="none" stroke="#60a5fa" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M29 15h7v7" fill="none" stroke="#60a5fa" stroke-width="3" stroke-linecap="round"/></svg>'}
+        NASDAQ:{color:'#60a5fa',bg:'rgba(96,165,250,.13)',svg:'<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="5" width="38" height="38" rx="10" fill="#17345a"/><path d="M11 32 19 24 25 28 36 15" fill="none" stroke="#60a5fa" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M29 15h7v7" fill="none" stroke="#60a5fa" stroke-width="3" stroke-linecap="round"/></svg>'},
+        OIL_BRENT:{color:'#d6e2ed',bg:'rgba(148,163,184,.14)',svg:'<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 4C18 14 10 21 10 30a14 14 0 0 0 28 0C38 21 30 14 24 4Z" fill="#d7e1eb" stroke="#8ea2b6" stroke-width="1.5"/><path d="M17 31c1 5 4 7 8 7" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg>'},
+        OIL_WTI:{color:'#f59e0b',bg:'rgba(245,158,11,.13)',svg:'<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 4C18 14 10 21 10 30a14 14 0 0 0 28 0C38 21 30 14 24 4Z" fill="#d88b24" stroke="#fbbf24" stroke-width="1.5"/><path d="M17 31c1 5 4 7 8 7" fill="none" stroke="#fff0c2" stroke-width="2.5" stroke-linecap="round"/></svg>'}
       };
       const x=marks[m]||marks.GOLD;logo.innerHTML=x.svg;logo.style.color=x.color;logo.style.background=x.bg;logo.setAttribute('aria-label',m+' asset logo');
       const capLabel=document.getElementById('terminalMarketCapLabel'),capValue=document.getElementById('terminalMarketCapValue');
-      if(capLabel&&capValue){if(m==='BTC'){capLabel.textContent='BTC MARKET CAP';capValue.textContent='Loading…';refreshBtcMarketCap();}else{capLabel.textContent='MARKET CAP';capValue.textContent=(m==='GOLD'||m==='SILVER')?'Global commodity value · estimate unavailable':'Index · no market cap';}}
+      if(capLabel&&capValue){const change=document.getElementById('terminalGoldChange');if(m==='BTC'){capLabel.textContent='BTC MARKET CAP';capValue.textContent='Loading…';if(change)change.style.display='none';refreshBtcMarketCap();}else if(m==='GOLD'){capLabel.textContent='GOLD MARKET CAP ESTIMATE';capValue.textContent=document.getElementById('marketPrice')?.textContent||'Loading gold spot price…';if(change){change.style.display='block';change.textContent='Waiting for live 24H change…';change.style.color='#8fa9c2';}}else if(m==='OIL_BRENT'||m==='OIL_WTI'){capLabel.textContent=m==='OIL_BRENT'?'BRENT CRUDE SPOT':'WTI CRUDE SPOT';capValue.textContent='Chart quote';if(change){change.style.display='block';change.textContent='TradingView chart only';change.style.color='#8fa9c2';}}else{capLabel.textContent='MARKET CAP';capValue.textContent=m==='SILVER'?'Global commodity value · estimate unavailable':'Index · no market cap';if(change)change.style.display='none';}}
       volume.querySelector('strong').textContent='Not supplied by current feed';
-      const title=document.getElementById('chartTitle');if(title&&!document.getElementById('exchangeWebsiteSelector')?.value?.match(/^(OANDA|BINANCE|BINGX)$/)){const name=({GOLD:'Gold · XAU/USD',BTC:'Bitcoin · BTC/USD',SILVER:'Silver · XAG/USD',NASDAQ:'NASDAQ · US Tech 100'})[m]||m;title.textContent=`${name} · TradingView ${getChartIntervalForTopbar()}`;}
+      const title=document.getElementById('chartTitle');if(title&&!document.getElementById('exchangeWebsiteSelector')?.value?.match(/^(OANDA|BINANCE|BINGX)$/)){const name=({GOLD:'Gold · XAU/USD',BTC:'Bitcoin · BTC/USD',SILVER:'Silver · XAG/USD',NASDAQ:'NASDAQ · US Tech 100',OIL_BRENT:'Oil Brent · USD',OIL_WTI:'Oil WTI · USD'})[m]||m;title.textContent=`${name} · TradingView ${getChartIntervalForTopbar()}`;}
     }
     function getChartIntervalForTopbar(){const sel=document.getElementById('btcSignalTimeframe');return selectedMarket()==='BTC'?(sel?.value||'15m'):'15m';}
     let capBusy=false;
