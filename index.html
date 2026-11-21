@@ -1451,7 +1451,7 @@ a{color:#68dfff!important}
 .indicator-dot-wma100{background:#48a8ff;box-shadow:0 0 8px rgba(72,168,255,.65)}
 .indicator-dot-wma200{background:#bd78ff;box-shadow:0 0 8px rgba(189,120,255,.6)}
 .indicator-dot-ema20{background:#f6c94b;box-shadow:0 0 8px rgba(246,201,75,.55)}
-/* Move Add Asset controls first, then Demo Robot and Auto Trade below them. */
+/* Move Add Asset controls first, then Demo Robot and Trading Mode below them. */
 .container{grid-template-areas:"header header" "chart scalp" "scanner eci" "accuracy accuracy" "mtf mtf" "assetbutton assetbutton" "asset asset" "robot robot" "mode mode" "notice notice" "sim sim"!important}
 .container>.demo-robot-card{grid-area:robot!important}
 .container>.trading-mode-card{grid-area:mode!important}
@@ -1710,7 +1710,7 @@ a{color:#68dfff!important}
     <section class="trading-mode-card" id="tradingModeCard" aria-labelledby="tradingModeTitle">
       <div class="trading-mode-head">
         <div>
-          <h2 class="trading-mode-title" id="tradingModeTitle">Auto Trade</h2>
+          <h2 class="trading-mode-title" id="tradingModeTitle">Trading Mode</h2>
           <p class="trading-mode-copy">Paper trading continues as before. When live mode is enabled and the authorized Worker is ready, qualifying BTC robot entries can submit real BingX orders with attached stop-loss and take-profit orders. Gold and Silver stay paper-only. Turning live mode off blocks new live entries; it does not close an existing BingX position.</p>
         </div>
         <span id="tradingModeBadge" class="trading-mode-status">PAPER MODE · DEFAULT</span>
@@ -3790,6 +3790,10 @@ document.addEventListener("fullscreenchange", () => {
 
 function switchMarket(value) {
     selectedMarket = (["GOLD", "BTC", "SILVER", "NASDAQ"].includes(value) || String(value).startsWith("CUSTOM:")) ? value : "GOLD";
+    // Asset changes should always display that asset's TradingView chart, not leave an exchange website selected.
+    exchangeWebsiteMode = false;
+    const chartSelector = document.getElementById("exchangeWebsiteSelector");
+    if (chartSelector) chartSelector.value = "CHART";
     updateBtcTimeframeControl();
     if (selectedMarket === "BTC") updateBtcDirectionAnalysis();
 
@@ -3874,6 +3878,8 @@ function switchMarket(value) {
     const chartTitle = document.getElementById("chartTitle");
     if (chartTitle && !exchangeWebsiteMode) {
         chartTitle.textContent = `TradingView — ${market.label} ${getSignalIntervalLabel()}`;
+        const chartNotice = document.getElementById("exchangeFrameNotice");
+        if (chartNotice) chartNotice.innerHTML = '<span class="indicator-legend" aria-label="Chart indicator legend"><span class="indicator-legend-item"><span class="indicator-dot indicator-dot-wma100" aria-hidden="true"></span>WMA 100</span><span class="indicator-legend-item"><span class="indicator-dot indicator-dot-wma200" aria-hidden="true"></span>WMA 200</span><span class="indicator-legend-item"><span class="indicator-dot indicator-dot-ema20" aria-hidden="true"></span>EMA 20</span></span>';
     }
 
     initialize();
@@ -3939,6 +3945,8 @@ function changeBtcSignalTimeframe(value) {
             frame.src = `https://s.tradingview.com/widgetembed/?frameElementId=tradingview_chart_${cacheBust}&tvwidgetsymbol=${encodeURIComponent(market.tradingView)}&symbol=${encodeURIComponent(market.tradingView)}&interval=${encodeURIComponent(getSignalIntervalOption().tvInterval)}&hidesidetoolbar=0&symboledit=1&saveimage=1&toolbarbg=f1f3f6&theme=dark&style=1&timezone=Etc%2FUTC&withdateranges=1&hideideas=1&cache=${cacheBust}`;
         }
         if (title) title.textContent = `TradingView — ${market.label} ${timeframeLabel}`;
+        const chartNotice = document.getElementById("exchangeFrameNotice");
+        if (chartNotice) chartNotice.innerHTML = '<span class="indicator-legend" aria-label="Chart indicator legend"><span class="indicator-legend-item"><span class="indicator-dot indicator-dot-wma100" aria-hidden="true"></span>WMA 100</span><span class="indicator-legend-item"><span class="indicator-dot indicator-dot-wma200" aria-hidden="true"></span>WMA 200</span><span class="indicator-legend-item"><span class="indicator-dot indicator-dot-ema20" aria-hidden="true"></span>EMA 20</span></span>';
     }
 
     if (selectedMarket === "BTC") updateBtcDirectionAnalysis();
@@ -7252,10 +7260,35 @@ setInterval(refreshMultiTimeframePanel, 60000);
   const root = document.getElementById('marketScannerVisual');
   if (!root) return;
   const steps = Array.from(root.querySelectorAll('.scanner-step'));
+  const live = root.querySelector('.scanner-live');
+  const radar = root.querySelector('.scanner-radar-icon');
   const text = id => (document.getElementById(id)?.textContent || '').trim().toLowerCase();
   const hasValue = value => !!value && value !== '—' && value !== '-' && !/loading|waiting|not available|n\/a/.test(value);
   const bullishOrBearish = value => /bullish|bearish|bull|bear|long|short/.test(value);
+  function terminalState(){
+    const found = document.getElementById('demoRobotEntryFound');
+    const position = document.getElementById('demoRobotPosition');
+    const foundVisible = !!found && getComputedStyle(found).display !== 'none';
+    const positionVisible = !!position && getComputedStyle(position).display !== 'none' && !!position.textContent.trim();
+    const badge = text('demoRobotBadge');
+    const message = text('demoRobotMessage');
+    const open = positionVisible || /managing paper trade|position open/.test(badge + ' ' + message);
+    if (open) return 'position';
+    if (foundVisible || /entry found|limit pending|order pending/.test(message)) return 'found';
+    return 'scanning';
+  }
   function update(){
+    const state = terminalState();
+    if (live && live.dataset.state !== state) {
+      live.innerHTML = state === 'position'
+        ? '<span class="scanner-live-dot" style="animation:none"></span>Position Open'
+        : state === 'found'
+          ? '<span class="scanner-live-dot" style="animation:none"></span>Entry Found · Limit Pending'
+          : '<span class="scanner-live-dot"></span>Scanning';
+      live.dataset.state = state;
+    }
+    if (radar) radar.style.display = state === 'scanning' ? '' : 'none';
+
     const overall = text('overallStatus') + ' ' + text('biasLine') + ' ' + text('signalTime');
     const signalReady = /buy long|sell short|bullish|bearish|signal detected|signal: long|signal: short/.test(overall) && !/waiting for|overall status: waiting/.test(overall);
     const trend = text('trendStatusValue');
@@ -7267,16 +7300,27 @@ setInterval(refreshMultiTimeframePanel, 60000);
     const pullback = text('pullbackStatus') + ' ' + text('entryDistanceProximity');
     const rejectionReady = /reject|confirmed|confirmation|entry ready|ready to enter/.test(pullback) && !/waiting|not confirmed|no rejection/.test(pullback);
     const robotStatus = text('demoRobotBadge') + ' ' + text('demoRobotMessage');
-    const finalReady = signalReady && trendReady && structureReady && rejectionReady && (/entry|pending|position|ready/.test(robotStatus));
+    const finalReady = state !== 'scanning' || (signalReady && trendReady && structureReady && rejectionReady && /entry|pending|position|ready/.test(robotStatus));
     const passed = [signalReady, trendReady, structureReady, rejectionReady, finalReady];
     steps.forEach((step, i) => {
       const icon = step.querySelector('.scanner-step-icon');
-      const state = step.querySelector('.scanner-step-state');
-      const done = !!passed[i];
+      const label = step.querySelector('.scanner-step-state');
+      const done = state !== 'scanning' ? (i === 4 || passed[i]) : !!passed[i];
       step.classList.toggle('is-done', done);
-      if (icon) { const nextIcon = done ? '✅' : '⏳'; const nextLabel = done ? 'Done' : 'Pending'; const nextStatus = done ? 'done' : 'pending'; if (icon.textContent !== nextIcon) icon.textContent = nextIcon; if (icon.getAttribute('aria-label') !== nextLabel) icon.setAttribute('aria-label', nextLabel); if (icon.dataset.scanStatus !== nextStatus) icon.dataset.scanStatus = nextStatus; }
-      if (state) { const nextState = done ? 'DONE' : (i === 0 ? 'WATCH' : i === 4 ? 'PENDING' : 'CHECK'); if (state.textContent !== nextState) state.textContent = nextState; }
+      if (icon) {
+        const nextIcon = done ? '✅' : '⏳';
+        const nextLabel = done ? 'Done' : 'Pending';
+        const nextStatus = done ? 'done' : 'pending';
+        if (icon.textContent !== nextIcon) icon.textContent = nextIcon;
+        if (icon.getAttribute('aria-label') !== nextLabel) icon.setAttribute('aria-label', nextLabel);
+        if (icon.dataset.scanStatus !== nextStatus) icon.dataset.scanStatus = nextStatus;
+      }
+      if (label) {
+        const nextState = done ? 'DONE' : (i === 0 ? 'WATCH' : 'CHECK');
+        if (label.textContent !== nextState) label.textContent = nextState;
+      }
     });
+    root.dataset.scanState = state;
   }
   update();
   const observer = new MutationObserver(update);
