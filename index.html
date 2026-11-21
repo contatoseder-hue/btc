@@ -1861,7 +1861,7 @@ a{color:#68dfff!important}
         <div class="demo-limit-controls" id="demoRobotEarlyReversalControls">
             <label class="demo-limit-toggle" for="demoRobotEarlyReversal">
                 <input id="demoRobotEarlyReversal" type="checkbox" checked>
-                <span><strong>Early Reversal Protection · PAPER TEST</strong><small>After two consecutive closed 5-minute candles oppose the open position and the latest close breaks the prior three-candle structure, close the paper position and resume scanning. Does not reverse automatically.</small></span>
+                <span><strong>Early Reversal Protection · PAPER TEST</strong><small>After the first opposing closed 5-minute candle, record its open as the retest level. Exit only if the next closed candle retests near that level, closes against the position again, and does not close through the level. A close through the level cancels that setup. Paper-only; does not reverse automatically.</small></span>
             </label>
             <div class="demo-limit-note">The original stop loss remains active. This is a paper-only exit rule and does not send or manage live exchange orders.</div>
         </div>
@@ -5070,6 +5070,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
         earlyReversalProtection: true,
         positionReversalCandles: [],
         lastEarlyReversalCandleTime: 0,
+        earlyReversalRetestSetup: null,
         lastPositionReversalFetch: 0,
         autoEntryRescanRequested: false,
         forceLimitRequest: null,
@@ -5883,6 +5884,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
         if (outcomeR > 0) state.wins++;
         else if (outcomeR < 0) state.losses++;
         state.position = null;
+        state.earlyReversalRetestSetup = null;
         state.positionStructureClosed = [];
         state.lastPositionStructureFetch = 0;
         state.cooldownUntil = state.autoEntry ? 0 : Date.now() + 60000;
@@ -5925,31 +5927,78 @@ setInterval(refreshMultiTimeframePanel, 60000);
     function checkEarlyReversalExit(markPrice) {
         const p = state.position;
         const bars = state.positionReversalCandles;
-        if (!state.earlyReversalProtection || !p || !Array.isArray(bars) || bars.length < 5) return false;
-        const closed = bars.filter(c => c && c[6] !== true && Number.isFinite(Number(c[0])) && Number.isFinite(Number(c[1])) && Number.isFinite(Number(c[2])) && Number.isFinite(Number(c[3])) && Number.isFinite(Number(c[4])));
-        if (closed.length < 5) return false;
+        if (!state.earlyReversalProtection || !p || !Array.isArray(bars) || bars.length < 2) return false;
+        const closed = bars.filter(c => c && c[6] !== true &&
+            Number.isFinite(Number(c[0])) && Number.isFinite(Number(c[1])) &&
+            Number.isFinite(Number(c[2])) && Number.isFinite(Number(c[3])) &&
+            Number.isFinite(Number(c[4])));
+        if (closed.length < 2) return false;
+
         const last = closed[closed.length - 1];
-        if (Number(last[0]) <= Number(state.lastEarlyReversalCandleTime || 0)) return false;
-        state.lastEarlyReversalCandleTime = Number(last[0]);
-        const prev = closed[closed.length - 2];
-        const prior = closed.slice(-5, -2);
-        if (prior.length !== 3) return false;
-        const twoBearish = Number(prev[4]) < Number(prev[1]) && Number(last[4]) < Number(last[1]);
-        const twoBullish = Number(prev[4]) > Number(prev[1]) && Number(last[4]) > Number(last[1]);
-        const priorLow = Math.min(...prior.map(c => Number(c[3])));
-        const priorHigh = Math.max(...prior.map(c => Number(c[2])));
-        const reversalAgainstLong = p.direction === 'long' && twoBearish && Number(last[4]) < priorLow;
-        const reversalAgainstShort = p.direction === 'short' && twoBullish && Number(last[4]) > priorHigh;
-        if (!reversalAgainstLong && !reversalAgainstShort) return false;
-        const qty = Number.isFinite(Number(p.remainingQuantity)) ? Number(p.remainingQuantity) : Number(p.quantity);
-        const realized = Number(p.realizedPnlUsd) || 0;
-        const floating = (p.direction === 'long' ? Number(markPrice) - Number(p.entry) : Number(p.entry) - Number(markPrice)) * qty;
-        const risk = Math.max(0.01, Number(p.riskUsd) || DEMO_RISK_USD);
-        const outcomeR = (realized + floating) / risk;
-        const reason = `early reversal exit: confirmed opposing 5m candles and structure break`;
-        logEvent(`Early Reversal Protection triggered on closed 5m candle ${new Date(Number(last[0])).toLocaleString()}; closing paper ${p.direction.toUpperCase()} and returning to scan mode.`);
-        closePaperPosition(outcomeR, reason, markPrice);
-        return true;
+        const candleTime = Number(last[0]);
+        if (candleTime <= Number(state.lastEarlyReversalCandleTime || 0)) return false;
+        state.lastEarlyReversalCandleTime = candleTime;
+
+        const open = Number(last[1]);
+        const high = Number(last[2]);
+        const low = Number(last[3]);
+        const close = Number(last[4]);
+        const isBearish = close < open;
+        const isBullish = close > open;
+        const direction = p.direction;
+        let setup = state.earlyReversalRetestSetup;
+
+        // A setup lasts for exactly the next completed 5-minute candle.
+        // A close through the reference level cancels it; a wick retest can still reject.
+        if (setup && setup.direction !== direction) setup = null;
+        if (setup && candleTime > Number(setup.candleTime)) {
+            const reference = Number(setup.reference);
+            const tolerance = 0.0015; // 0.15% allowance for a near retest
+            let invalidated = false;
+            let confirmed = false;
+
+            if (direction === 'long') {
+                invalidated = close > reference;
+                const retested = high >= reference * (1 - tolerance);
+                confirmed = !invalidated && retested && isBearish && close < reference;
+            } else if (direction === 'short') {
+                invalidated = close < reference;
+                const retested = low <= reference * (1 + tolerance);
+                confirmed = !invalidated && retested && isBullish && close > reference;
+            }
+
+            // Consume the setup after the next candle, whether it confirms or fails.
+            state.earlyReversalRetestSetup = null;
+            if (confirmed) {
+                const qty = Number.isFinite(Number(p.remainingQuantity)) ? Number(p.remainingQuantity) : Number(p.quantity);
+                const realized = Number(p.realizedPnlUsd) || 0;
+                const floating = (direction === 'long' ? Number(markPrice) - Number(p.entry) : Number(p.entry) - Number(markPrice)) * qty;
+                const risk = Math.max(0.01, Number(p.riskUsd) || DEMO_RISK_USD);
+                const outcomeR = (realized + floating) / risk;
+                const reason = `early reversal exit: 5m retest rejection at ${formatPrice(reference)}`;
+                logEvent(`Early Reversal Protection: ${direction.toUpperCase()} retest rejection confirmed on the next closed 5m candle near ${formatPrice(reference)}; closing paper position.`);
+                closePaperPosition(outcomeR, reason, markPrice);
+                return true;
+            }
+            if (invalidated) {
+                logEvent(`Early Reversal setup cancelled: the closed 5m candle broke through ${formatPrice(reference)}. Holding position and waiting for a new setup.`);
+                return false;
+            }
+            // No qualifying rejection: wait for a fresh opposing candle to start another setup.
+        }
+
+        // Start a new setup only on a fresh opposing candle. For a LONG, the
+        // reference is that bearish candle's open; for a SHORT, the bullish candle's open.
+        if (!state.earlyReversalRetestSetup) {
+            if (direction === 'long' && isBearish) {
+                state.earlyReversalRetestSetup = { direction, reference: open, candleTime };
+                logEvent(`Early Reversal watching LONG: first bearish 5m candle closed; waiting for the next candle to retest ${formatPrice(open)} and reject.`);
+            } else if (direction === 'short' && isBullish) {
+                state.earlyReversalRetestSetup = { direction, reference: open, candleTime };
+                logEvent(`Early Reversal watching SHORT: first bullish 5m candle closed; waiting for the next candle to retest ${formatPrice(open)} and reject.`);
+            }
+        }
+        return false;
     }
 
     function managePaperPosition(markPrice) {
@@ -6634,9 +6683,10 @@ setInterval(refreshMultiTimeframePanel, 60000);
     if (earlyReversalInput) {
         earlyReversalInput.addEventListener('change', () => {
             state.earlyReversalProtection = Boolean(earlyReversalInput.checked);
+            if (!state.earlyReversalProtection) state.earlyReversalRetestSetup = null;
             logEvent(`Early Reversal Protection ${state.earlyReversalProtection ? 'enabled' : 'disabled'} for paper trades.`);
             setMessage(state.earlyReversalProtection
-                ? 'Early Reversal Protection ON: a confirmed opposing 5m candle pair plus a structure break can close a paper position early. The original stop remains active.'
+                ? 'Early Reversal Protection ON: first opposing 5m candle sets a reference; the next closed candle must retest and reject it. The original stop remains active.'
                 : 'Early Reversal Protection OFF. Existing stop-loss and take-profit rules remain unchanged.');
             savePersistentState();
             renderUi();
