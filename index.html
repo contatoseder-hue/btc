@@ -937,6 +937,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   #ptMouseGlow, #ptClickFlash { display: none !important; }
 }
 
+
+/* Professional asset marks and compact market-cap metric */
+.terminal-market-logo{display:inline-flex!important;align-items:center;justify-content:center;flex:0 0 42px;width:42px;height:42px;padding:5px;border:1px solid rgba(148,163,184,.22);border-radius:12px;overflow:hidden;box-sizing:border-box}
+.terminal-market-logo svg{display:block;width:100%;height:100%}
+.terminal-market-cap strong{font-variant-numeric:tabular-nums}
+
 </style>
 <style id="professionalTerminalVisualLayer">
 
@@ -1518,10 +1524,10 @@ a{color:#68dfff!important}
         <div style="max-width:420px;margin:0 auto 16px;">
             <div class="label" style="text-align:left;">Select Market</div>
             <select id="marketSelect" onchange="switchMarket(this.value)">
-                <option value="GOLD" selected>🪙 Gold / USD (XAU/USD)</option>
-                <option value="BTC">Bitcoin / USD (BTC/USD)</option>
+                <option value="GOLD" selected>🟡 Gold / USD (XAU/USD)</option>
+                <option value="BTC">🟠 Bitcoin / USD (BTC/USD)</option>
                 <option value="SILVER">⚪ Silver / USD (XAG/USD)</option>
-                <option value="NASDAQ">NASDAQ / US Tech 100</option>
+                <option value="NASDAQ">📈 NASDAQ / US Tech 100</option>
             </select>
         </div>
 
@@ -7405,12 +7411,30 @@ setInterval(refreshMultiTimeframePanel, 60000);
     if(picker){picker.className+=' terminal-market-picker';const label=picker.querySelector('.label');const row=document.createElement('div');row.className='terminal-market-row';picker.appendChild(row);row.appendChild(logo);row.appendChild(marketSelect);left.appendChild(picker);}
     header.insertBefore(left,header.firstChild);
     status.append(bias,overall);if(signalTime)status.appendChild(signalTime);header.appendChild(status);
+    const cap=document.createElement('div');cap.className='terminal-volume-note terminal-market-cap';cap.innerHTML='<span id="terminalMarketCapLabel">MARKET CAP</span><strong id="terminalMarketCapValue">Loading BTC market cap…</strong>';meta.appendChild(cap);
     const trend=document.querySelector('.trend-mini-panel');if(trend)meta.appendChild(trend);
     const volume=document.createElement('div');volume.className='terminal-volume-note';volume.innerHTML='<span>24H VOLUME</span><strong id="terminal24hVolume">Not supplied by current feed</strong>';meta.appendChild(volume);header.appendChild(meta);
     const timeframe=document.getElementById('btcTimeframeControl');if(timeframe)left.appendChild(timeframe);
     const directionCard=document.getElementById('btcDirectionAnalysisCard');if(directionCard)status.appendChild(directionCard);
     function selectedMarket(){return (marketSelect.value||'GOLD').toUpperCase();}
-    function updateMarketLogo(){const m=selectedMarket();const map={GOLD:{text:'Au',color:'#f6c94b',bg:'rgba(246,201,75,.12)'},BTC:{text:'₿',color:'#f7931a',bg:'rgba(247,147,26,.13)'},SILVER:{text:'Ag',color:'#d8e4ef',bg:'rgba(216,228,239,.12)'},NASDAQ:{text:'N',color:'#60a5fa',bg:'rgba(96,165,250,.13)'}};const x=map[m]||map.GOLD;logo.textContent=x.text;logo.style.color=x.color;logo.style.background=x.bg;volume.querySelector('strong').textContent='Not supplied by current feed';}
+    function updateMarketLogo(){
+      const m=selectedMarket();
+      const marks={
+        GOLD:{color:'#f6c94b',bg:'rgba(246,201,75,.13)',svg:'<svg viewBox="0 0 48 48" aria-hidden="true"><ellipse cx="24" cy="37" rx="17" ry="5" fill="#8c5d12" opacity=".45"/><path d="M8 18 18 9h20l-8 9z" fill="#ffe38a"/><path d="M8 18h22v17H8z" fill="#d99b20"/><path d="M30 18 38 9v17l-8 9z" fill="#f6c94b"/><path d="M12 22h14M12 27h14" stroke="#fff0b5" stroke-width="1.5" opacity=".8"/></svg>'},
+        BTC:{color:'#f7931a',bg:'rgba(247,147,26,.13)',svg:'<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="20" fill="#f7931a"/><circle cx="24" cy="24" r="16" fill="none" stroke="#ffd29a" stroke-width="1.4"/><text x="24" y="32" text-anchor="middle" font-size="27" font-weight="800" fill="white">₿</text></svg>'},
+        SILVER:{color:'#d8e4ef',bg:'rgba(216,228,239,.13)',svg:'<svg viewBox="0 0 48 48" aria-hidden="true"><ellipse cx="24" cy="37" rx="17" ry="5" fill="#667789" opacity=".4"/><path d="M8 18 18 9h20l-8 9z" fill="#f7fbff"/><path d="M8 18h22v17H8z" fill="#9eafbf"/><path d="M30 18 38 9v17l-8 9z" fill="#dce6ef"/><path d="M12 22h14M12 27h14" stroke="#fff" stroke-width="1.5" opacity=".85"/></svg>'},
+        NASDAQ:{color:'#60a5fa',bg:'rgba(96,165,250,.13)',svg:'<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="5" width="38" height="38" rx="10" fill="#17345a"/><path d="M11 32 19 24 25 28 36 15" fill="none" stroke="#60a5fa" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M29 15h7v7" fill="none" stroke="#60a5fa" stroke-width="3" stroke-linecap="round"/></svg>'}
+      };
+      const x=marks[m]||marks.GOLD;logo.innerHTML=x.svg;logo.style.color=x.color;logo.style.background=x.bg;logo.setAttribute('aria-label',m+' asset logo');
+      const capLabel=document.getElementById('terminalMarketCapLabel'),capValue=document.getElementById('terminalMarketCapValue');
+      if(capLabel&&capValue){if(m==='BTC'){capLabel.textContent='BTC MARKET CAP';capValue.textContent='Loading…';refreshBtcMarketCap();}else{capLabel.textContent='MARKET CAP';capValue.textContent=(m==='GOLD'||m==='SILVER')?'Global commodity value · estimate unavailable':'Index · no market cap';}}
+      volume.querySelector('strong').textContent='Not supplied by current feed';
+      const title=document.getElementById('chartTitle');if(title&&!document.getElementById('exchangeWebsiteSelector')?.value?.match(/^(OANDA|BINANCE|BINGX)$/)){const name=({GOLD:'Gold · XAU/USD',BTC:'Bitcoin · BTC/USD',SILVER:'Silver · XAG/USD',NASDAQ:'NASDAQ · US Tech 100'})[m]||m;title.textContent=`${name} · TradingView ${getChartIntervalForTopbar()}`;}
+    }
+    function getChartIntervalForTopbar(){const sel=document.getElementById('btcSignalTimeframe');return selectedMarket()==='BTC'?(sel?.value||'15m'):'15m';}
+    let capBusy=false;
+    async function refreshBtcMarketCap(){if(capBusy||selectedMarket()!=='BTC')return;capBusy=true;try{const r=await fetch('https://api.coingecko.com/api/v3/coins/bitcoin?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false',{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);const d=await r.json();const v=Number(d?.market_data?.market_cap?.usd);if(!Number.isFinite(v)||v<=0)throw new Error('missing value');const el=document.getElementById('terminalMarketCapValue');if(el&&selectedMarket()==='BTC')el.textContent='$'+(v/1e12).toFixed(3)+'T';}catch(_){const el=document.getElementById('terminalMarketCapValue');if(el&&selectedMarket()==='BTC')el.textContent='Unavailable';}finally{capBusy=false;}}
+    setInterval(()=>{if(selectedMarket()==='BTC')refreshBtcMarketCap();},120000);
     function updateLoginLabel(){const connected=!!(connectedBadge&&!connectedBadge.hidden);login.textContent=connected?'LOG OUT':'LOG IN';login.setAttribute('aria-label',connected?'Log out':'Log in');}
     login.addEventListener('click',function(){
       const connected=!!(connectedBadge&&!connectedBadge.hidden);
