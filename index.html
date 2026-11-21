@@ -1451,7 +1451,7 @@ a{color:#68dfff!important}
 .indicator-dot-wma100{background:#48a8ff;box-shadow:0 0 8px rgba(72,168,255,.65)}
 .indicator-dot-wma200{background:#bd78ff;box-shadow:0 0 8px rgba(189,120,255,.6)}
 .indicator-dot-ema20{background:#f6c94b;box-shadow:0 0 8px rgba(246,201,75,.55)}
-/* Move Add Asset controls first, then Demo Robot and Trading Mode below them. */
+/* Move Add Asset controls first, then Demo Robot and Auto Trade below them. */
 .container{grid-template-areas:"header header" "chart scalp" "scanner eci" "accuracy accuracy" "mtf mtf" "assetbutton assetbutton" "asset asset" "robot robot" "mode mode" "notice notice" "sim sim"!important}
 .container>.demo-robot-card{grid-area:robot!important}
 .container>.trading-mode-card{grid-area:mode!important}
@@ -1710,7 +1710,7 @@ a{color:#68dfff!important}
     <section class="trading-mode-card" id="tradingModeCard" aria-labelledby="tradingModeTitle">
       <div class="trading-mode-head">
         <div>
-          <h2 class="trading-mode-title" id="tradingModeTitle">Trading Mode</h2>
+          <h2 class="trading-mode-title" id="tradingModeTitle">Auto Trade</h2>
           <p class="trading-mode-copy">Paper trading continues as before. When live mode is enabled and the authorized Worker is ready, qualifying BTC robot entries can submit real BingX orders with attached stop-loss and take-profit orders. Gold and Silver stay paper-only. Turning live mode off blocks new live entries; it does not close an existing BingX position.</p>
         </div>
         <span id="tradingModeBadge" class="trading-mode-status">PAPER MODE · DEFAULT</span>
