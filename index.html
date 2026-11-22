@@ -1530,10 +1530,9 @@ a{color:#68dfff!important}
             <select id="marketSelect" onchange="switchMarket(this.value)">
                 <option value="GOLD" selected>🟡 Gold / USD (XAU/USD)</option>
                 <option value="BTC">🟠 Bitcoin / USD (BTC/USD)</option>
+                <option value="ZEC">🟢 Zcash / USDT (BingX Perpetual)</option>
                 <option value="SILVER">⚪ Silver / USD (XAG/USD)</option>
                 <option value="NASDAQ">📈 NASDAQ / US Tech 100</option>
-                <option value="OIL_BRENT">🛢️ Oil Brent / USD</option>
-                <option value="OIL_WTI">🛢️ Oil WTI / USD</option>
             </select>
         </div>
 
@@ -1760,7 +1759,7 @@ a{color:#68dfff!important}
             <div>
                 <div class="section-title" style="margin-bottom:0;">Demo Robot · Support / Resistance Confirmation</div>
                 <div class="demo-robot-subtitle">
-                    Paper trading remains available. Live BTC orders require the separate live switch, an authorized account, and a ready Worker. Gold and Silver remain paper-only. The robot waits for ECI direction, 1-minute WMA 100/200 agreement, a confirmed 15-minute swing level, and a closed 1-minute rejection candle. BTC also uses a 1-hour extension guard: near the previous closed 1-hour high/low, entries wait for a 15-minute pullback and rejection-confirmation candle.
+                    Paper trading remains available. Live BTC orders require the separate live switch, an authorized account, and a ready Worker. ZEC, Gold and Silver remain paper-only. The robot waits for ECI direction, 1-minute WMA 100/200 agreement, a confirmed 15-minute swing level, and a closed 1-minute rejection candle. BTC also uses a 1-hour extension guard: near the previous closed 1-hour high/low, entries wait for a 15-minute pullback and rejection-confirmation candle.
                 </div>
             </div>
             <span id="demoRobotBadge" class="demo-robot-badge">DEMO OFF</span>
@@ -2829,6 +2828,10 @@ function getMarketConfig() {
         };
     }
 
+    if (selectedMarket === "ZEC") {
+        return { label: "ZEC/USDT", name: "Zcash", yahoo: null, dataSymbol: "ZEC-USDT", bingxSymbol: "ZEC-USDT", binanceSymbol: null, tradingView: "BINGX:ZECUSDT.P", paperOnly: true };
+    }
+
     if (selectedMarket === "BTC") {
         return {
             label: "BTC/USD",
@@ -2878,6 +2881,7 @@ function getMarketPriceSourceName(marketCode = selectedMarket) {
     }
     if (marketCode === "GOLD") return "Binance Spot PAXG/USDT";
     if (marketCode === "BTC") return "Binance Futures";
+    if (marketCode === "ZEC") return "BingX Perpetual Futures";
     return "BingX";
 }
 
@@ -2889,31 +2893,56 @@ function getMarketPriceSourceBadge(marketCode = selectedMarket) {
     }
     if (marketCode === "GOLD") return "BINANCE SPOT PAXG/USDT LAST PRICE";
     if (marketCode === "BTC") return "BINANCE FUTURES LAST PRICE";
+    if (marketCode === "ZEC") return "BINGX ZEC-USDT PERPETUAL LAST PRICE";
     return "BINGX LAST PRICE";
 }
 
+// ZEC read-only fallback: BingX USDT-M perpetual public market endpoints.
+// This does not authenticate or place orders. Live ZEC trading remains disabled.
+async function fetchDirectBingXPrice(symbol = "ZEC-USDT") {
+    const url = `https://open-api.bingx.com/openApi/swap/v2/quote/price?symbol=${encodeURIComponent(symbol)}`;
+    const response = await fetch(url, { cache: "no-store", headers: { "Accept": "application/json" } });
+    const payload = await response.json().catch(() => null);
+    if (!response.ok || !payload || Number(payload.code) !== 0) {
+        throw new Error(`BingX price API failed (${response.status}): ${payload?.msg || payload?.message || "invalid response"}`);
+    }
+    const price = Number(payload?.data?.price);
+    if (!Number.isFinite(price) || price <= 0) throw new Error("BingX returned an invalid ZEC-USDT price.");
+    return price;
+}
+
+async function fetchDirectBingXCandlePayload(symbol = "ZEC-USDT", interval = "1m", limit = 500) {
+    const params = new URLSearchParams({ symbol, interval: String(interval), limit: String(Math.min(Math.max(Number(limit) || 500, 50), 1440)) });
+    const url = `https://open-api.bingx.com/openApi/swap/v3/quote/klines?${params.toString()}`;
+    const response = await fetch(url, { cache: "no-store", headers: { "Accept": "application/json" } });
+    const payload = await response.json().catch(() => null);
+    if (!response.ok || !payload || Number(payload.code) !== 0 || !Array.isArray(payload.data)) {
+        throw new Error(`BingX ${interval} candle API failed (${response.status}): ${payload?.msg || payload?.message || "invalid response"}`);
+    }
+    const bars = payload.data.filter(row => Array.isArray(row) && row.length >= 7).map(row => ({
+        openTime: Number(row[0]), open: row[1], high: row[2], low: row[3], close: row[4], volume: row[5], closeTime: Number(row[6]), isOpen: Number(row[6]) >= Date.now()
+    })).filter(bar => Number.isFinite(bar.openTime) && [bar.open, bar.high, bar.low, bar.close].every(v => Number.isFinite(Number(v)) && Number(v) > 0));
+    if (!bars.length) throw new Error(`BingX returned no valid ${interval} ZEC-USDT candles.`);
+    return { bars, source: `BingX USDT-M Perpetual (${symbol})` };
+}
+
 async function fetchMarketData(symbol, interval, limit = 300, historyRange = null) {
-    // All dashboard candle history now comes from the same active exchange feed
-    // used by the Cloudflare ECI engine and displayed current last price.
-    const params = new URLSearchParams({
-        market: selectedMarket,
-        candles: "1",
-        interval: String(interval),
-        limit: String(Math.min(Math.max(limit, 50), 1440)),
-        t: String(Date.now())
-    });
-    const response = await fetch(`${CLOUDFLARE_API}?${params.toString()}`, {
-        cache: "no-store",
-        headers: { "Accept": "application/json" }
-    });
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok) {
-        throw new Error(`Market candle request failed (${getMarketPriceSourceName()}): ${response.status}: ${payload?.message || payload?.error || "no details"}`);
+    if (selectedMarket === "ZEC") {
+        const direct = await fetchDirectBingXCandlePayload("ZEC-USDT", interval, limit);
+        return direct.bars;
     }
-    if (!Array.isArray(payload?.bars) || !payload.bars.length) {
-        throw new Error(`No ${interval} candles returned by ${getMarketPriceSourceName()}: ${payload?.message || payload?.error || "empty bars array"}`);
+    const params = new URLSearchParams({ market: selectedMarket, candles: "1", interval: String(interval), limit: String(Math.min(Math.max(limit, 50), 1440)), t: String(Date.now()) });
+    try {
+        const response = await fetch(`${CLOUDFLARE_API}?${params.toString()}`, { cache: "no-store", headers: { "Accept": "application/json" } });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || !Array.isArray(payload?.bars) || !payload.bars.length) throw new Error(`Worker candle request failed (${response.status}): ${payload?.message || payload?.error || "empty bars array"}`);
+        return payload.bars;
+    } catch (error) {
+        if (selectedMarket !== "ZEC") throw error;
+        console.warn("ZEC Worker feed unavailable; trying BingX public candles.", error?.message || String(error));
+        const fallback = await fetchDirectBingXCandlePayload("ZEC-USDT", interval, limit);
+        return fallback.bars;
     }
-    return payload.bars;
 }
 
 function marketBarsToCandles(bars, intervalMinutes = 15) {
@@ -3018,21 +3047,33 @@ async function updateBtcDirectionAnalysis() {
 
 async function fetchCurrentPrice() {
     try {
+        if (selectedMarket === "ZEC") {
+            currentPrice = await fetchDirectBingXPrice("ZEC-USDT");
+            document.getElementById("marketPrice").textContent = formatPrice(currentPrice);
+            const live = document.getElementById("marketPriceLive");
+            if (live) { live.innerHTML = `<span class="live-dot"></span><span>LIVE • ${getMarketPriceSourceBadge()}</span>`; live.style.color = "#22c55e"; }
+            const market = getMarketConfig();
+            const priceLine = document.getElementById("priceLine");
+            if (priceLine) priceLine.textContent = `${market.name} ${getMarketPriceSourceName()} Last Price: ${formatPrice(currentPrice)}`;
+            return;
+        }
         const params = new URLSearchParams({
             market: selectedMarket,
             price: "1",
             t: String(Date.now())
         });
-        const response = await fetch(`${CLOUDFLARE_API}?${params.toString()}`, {
-            cache: "no-store",
-            headers: { "Accept": "application/json" }
-        });
-        const payload = await response.json().catch(() => ({}));
-        if (!response.ok || payload?.error) {
-            throw new Error(`${getMarketPriceSourceName()} price request failed (${response.status}): ${payload?.message || payload?.error || "no details"}`);
+        let price;
+        try {
+            const response = await fetch(`${CLOUDFLARE_API}?${params.toString()}`, { cache: "no-store", headers: { "Accept": "application/json" } });
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok || payload?.error) throw new Error(`${getMarketPriceSourceName()} price request failed (${response.status}): ${payload?.message || payload?.error || "no details"}`);
+            price = Number(payload?.price);
+            if (!Number.isFinite(price) || price <= 0) throw new Error("Invalid market last price returned by Worker");
+        } catch (workerError) {
+            if (selectedMarket !== "ZEC") throw workerError;
+            console.warn("ZEC Worker price unavailable; trying BingX public price.", workerError?.message || String(workerError));
+            price = await fetchDirectBingXPrice("ZEC-USDT");
         }
-        const price = Number(payload?.price);
-        if (!Number.isFinite(price) || price <= 0) throw new Error("Invalid market last price returned by Worker");
 
         currentPrice = price;
         document.getElementById("marketPrice").textContent = formatPrice(currentPrice);
@@ -3810,7 +3851,7 @@ document.addEventListener("fullscreenchange", () => {
 });
 
 function switchMarket(value) {
-    selectedMarket = (["GOLD", "BTC", "SILVER", "NASDAQ", "OIL_BRENT", "OIL_WTI"].includes(value) || String(value).startsWith("CUSTOM:")) ? value : "GOLD";
+    selectedMarket = (["GOLD", "BTC", "ZEC", "SILVER", "NASDAQ"].includes(value) || String(value).startsWith("CUSTOM:")) ? value : "GOLD";
     // Asset changes should always display that asset's TradingView chart, not leave an exchange website selected.
     exchangeWebsiteMode = false;
     const chartSelector = document.getElementById("exchangeWebsiteSelector");
@@ -4106,6 +4147,14 @@ const mtfHistoryCache = new Map();
 const MTF_HISTORY_CACHE_MS = 5000;
 
 async function fetchMtfCandleHistory(marketCode, frame) {
+    if (marketCode === "ZEC") {
+        const direct = await fetchDirectBingXCandlePayload("ZEC-USDT", frame.interval, 500);
+        const candles = marketBarsToCandles(direct.bars, frame.minutes).sort((a, b) => a[0] - b[0]);
+        const valid = candles.filter(c => [c[1], c[2], c[3], c[4]].every(v => Number.isFinite(v) && v > 0));
+        if (!valid.length) throw new Error(`No valid BingX ZEC ${frame.interval} candles.`);
+        const normalizedCandles = mergeMtfCandles([], valid);
+        return { candles: normalizedCandles, referenceCandles: getMtfReferenceCandles(normalizedCandles), sourceBars: direct.bars.length, rejectedBars: direct.bars.length - valid.length, source: direct.source };
+    }
     const cacheKey = `${marketCode}|${frame.interval}`;
     const now = Date.now();
     const cached = mtfHistoryCache.get(cacheKey);
@@ -4148,7 +4197,10 @@ async function fetchMtfCandleHistory(marketCode, frame) {
             }
         } catch (error) {
             workerFailure = error;
-            if (marketCode !== "BTC") {
+            if (marketCode === "ZEC") {
+                payload = await fetchDirectBingXCandlePayload("ZEC-USDT", frame.interval, 500);
+                console.warn(`[Dashboard candle feed] Cloudflare failed for ZEC ${frame.interval}; using BingX public fallback.`, workerFailure?.message || String(workerFailure));
+            } else if (marketCode !== "BTC") {
                 const detail = error?.message || String(error);
                 if (/failed to fetch|networkerror|load failed/i.test(detail)) {
                     const pageOrigin = window.location && window.location.origin ? window.location.origin : "unknown";
@@ -5130,7 +5182,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
     const $ = (id) => document.getElementById(id);
 
     function marketName(code) {
-        const names = { GOLD: 'Gold', BTC: 'Bitcoin', SILVER: 'Silver', NASDAQ: 'NASDAQ' };
+        const names = { GOLD: 'Gold', BTC: 'Bitcoin', ZEC: 'Zcash', SILVER: 'Silver', NASDAQ: 'NASDAQ' };
         return names[code] || code || 'Unknown market';
     }
 
@@ -5588,14 +5640,17 @@ setInterval(refreshMultiTimeframePanel, 60000);
     }
 
     async function fetchPriceForMarket(market) {
+        if (market === 'ZEC') return await fetchDirectBingXPrice('ZEC-USDT');
         const params = new URLSearchParams({ market, price: '1', t: String(Date.now()) });
         const response = await fetch(`${CLOUDFLARE_API}?${params.toString()}`, {
             cache: 'no-store',
             headers: { 'Accept': 'application/json' }
         });
-        const payload = await response.json().catch(() => ({}));
-        if (!response.ok || payload?.error) {
-            throw new Error(payload?.message || payload?.error || `Price request failed (${response.status})`);
+        let payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload?.error || !Number.isFinite(Number(payload?.price)) || Number(payload?.price) <= 0) {
+            if (market !== 'ZEC') throw new Error(payload?.message || payload?.error || `Price request failed (${response.status})`);
+            const directPrice = await fetchDirectBingXPrice('ZEC-USDT');
+            return directPrice;
         }
         const price = Number(payload?.price);
         if (!Number.isFinite(price) || price <= 0) throw new Error('Price feed returned an invalid value.');
@@ -6990,7 +7045,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
     const session = data && data.session;
     if (!session?.access_token) throw new Error("Live order cancelled: authenticated session is missing.");
     if (String(position.market).toUpperCase() !== "BTC") {
-      throw new Error("Live order blocked: only BTC-USDT has been enabled. Gold and Silver remain paper-only until their BingX contracts are verified.");
+      throw new Error("Live order blocked: only BTC-USDT has been enabled. ZEC, Gold and Silver remain paper-only until their contracts and live execution safeguards are separately verified.");
     }
     const stopDistance = Math.abs(Number(position.entry) - Number(position.initialStop));
     if (!Number.isFinite(stopDistance) || stopDistance <= 0) throw new Error("Live order blocked: invalid stop distance.");
@@ -7452,6 +7507,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
       const marks={
         GOLD:{color:'#f6c94b',bg:'rgba(246,201,75,.13)',svg:'<svg viewBox="0 0 48 48" aria-hidden="true"><ellipse cx="24" cy="37" rx="17" ry="5" fill="#8c5d12" opacity=".45"/><path d="M8 18 18 9h20l-8 9z" fill="#ffe38a"/><path d="M8 18h22v17H8z" fill="#d99b20"/><path d="M30 18 38 9v17l-8 9z" fill="#f6c94b"/><path d="M12 22h14M12 27h14" stroke="#fff0b5" stroke-width="1.5" opacity=".8"/></svg>'},
         BTC:{color:'#f7931a',bg:'rgba(247,147,26,.13)',svg:'<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="20" fill="#f7931a"/><circle cx="24" cy="24" r="16" fill="none" stroke="#ffd29a" stroke-width="1.4"/><text x="24" y="32" text-anchor="middle" font-size="27" font-weight="800" fill="white">₿</text></svg>'},
+        ZEC:{color:'#f4b728',bg:'rgba(244,183,40,.13)',svg:'<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="20" fill="#f4b728"/><path d="M14 15h20v4L20 29h14v4H14v-4l14-10H14z" fill="#fff" stroke="#fff" stroke-linejoin="round" stroke-width="1.2"/></svg>'},
         SILVER:{color:'#d8e4ef',bg:'rgba(216,228,239,.13)',svg:'<svg viewBox="0 0 48 48" aria-hidden="true"><ellipse cx="24" cy="37" rx="17" ry="5" fill="#667789" opacity=".4"/><path d="M8 18 18 9h20l-8 9z" fill="#f7fbff"/><path d="M8 18h22v17H8z" fill="#9eafbf"/><path d="M30 18 38 9v17l-8 9z" fill="#dce6ef"/><path d="M12 22h14M12 27h14" stroke="#fff" stroke-width="1.5" opacity=".85"/></svg>'},
         NASDAQ:{color:'#60a5fa',bg:'rgba(96,165,250,.13)',svg:'<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="5" width="38" height="38" rx="10" fill="#17345a"/><path d="M11 32 19 24 25 28 36 15" fill="none" stroke="#60a5fa" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M29 15h7v7" fill="none" stroke="#60a5fa" stroke-width="3" stroke-linecap="round"/></svg>'},
         OIL_BRENT:{color:'#d6e2ed',bg:'rgba(148,163,184,.14)',svg:'<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 4C18 14 10 21 10 30a14 14 0 0 0 28 0C38 21 30 14 24 4Z" fill="#d7e1eb" stroke="#8ea2b6" stroke-width="1.5"/><path d="M17 31c1 5 4 7 8 7" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg>'},
@@ -7461,7 +7517,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
       const capLabel=document.getElementById('terminalMarketCapLabel'),capValue=document.getElementById('terminalMarketCapValue');
       if(capLabel&&capValue){const change=document.getElementById('terminalGoldChange');if(m==='BTC'){capLabel.textContent='BTC MARKET CAP';capValue.textContent='Loading…';if(change)change.style.display='none';refreshBtcMarketCap();}else if(m==='GOLD'){capLabel.textContent='GOLD MARKET CAP ESTIMATE';capValue.textContent=document.getElementById('marketPrice')?.textContent||'Loading gold spot price…';if(change){change.style.display='block';change.textContent='Waiting for live 24H change…';change.style.color='#8fa9c2';}}else if(m==='OIL_BRENT'||m==='OIL_WTI'){capLabel.textContent=m==='OIL_BRENT'?'BRENT CRUDE SPOT':'WTI CRUDE SPOT';capValue.textContent='Chart quote';if(change){change.style.display='block';change.textContent='TradingView chart only';change.style.color='#8fa9c2';}}else{capLabel.textContent='MARKET CAP';capValue.textContent=m==='SILVER'?'Global commodity value · estimate unavailable':'Index · no market cap';if(change)change.style.display='none';}}
       volume.querySelector('strong').textContent='Not supplied by current feed';
-      const title=document.getElementById('chartTitle');if(title&&!document.getElementById('exchangeWebsiteSelector')?.value?.match(/^(OANDA|BINANCE|BINGX)$/)){const name=({GOLD:'Gold · XAU/USD',BTC:'Bitcoin · BTC/USD',SILVER:'Silver · XAG/USD',NASDAQ:'NASDAQ · US Tech 100',OIL_BRENT:'Oil Brent · USD',OIL_WTI:'Oil WTI · USD'})[m]||m;title.textContent=`${name} · TradingView ${getChartIntervalForTopbar()}`;}
+      const title=document.getElementById('chartTitle');if(title&&!document.getElementById('exchangeWebsiteSelector')?.value?.match(/^(OANDA|BINANCE|BINGX)$/)){const name=({GOLD:'Gold · XAU/USD',BTC:'Bitcoin · BTC/USD',ZEC:'Zcash · ZEC/USDT',SILVER:'Silver · XAG/USD',NASDAQ:'NASDAQ · US Tech 100',OIL_BRENT:'Oil Brent · USD',OIL_WTI:'Oil WTI · USD'})[m]||m;title.textContent=`${name} · TradingView ${getChartIntervalForTopbar()}`;}
     }
     function getChartIntervalForTopbar(){const sel=document.getElementById('btcSignalTimeframe');return selectedMarket()==='BTC'?(sel?.value||'15m'):'15m';}
     let capBusy=false;
