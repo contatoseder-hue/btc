@@ -943,6 +943,37 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .terminal-market-logo svg{display:block;width:100%;height:100%}
 .terminal-market-cap strong{font-variant-numeric:tabular-nums}
 
+
+/* Responsive mobile terminal: presentation only; trading logic is untouched. */
+#mobileViewToggle{display:none}
+@media (max-width: 700px){
+  html,body{width:100%;max-width:100%;overflow-x:hidden;-webkit-text-size-adjust:100%}
+  body{font-size:14px}
+  .container{width:100%;max-width:100%;margin:0;padding:8px 8px 28px}
+  .card,.container section.card,.container section:not(.supabase-auth-card){padding:12px;margin-bottom:10px;border-radius:12px;min-width:0;max-width:100%}
+  .header{padding:12px 10px}
+  .grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+  .stat{padding:10px;min-width:0}
+  .value{font-size:18px;overflow-wrap:anywhere}
+  .section-title,.trading-mode-title{font-size:16px;line-height:1.25}
+  input,select,textarea,button{max-width:100%;font-size:16px}
+  input,select,textarea{min-width:0}
+  table{display:block;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  iframe,.tradingview-widget-container,.tradingview-widget-container iframe,canvas,svg{max-width:100%}
+  .tradingview-widget-container iframe{height:300px!important;min-height:260px!important}
+  #mobileViewToggle{display:flex;position:sticky;top:5px;z-index:9999;justify-content:center;align-items:center;gap:8px;width:100%;margin:0 0 9px;padding:10px 12px;border:1px solid #2c6571;border-radius:10px;background:#10232b;color:#e8fbff;font-weight:700;box-shadow:0 5px 16px #0007;cursor:pointer}
+  #mobileViewToggle:focus-visible{outline:2px solid #40d9c0;outline-offset:2px}
+  body.mobile-compact .public-beta-notice,
+  body.mobile-compact .accuracy-card,
+  body.mobile-compact #eciDetailsCard,
+  body.mobile-compact #multiTimeframePanel,
+  body.mobile-compact #assetAdminPanel,
+  body.mobile-compact .mobile-secondary-panel{display:none!important}
+  body.mobile-compact .container{padding-top:6px}
+  body.mobile-compact .tradingview-widget-container iframe{height:260px!important;min-height:220px!important}
+  body.mobile-full #mobileViewToggle{background:#172332;border-color:#42536a}
+}
+
 </style>
 <style id="professionalTerminalVisualLayer">
 
@@ -7573,6 +7604,38 @@ setInterval(refreshMultiTimeframePanel, 60000);
     marketSelect.addEventListener('change',updateMarketLogo);
     updateMarketLogo();updateLoginLabel();
   } catch(error){console.warn('Terminal topbar visual setup skipped:',error);}
+})();
+</script>
+
+
+<script id="mobile-view-switch">
+(function(){
+  function initMobileView(){
+    var container=document.querySelector('.container');
+    if(!container || document.getElementById('mobileViewToggle')) return;
+    var btn=document.createElement('button');
+    btn.type='button'; btn.id='mobileViewToggle';
+    btn.setAttribute('aria-pressed','true');
+    btn.innerHTML='<span aria-hidden="true">▣</span><span class="mobile-view-label">Mobile compact view · Show full dashboard</span>';
+    var auth=container.querySelector('#supabaseAuthCard, .supabase-auth-card');
+    if(auth && auth.parentNode===container) auth.insertAdjacentElement('afterend',btn);
+    else container.insertAdjacentElement('afterbegin',btn);
+    function setCompact(compact){
+      document.body.classList.toggle('mobile-compact',compact);
+      document.body.classList.toggle('mobile-full',!compact);
+      btn.setAttribute('aria-pressed',String(compact));
+      btn.querySelector('.mobile-view-label').textContent=compact?'Mobile compact view · Show full dashboard':'Full dashboard · Switch to compact view';
+    }
+    var mobile=window.matchMedia && window.matchMedia('(max-width: 700px)').matches;
+    setCompact(mobile);
+    btn.addEventListener('click',function(){setCompact(!document.body.classList.contains('mobile-compact'));});
+    if(window.matchMedia){
+      var mq=window.matchMedia('(max-width: 700px)');
+      var handle=function(e){if(e.matches){setCompact(true)}else{document.body.classList.remove('mobile-compact','mobile-full')}};
+      if(mq.addEventListener) mq.addEventListener('change',handle); else if(mq.addListener) mq.addListener(handle);
+    }
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initMobileView); else initMobileView();
 })();
 </script>
 
