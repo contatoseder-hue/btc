@@ -2919,18 +2919,26 @@ async function fetchDirectBingXCandlePayload(symbol = "ZEC-USDT", interval = "1m
     if (!response.ok || !payload || Number(payload.code) !== 0 || !Array.isArray(payload.data)) {
         throw new Error(`BingX ${interval} candle API failed (${response.status}): ${payload?.msg || payload?.message || "invalid response"}`);
     }
-    const bars = payload.data.filter(row => Array.isArray(row) && row.length >= 7).map(row => ({
-        openTime: Number(row[0]), open: row[1], high: row[2], low: row[3], close: row[4], volume: row[5], closeTime: Number(row[6]), isOpen: Number(row[6]) >= Date.now()
-    })).filter(bar => Number.isFinite(bar.openTime) && [bar.open, bar.high, bar.low, bar.close].every(v => Number.isFinite(Number(v)) && Number(v) > 0));
+    // Accept both array and object rows returned by different BingX kline response versions.
+    const intervalMs = {"1m":60000,"3m":180000,"5m":300000,"15m":900000,"30m":1800000,"1h":3600000,"2h":7200000,"4h":14400000,"1d":86400000}[String(interval)] || 60000;
+    const bars = payload.data.map(row => {
+        if (Array.isArray(row) && row.length >= 5) {
+            const openTime = Number(row[0]);
+            const closeTime = Number(row[6] ?? (openTime + intervalMs - 1));
+            return { openTime, open: row[1], high: row[2], low: row[3], close: row[4], volume: row[5], closeTime, isOpen: closeTime >= Date.now() };
+        }
+        if (row && typeof row === "object") {
+            const openTime = Number(row.time ?? row.timestamp ?? row.openTime ?? row.open_time);
+            const closeTime = Number(row.closeTime ?? row.close_time ?? (openTime + intervalMs - 1));
+            return { openTime, open: row.open, high: row.high, low: row.low, close: row.close, volume: row.volume, closeTime, isOpen: closeTime >= Date.now() };
+        }
+        return null;
+    }).filter(bar => bar && Number.isFinite(bar.openTime) && [bar.open, bar.high, bar.low, bar.close].every(v => Number.isFinite(Number(v)) && Number(v) > 0));
     if (!bars.length) throw new Error(`BingX returned no valid ${interval} ZEC-USDT candles.`);
     return { bars, source: `BingX USDT-M Perpetual (${symbol})` };
 }
 
 async function fetchMarketData(symbol, interval, limit = 300, historyRange = null) {
-    if (selectedMarket === "ZEC") {
-        const direct = await fetchDirectBingXCandlePayload("ZEC-USDT", interval, limit);
-        return direct.bars;
-    }
     const params = new URLSearchParams({ market: selectedMarket, candles: "1", interval: String(interval), limit: String(Math.min(Math.max(limit, 50), 1440)), t: String(Date.now()) });
     try {
         const response = await fetch(`${CLOUDFLARE_API}?${params.toString()}`, { cache: "no-store", headers: { "Accept": "application/json" } });
@@ -3048,7 +3056,17 @@ async function updateBtcDirectionAnalysis() {
 async function fetchCurrentPrice() {
     try {
         if (selectedMarket === "ZEC") {
-            currentPrice = await fetchDirectBingXPrice("ZEC-USDT");
+            const params = new URLSearchParams({ market: "ZEC", price: "1", t: String(Date.now()) });
+            try {
+                const response = await fetch(`${CLOUDFLARE_API}?${params.toString()}`, { cache: "no-store", headers: { "Accept": "application/json" } });
+                const payload = await response.json().catch(() => ({}));
+                const workerPrice = Number(payload?.price);
+                if (!response.ok || payload?.error || !Number.isFinite(workerPrice) || workerPrice <= 0) throw new Error(payload?.message || payload?.error || `Worker returned HTTP ${response.status}`);
+                currentPrice = workerPrice;
+            } catch (workerError) {
+                console.warn("ZEC Worker price request failed; trying BingX public price endpoint.", workerError?.message || String(workerError));
+                currentPrice = await fetchDirectBingXPrice("ZEC-USDT");
+            }
             document.getElementById("marketPrice").textContent = formatPrice(currentPrice);
             const live = document.getElementById("marketPriceLive");
             if (live) { live.innerHTML = `<span class="live-dot"></span><span>LIVE • ${getMarketPriceSourceBadge()}</span>`; live.style.color = "#22c55e"; }
@@ -6218,15 +6236,17 @@ setInterval(refreshMultiTimeframePanel, 60000);
             closeLocation >= 0.60 && candleClose > previousClose;
 
         if (direction === 'short') {
-            if (!bearishHour) return { blocked: true, reason: 'SHORT requires the previous fully closed 1h candle to be bearish (close below open). Waiting.' };
-            if (!nearHigh) return { blocked: true, reason: 'SHORT requires price near the previous closed 1h high; waiting at the top entry zone.' };
-            if (!rejectionAtHigh) return { blocked: true, reason: 'Price is in the 1h high zone, but the latest closed 15m candle has not confirmed bearish rejection. Waiting before SHORT entry.' };
+            // Apply the special 1h rejection rule only when price is actually near the prior hour high.
+            if (!nearHigh) return { blocked: false, reason: 'Outside 1h high extension zone; standard confirmations apply.' };
+            if (!bearishHour) return { blocked: true, reason: 'SHORT near the 1h high is blocked because the previous closed 1h candle was not bearish.' };
+            if (!rejectionAtHigh) return { blocked: true, reason: 'Price is near the 1h high, but the latest closed 15m candle has not confirmed bearish rejection.' };
             return { blocked: false, reason: '1h high zone and 15m bearish rejection confirmed' };
         }
         if (direction === 'long') {
-            if (!bullishHour) return { blocked: true, reason: 'LONG requires the previous fully closed 1h candle to be bullish/green (close above open). Waiting.' };
-            if (!nearLow) return { blocked: true, reason: 'LONG requires price near the previous closed 1h low; waiting at the bottom entry zone.' };
-            if (!rejectionAtLow) return { blocked: true, reason: 'Price is in the 1h low zone, but the latest closed 15m candle has not confirmed bullish rejection. Waiting before LONG entry.' };
+            // Apply the special 1h rejection rule only when price is actually near the prior hour low.
+            if (!nearLow) return { blocked: false, reason: 'Outside 1h low extension zone; standard confirmations apply.' };
+            if (!bullishHour) return { blocked: true, reason: 'LONG near the 1h low is blocked because the previous closed 1h candle was not bullish.' };
+            if (!rejectionAtLow) return { blocked: true, reason: 'Price is near the 1h low, but the latest closed 15m candle has not confirmed bullish rejection.' };
             return { blocked: false, reason: '1h low zone and 15m bullish rejection confirmed' };
         }
         return { blocked: true, reason: 'Unknown trade direction; entry blocked.' };
