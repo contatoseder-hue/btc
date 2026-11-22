@@ -2900,15 +2900,30 @@ function getMarketPriceSourceBadge(marketCode = selectedMarket) {
 // ZEC read-only fallback: BingX USDT-M perpetual public market endpoints.
 // This does not authenticate or place orders. Live ZEC trading remains disabled.
 async function fetchDirectBingXPrice(symbol = "ZEC-USDT") {
-    const url = `https://open-api.bingx.com/openApi/swap/v2/quote/price?symbol=${encodeURIComponent(symbol)}`;
-    const response = await fetch(url, { cache: "no-store", headers: { "Accept": "application/json" } });
-    const payload = await response.json().catch(() => null);
-    if (!response.ok || !payload || Number(payload.code) !== 0) {
-        throw new Error(`BingX price API failed (${response.status}): ${payload?.msg || payload?.message || "invalid response"}`);
+    // Try the primary public USDT-M perpetual ticker, then BingX's documented
+    // swap ticker endpoint. Neither endpoint needs API credentials.
+    const endpoints = [
+        `https://open-api.bingx.com/openApi/swap/v2/quote/price?symbol=${encodeURIComponent(symbol)}`,
+        `https://open-api.bingx.com/openApi/swap/v1/ticker/price?symbol=${encodeURIComponent(symbol)}`
+    ];
+    const failures = [];
+    for (const url of endpoints) {
+        try {
+            const response = await fetch(url, { cache: "no-store", headers: { "Accept": "application/json" } });
+            const payload = await response.json().catch(() => null);
+            if (!response.ok || !payload || Number(payload.code) !== 0) {
+                throw new Error(`HTTP ${response.status}: ${payload?.msg || payload?.message || "invalid response"}`);
+            }
+            const rows = Array.isArray(payload.data) ? payload.data : [payload.data];
+            const row = rows.find(item => !item?.symbol || String(item.symbol).toUpperCase() === symbol.toUpperCase());
+            const price = Number(row?.price ?? row?.lastPrice ?? row?.last);
+            if (!Number.isFinite(price) || price <= 0) throw new Error("BingX response did not contain a valid price.");
+            return price;
+        } catch (error) {
+            failures.push(error?.message || String(error));
+        }
     }
-    const price = Number(payload?.data?.price);
-    if (!Number.isFinite(price) || price <= 0) throw new Error("BingX returned an invalid ZEC-USDT price.");
-    return price;
+    throw new Error(`BingX ${symbol} perpetual price unavailable. ${failures.join(" | ")}`);
 }
 
 async function fetchDirectBingXCandlePayload(symbol = "ZEC-USDT", interval = "1m", limit = 500) {
@@ -3111,9 +3126,12 @@ async function fetchCurrentPrice() {
         document.getElementById("marketPrice").textContent = "Unavailable";
         const marketPriceLive = document.getElementById("marketPriceLive");
         if (marketPriceLive) {
-            marketPriceLive.innerHTML = '<span class="live-dot" style="background:#ef4444;animation:none;"></span><span>OFFLINE</span>';
+            marketPriceLive.innerHTML = '<span class="live-dot" style="background:#ef4444;animation:none;"></span><span>OFFLINE · BINGX PERPETUAL</span>';
             marketPriceLive.style.color = "#ef4444";
+            marketPriceLive.title = error?.message || "BingX price feed unavailable";
         }
+        const priceLine = document.getElementById("priceLine");
+        if (priceLine) priceLine.textContent = `${getMarketConfig().name} BingX Perpetual Futures: price feed unavailable`;
     }
 }
 
