@@ -1790,9 +1790,9 @@ a{color:#68dfff!important}
     <div class="card demo-robot-card" id="demoRobotCard">
         <div class="demo-robot-top">
             <div>
-                <div class="section-title" style="margin-bottom:0;">Demo Robot · Support / Resistance Confirmation</div>
+                <div class="section-title" style="margin-bottom:0;">Paper Robot · MAEE / MBEE Price Action</div>
                 <div class="demo-robot-subtitle">
-                    Paper trading remains available. Live BTC orders require the separate live switch, an authorized account, and a ready Worker. ZEC, Gold and Silver remain paper-only. The robot waits for ECI direction, 1-minute WMA 100/200 agreement, a confirmed 15-minute swing level, and a closed 1-minute rejection candle. BTC also uses a 1-hour extension guard: near the previous closed 1-hour high/low, entries wait for a 15-minute pullback and rejection-confirmation candle.
+                    Paper entries use Rayner Teo’s MAEE reversal and MBEE breakout frameworks, interpreted algorithmically from closed candles. MAEE checks market structure, pullback to an area of value, and a rejection trigger. MBEE checks a tight buildup and a confirmed close outside its range. Stops use setup structure and ATR. This replacement strategy is paper-only; live orders are disabled for these entries pending review.
                 </div>
             </div>
             <span id="demoRobotBadge" class="demo-robot-badge">DEMO OFF</span>
@@ -1934,7 +1934,7 @@ a{color:#68dfff!important}
                 </div>
                 <button id="demoRobotUseNearest" class="demo-robot-clear" type="button">Use Nearest Level</button>
             </div>
-            <div class="demo-limit-note">Limit orders can fill during a breakout and are riskier than confirmed entries. This is paper simulation only. Pending limit orders expire after 30 minutes and are cancelled if ECI/WMA direction changes or the level is invalidated.</div>
+            <div class="demo-limit-note">Legacy Force Limit Entry is disabled because its ECI-based rules do not belong to the MAEE/MBEE strategy. Ebook strategy entries use confirmed closed-candle setups and are paper-only.</div>
         </div>
 
         <div class="demo-robot-controls">
@@ -1959,7 +1959,7 @@ a{color:#68dfff!important}
             </table>
         </div>
         <div class="demo-robot-footnote">
-            Standard mode: ECI direction must match the 1-minute WMA trend, then a closed 1-minute rejection candle confirms the 15-minute swing level. BTC entries near the previous closed 1-hour high/low also require a recent 15-minute pullback and a closed 15-minute rejection/continuation candle. Optional Paper Limit Entry mode skips the rejection-candle requirement and simulates a limit at the nearest confirmed support/resistance (or a nearby manual override); it is higher risk and expires after 30 minutes. Support/resistance stays fixed as price moves, changing only if crossed/invalidated or replaced by a newer confirmed, closer swing. Demo sizing respects both the configured maximum initial stop risk and the configured margin allocation at the 10× paper model; estimated margin is not an exchange simulation and liquidation is not modeled. USD PnL is an estimate and excludes fees, spread, slippage and instrument-specific contract sizing. TP1 is 2R; 50% exits there and the remaining 50% targets 3R, with the stop moved to entry after TP1. State, pending setup/order, levels, open position and trade history are saved locally and an active robot resumes on refresh. JavaScript cannot monitor trades while the browser/page is closed; it resumes only when the dashboard is open again. BTC open-position mark and floating PnL use a public mark-price WebSocket when available; entry decisions still require closed candles. Other market marks continue to use the existing polling feed. Paper trading only; no exchange orders are sent. Custom assets are not enabled in this test.
+            Strategy: MAEE reversal and MBEE breakout from Price Action Trading Secrets, implemented as rule-based approximations using closed candles. Stops are placed beyond the setup structure with an ATR buffer. Existing paper position management remains in use: TP1 at 2R, partial exit, TP2 target at 3R, and the existing fee-protection stop. These exits are not a complete automation of every discretionary exit described in the book. The robot stores open positions and trade history in this browser and runs only while the dashboard is open. All MAEE/MBEE entries are paper-only; live order submission is disabled for this strategy. PnL is estimated and can exclude fees, spread, slippage and instrument-specific contract sizing.
         </div>
     </div>
 
@@ -2024,17 +2024,17 @@ a{color:#68dfff!important}
         <div class="scanner-live"><span class="scanner-live-dot"></span>Scanning</div>
       </div>
       <div class="scanner-track">
-        <div class="scanner-step"><span class="scanner-step-icon" aria-label="Pending" data-scan-status="pending">⏳</span><span>ECI signal detected</span><span class="scanner-step-state">WATCH</span></div>
-        <div class="scanner-step"><span class="scanner-step-icon" aria-label="Pending" data-scan-status="pending">⏳</span><span>1m WMA100 agreement</span><span class="scanner-step-state">CHECK</span></div>
-        <div class="scanner-step"><span class="scanner-step-icon" aria-label="Pending" data-scan-status="pending">⏳</span><span>15 minutes structure ok</span><span class="scanner-step-state">CHECK</span></div>
-        <div class="scanner-step"><span class="scanner-step-icon" aria-label="Pending" data-scan-status="pending">⏳</span><span>Rejection candle</span><span class="scanner-step-state">CHECK</span></div>
-        <div class="scanner-step scanner-final"><span class="scanner-step-icon" aria-label="Pending" data-scan-status="pending">⏳</span><span>Final check</span><span class="scanner-step-state">PENDING</span></div>
+        <div class="scanner-step"><span class="scanner-step-icon" aria-label="Pending" data-scan-status="pending">⏳</span><span>MAEE / MBEE setup</span><span class="scanner-step-state">SCAN</span></div>
+        <div class="scanner-step"><span class="scanner-step-icon" aria-label="Pending" data-scan-status="pending">⏳</span><span>Market structure / buildup</span><span class="scanner-step-state">CHECK</span></div>
+        <div class="scanner-step"><span class="scanner-step-icon" aria-label="Pending" data-scan-status="pending">⏳</span><span>Area of value / breakout level</span><span class="scanner-step-state">CHECK</span></div>
+        <div class="scanner-step"><span class="scanner-step-icon" aria-label="Pending" data-scan-status="pending">⏳</span><span>Closed-candle trigger</span><span class="scanner-step-state">CHECK</span></div>
+        <div class="scanner-step scanner-final"><span class="scanner-step-icon" aria-label="Pending" data-scan-status="pending">⏳</span><span>Structure / ATR stop</span><span class="scanner-step-state">PENDING</span></div>
       </div>
-      <div class="scanner-footnote">Visual scanner panel · signal rules and execution logic unchanged</div>
+      <div class="scanner-footnote">MAEE / MBEE strategy scanner · paper entries only</div>
     </section>
 
-    <!-- ECI DETAILS -->
-    <div class="card" id="eciDetailsCard">
+    <!-- Legacy ECI diagnostics retained for compatibility but hidden; no longer used for new entries. -->
+    <div class="card" id="eciDetailsCard" style="display:none">
 
         <div class="section-title" id="eciSectionTitle">
             ECI — 15m
@@ -2120,7 +2120,7 @@ a{color:#68dfff!important}
             </div>
             <div class="mtf-guidance-card critical">
                 <p class="warning-title"><strong>⚠️ READ BEFORE TRADE</strong></p>
-                <strong class="limit-instruction">Do NOT buy at Market order. Wait for the ECI entry level and use a LIMIT order.</strong>
+                <strong class="limit-instruction">MAEE/MBEE entries are based on confirmed closed-candle setups. Live execution is disabled for this strategy.</strong>
             </div>
             <div class="mtf-guidance-card disclaimer">
                 <p><strong>DISCLAIMER:</strong> This dashboard is for informational and educational purposes only. Signals are not financial advice. Leveraged trading involves substantial risk including loss of your trading capital. Trade responsibly.</p>
@@ -6302,7 +6302,9 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 setMessage('Waiting for a valid live price from the dashboard feed. No entry can be recorded.');
                 return;
             }
-            if (state.confirmClosed.length < 200) {
+            // WMA 100/200 is a legacy filter and must not gate the ebook MAEE/MBEE entry engine.
+            // The book strategy uses closed signal-timeframe candles plus its own structure/ATR stop.
+            if (state.confirmClosed.length < 200 && !window.priceActionTradingSecretsEnabled) {
                 state.trend = { direction: 'neutral', label: `Need 200 closed 1m bars (${state.confirmClosed.length} available)` };
                 setMessage('Waiting for enough closed 1-minute candles to calculate WMA 100/200.');
                 return;
