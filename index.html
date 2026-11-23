@@ -1,5 +1,5 @@
-o
 
+h
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -937,45 +937,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   #ptMouseGlow, #ptClickFlash { display: none !important; }
 }
 
-
-/* Professional asset marks and compact market-cap metric */
-.terminal-market-logo{display:inline-flex!important;align-items:center;justify-content:center;flex:0 0 42px;width:42px;height:42px;padding:5px;border:1px solid rgba(148,163,184,.22);border-radius:12px;overflow:hidden;box-sizing:border-box}
-.terminal-market-logo svg{display:block;width:100%;height:100%}
-.terminal-market-cap strong{font-variant-numeric:tabular-nums}
-
-
-/* Responsive mobile terminal: presentation only; trading logic is untouched. */
-#mobileViewToggle{display:none}
-@media (max-width: 700px){
-  html,body{width:100%;max-width:100%;overflow-x:hidden;-webkit-text-size-adjust:100%}
-  body{font-size:14px}
-  .container{width:100%;max-width:100%;margin:0;padding:8px 8px 28px}
-  .card,.container section.card,.container section:not(.supabase-auth-card){padding:12px;margin-bottom:10px;border-radius:12px;min-width:0;max-width:100%}
-  .header{padding:12px 10px}
-  .grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
-  .stat{padding:10px;min-width:0}
-  .value{font-size:18px;overflow-wrap:anywhere}
-  .section-title,.trading-mode-title{font-size:16px;line-height:1.25}
-  input,select,textarea,button{max-width:100%;font-size:16px}
-  input,select,textarea{min-width:0}
-  table{display:block;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
-  iframe,.tradingview-widget-container,.tradingview-widget-container iframe,canvas,svg{max-width:100%}
-  .tradingview-widget-container iframe{height:300px!important;min-height:260px!important}
-  #mobileViewToggle{display:flex;position:sticky;top:5px;z-index:9999;justify-content:center;align-items:center;gap:8px;width:100%;margin:0 0 9px;padding:10px 12px;border:1px solid #2c6571;border-radius:10px;background:#10232b;color:#e8fbff;font-weight:700;box-shadow:0 5px 16px #0007;cursor:pointer}
-  #mobileViewToggle:focus-visible{outline:2px solid #40d9c0;outline-offset:2px}
-  body.mobile-compact .public-beta-notice,
-  body.mobile-compact .accuracy-card,
-  body.mobile-compact #eciDetailsCard,
-  body.mobile-compact #multiTimeframePanel,
-  body.mobile-compact #assetAdminPanel,
-  body.mobile-compact .mobile-secondary-panel{display:none!important}
-  /* Mobile compact mode hides the entire chart panel to keep the scanner and trade controls above the fold. Full Dashboard restores it. */
-  body.mobile-compact #mobileChartPanel{display:none!important}
-  body.mobile-compact .container{padding-top:6px}
-  body.mobile-compact .tradingview-widget-container iframe{height:260px!important;min-height:220px!important}
-  body.mobile-full #mobileViewToggle{background:#172332;border-color:#42536a}
-}
-
 </style>
 <style id="professionalTerminalVisualLayer">
 
@@ -1429,9 +1390,7 @@ a{color:#68dfff!important}
 }
 
 /* Scanner progress indicators: driven from existing dashboard status fields. */
-.scanner-radar-icon{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;flex:0 0 28px;font-size:23px;line-height:1;transform-origin:center;filter:drop-shadow(0 0 7px rgba(22,230,154,.55));animation:scannerEmojiPulse 1.15s ease-in-out infinite!important;}
-@keyframes scannerEmojiPulse{0%,100%{transform:scale(1) rotate(-8deg);filter:drop-shadow(0 0 3px rgba(22,230,154,.35));opacity:.78}50%{transform:scale(1.16) rotate(8deg);filter:drop-shadow(0 0 12px rgba(22,230,154,.95));opacity:1}}
-@media(prefers-reduced-motion:reduce){.scanner-radar-icon{animation:scannerEmojiPulse 1.15s ease-in-out infinite!important}}
+.scanner-radar-icon{width:25px;height:25px;object-fit:contain;border-radius:50%;flex:0 0 25px;filter:drop-shadow(0 0 7px rgba(22,230,154,.45));}
 .scanner-step-icon{display:inline-flex;align-items:center;justify-content:center;min-width:22px;min-height:22px;font-size:17px;}
 .scanner-step.is-done .scanner-step-icon{color:#16e69a;filter:drop-shadow(0 0 5px rgba(22,230,154,.45));}
 .scanner-step.is-done .scanner-step-state{color:#16e69a!important;}
@@ -1446,8 +1405,8 @@ a{color:#68dfff!important}
 .container{grid-template-areas:"header header" "chart scalp" "scanner eci" "mode mode" "robot robot" "notice notice" "accuracy accuracy" "mtf mtf" "assetbutton assetbutton" "asset asset" "sim sim"!important}
 .container>.header{grid-area:header!important;display:grid!important;grid-template-columns:minmax(220px,285px) minmax(240px,1fr) minmax(230px,320px)!important;grid-template-areas:"left status meta"!important;align-items:center!important;gap:16px!important;padding:13px 16px!important;min-width:0!important;border:1px solid rgba(56,218,250,.2)!important;background:linear-gradient(110deg,rgba(7,20,35,.98),rgba(6,16,29,.98))!important;box-shadow:0 8px 24px rgba(0,0,0,.18)!important}
 .container>.header:after{display:none!important;content:none!important}
-.terminal-left-rail{grid-area:left;display:flex;flex-direction:column;align-items:flex-start;align-self:start;gap:6px;min-width:0;margin-top:-4px!important;margin-left:-4px!important}
-.terminal-login-btn{min-width:84px!important;min-height:29px!important;padding:5px 10px!important;margin:0!important;font-size:11px!important;font-weight:800!important;letter-spacing:.04em!important;background:#0b1b2d!important;color:#dff6ff!important;border:1px solid rgba(56,218,250,.42)!important;box-shadow:none!important}
+.terminal-left-rail{grid-area:left;display:flex;flex-direction:column;align-items:flex-start;gap:12px;min-width:0}
+.terminal-login-btn{min-width:94px!important;min-height:34px!important;padding:7px 13px!important;font-size:12px!important;font-weight:800!important;letter-spacing:.04em!important;background:#0b1b2d!important;color:#dff6ff!important;border:1px solid rgba(56,218,250,.42)!important;box-shadow:none!important}
 .terminal-market-picker{width:100%;max-width:285px!important;margin:0!important;display:flex;flex-direction:column;align-items:flex-start;gap:6px}
 .terminal-market-picker>.label{font-size:10px!important;text-transform:uppercase;letter-spacing:.12em;color:#91a9c2!important;margin:0!important}
 .terminal-market-row{display:flex;align-items:center;gap:9px;width:100%;min-width:0}
@@ -1463,10 +1422,6 @@ a{color:#68dfff!important}
 .terminal-market-meta .trend-mini-heading{font-size:10px!important}
 .terminal-volume-note{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 10px;border:1px solid rgba(56,218,250,.13);border-radius:8px;background:rgba(3,12,23,.38);font-size:9px;letter-spacing:.08em;color:#8fa9c2}
 .terminal-volume-note strong{font-size:10px;color:#d9eaf8;letter-spacing:0;text-align:right}
-.terminal-market-cap{display:grid!important;grid-template-columns:1fr;gap:4px!important;align-content:center}
-.terminal-market-cap span{font-size:9px;letter-spacing:.08em;color:#8fa9c2}
-.terminal-market-cap strong{font-size:17px!important;font-weight:850;color:#f3f8ff!important;text-align:left!important}
-.terminal-market-cap .market-cap-change{font-size:10px;font-weight:750;letter-spacing:0;color:#2dd4bf;text-align:left}
 /* The trend mini panel is visually relocated to the header; keep the original scalp area compact. */
 .container>.header + .card .status-row{align-items:start}
 @media(max-width:900px){
@@ -1563,11 +1518,10 @@ a{color:#68dfff!important}
         <div style="max-width:420px;margin:0 auto 16px;">
             <div class="label" style="text-align:left;">Select Market</div>
             <select id="marketSelect" onchange="switchMarket(this.value)">
-                <option value="GOLD" selected>🟡 Gold / USD (XAU/USD)</option>
-                <option value="BTC">🟠 Bitcoin / USD (BTC/USD)</option>
-                <option value="ZEC">🟢 Zcash / USDT (BingX Perpetual)</option>
+                <option value="GOLD" selected>🪙 Gold / USD (XAU/USD)</option>
+                <option value="BTC">Bitcoin / USD (BTC/USD)</option>
                 <option value="SILVER">⚪ Silver / USD (XAG/USD)</option>
-                <option value="NASDAQ">📈 NASDAQ / US Tech 100</option>
+                <option value="NASDAQ">NASDAQ / US Tech 100</option>
             </select>
         </div>
 
@@ -1792,9 +1746,9 @@ a{color:#68dfff!important}
     <div class="card demo-robot-card" id="demoRobotCard">
         <div class="demo-robot-top">
             <div>
-                <div class="section-title" style="margin-bottom:0;">Paper Robot · MAEE / MBEE Price Action</div>
+                <div class="section-title" style="margin-bottom:0;">Demo Robot · Support / Resistance Confirmation</div>
                 <div class="demo-robot-subtitle">
-                    Paper entries use Rayner Teo’s MAEE reversal and MBEE breakout frameworks, interpreted algorithmically from closed candles. MAEE checks market structure, pullback to an area of value, and a rejection trigger. MBEE checks a tight buildup and a confirmed close outside its range. Stops use setup structure and ATR. This replacement strategy is paper-only; live orders are disabled for these entries pending review.
+                    Paper trading remains available. Live BTC orders require the separate live switch, an authorized account, and a ready Worker. Gold and Silver remain paper-only. The robot waits for ECI direction, 1-minute WMA 100/200 agreement, a confirmed 15-minute swing level, and a closed 1-minute rejection candle. BTC also uses a 1-hour extension guard: near the previous closed 1-hour high/low, entries wait for a 15-minute pullback and rejection-confirmation candle.
                 </div>
             </div>
             <span id="demoRobotBadge" class="demo-robot-badge">DEMO OFF</span>
@@ -1810,7 +1764,7 @@ a{color:#68dfff!important}
                 <div id="demoRobotResistance" class="value">—</div>
             </div>
             <div class="demo-robot-stat">
-                <div class="label">Price Action Signal</div>
+                <div class="label">Dashboard ECI</div>
                 <div id="demoRobotEci" class="value">Waiting</div>
             </div>
             <div class="demo-robot-stat">
@@ -1936,7 +1890,7 @@ a{color:#68dfff!important}
                 </div>
                 <button id="demoRobotUseNearest" class="demo-robot-clear" type="button">Use Nearest Level</button>
             </div>
-            <div class="demo-limit-note">Legacy Force Limit Entry is disabled because its ECI-based rules do not belong to the MAEE/MBEE strategy. Ebook strategy entries use confirmed closed-candle setups and are paper-only.</div>
+            <div class="demo-limit-note">Limit orders can fill during a breakout and are riskier than confirmed entries. This is paper simulation only. Pending limit orders expire after 30 minutes and are cancelled if ECI/WMA direction changes or the level is invalidated.</div>
         </div>
 
         <div class="demo-robot-controls">
@@ -1961,7 +1915,7 @@ a{color:#68dfff!important}
             </table>
         </div>
         <div class="demo-robot-footnote">
-            Strategy: MAEE reversal and MBEE breakout from Price Action Trading Secrets, implemented as rule-based approximations using closed candles. Stops are placed beyond the setup structure with an ATR buffer. Existing paper position management remains in use: TP1 at 2R, partial exit, TP2 target at 3R, and the existing fee-protection stop. These exits are not a complete automation of every discretionary exit described in the book. The robot stores open positions and trade history in this browser and runs only while the dashboard is open. All MAEE/MBEE entries are paper-only; live order submission is disabled for this strategy. PnL is estimated and can exclude fees, spread, slippage and instrument-specific contract sizing.
+            Standard mode: ECI direction must match the 1-minute WMA trend, then a closed 1-minute rejection candle confirms the 15-minute swing level. BTC entries near the previous closed 1-hour high/low also require a recent 15-minute pullback and a closed 15-minute rejection/continuation candle. Optional Paper Limit Entry mode skips the rejection-candle requirement and simulates a limit at the nearest confirmed support/resistance (or a nearby manual override); it is higher risk and expires after 30 minutes. Support/resistance stays fixed as price moves, changing only if crossed/invalidated or replaced by a newer confirmed, closer swing. Demo sizing respects both the configured maximum initial stop risk and the configured margin allocation at the 10× paper model; estimated margin is not an exchange simulation and liquidation is not modeled. USD PnL is an estimate and excludes fees, spread, slippage and instrument-specific contract sizing. TP1 is 2R; 50% exits there and the remaining 50% targets 3R, with the stop moved to entry after TP1. State, pending setup/order, levels, open position and trade history are saved locally and an active robot resumes on refresh. JavaScript cannot monitor trades while the browser/page is closed; it resumes only when the dashboard is open again. BTC open-position mark and floating PnL use a public mark-price WebSocket when available; entry decisions still require closed candles. Other market marks continue to use the existing polling feed. Paper trading only; no exchange orders are sent. Custom assets are not enabled in this test.
         </div>
     </div>
 
@@ -2022,21 +1976,21 @@ a{color:#68dfff!important}
     <!-- MARKET SCANNER: visual-only panel; existing signal logic remains untouched -->
     <section class="card market-scanner-card" id="marketScannerVisual" aria-label="Market Scanner">
       <div class="scanner-heading">
-        <div class="scanner-title"><span class="scanner-radar-icon" aria-hidden="true">📡</span><span>Market Scanner</span></div>
+        <div class="scanner-title"><img class="scanner-radar-icon" src="https://media.tenor.com/Gparo0eD0KIAAAAC/nerd-radar-mayclan.gif" alt="" aria-hidden="true"><span>Market Scanner</span></div>
         <div class="scanner-live"><span class="scanner-live-dot"></span>Scanning</div>
       </div>
       <div class="scanner-track">
-        <div class="scanner-step"><span class="scanner-step-icon" aria-label="Pending" data-scan-status="pending">⏳</span><span>MAEE / MBEE setup</span><span class="scanner-step-state">SCAN</span></div>
-        <div class="scanner-step"><span class="scanner-step-icon" aria-label="Pending" data-scan-status="pending">⏳</span><span>Market structure / buildup</span><span class="scanner-step-state">CHECK</span></div>
-        <div class="scanner-step"><span class="scanner-step-icon" aria-label="Pending" data-scan-status="pending">⏳</span><span>Area of value / breakout level</span><span class="scanner-step-state">CHECK</span></div>
-        <div class="scanner-step"><span class="scanner-step-icon" aria-label="Pending" data-scan-status="pending">⏳</span><span>Closed-candle trigger</span><span class="scanner-step-state">CHECK</span></div>
-        <div class="scanner-step scanner-final"><span class="scanner-step-icon" aria-label="Pending" data-scan-status="pending">⏳</span><span>Structure / ATR stop</span><span class="scanner-step-state">PENDING</span></div>
+        <div class="scanner-step"><span class="scanner-step-icon" aria-label="Pending" data-scan-status="pending">⏳</span><span>ECI signal detected</span><span class="scanner-step-state">WATCH</span></div>
+        <div class="scanner-step"><span class="scanner-step-icon" aria-label="Pending" data-scan-status="pending">⏳</span><span>1m WMA100 agreement</span><span class="scanner-step-state">CHECK</span></div>
+        <div class="scanner-step"><span class="scanner-step-icon" aria-label="Pending" data-scan-status="pending">⏳</span><span>15 minutes structure ok</span><span class="scanner-step-state">CHECK</span></div>
+        <div class="scanner-step"><span class="scanner-step-icon" aria-label="Pending" data-scan-status="pending">⏳</span><span>Rejection candle</span><span class="scanner-step-state">CHECK</span></div>
+        <div class="scanner-step scanner-final"><span class="scanner-step-icon" aria-label="Pending" data-scan-status="pending">⏳</span><span>Final check</span><span class="scanner-step-state">PENDING</span></div>
       </div>
-      <div class="scanner-footnote">MAEE / MBEE strategy scanner · paper entries only</div>
+      <div class="scanner-footnote">Visual scanner panel · signal rules and execution logic unchanged</div>
     </section>
 
-    <!-- Legacy ECI diagnostics retained for compatibility but hidden; no longer used for new entries. -->
-    <div class="card" id="eciDetailsCard" style="display:none">
+    <!-- ECI DETAILS -->
+    <div class="card" id="eciDetailsCard">
 
         <div class="section-title" id="eciSectionTitle">
             ECI — 15m
@@ -2122,7 +2076,7 @@ a{color:#68dfff!important}
             </div>
             <div class="mtf-guidance-card critical">
                 <p class="warning-title"><strong>⚠️ READ BEFORE TRADE</strong></p>
-                <strong class="limit-instruction">MAEE/MBEE entries are based on confirmed closed-candle setups. Live execution is disabled for this strategy.</strong>
+                <strong class="limit-instruction">Do NOT buy at Market order. Wait for the ECI entry level and use a LIMIT order.</strong>
             </div>
             <div class="mtf-guidance-card disclaimer">
                 <p><strong>DISCLAIMER:</strong> This dashboard is for informational and educational purposes only. Signals are not financial advice. Leveraged trading involves substantial risk including loss of your trading capital. Trade responsibly.</p>
@@ -2198,7 +2152,7 @@ a{color:#68dfff!important}
     </script>
 
     <!-- TRADINGVIEW / EXCHANGE WEBSITE PANEL (added option only) -->
-    <div class="card" id="mobileChartPanel">
+    <div class="card">
 
         <div class="section-title" id="chartTitle">
             TradingView — XAU/USD 15m
@@ -2376,8 +2330,6 @@ function updateBtcTimeframeControl() {
 }
 
 const rsiPeriod = 14;
-window.priceActionTradingSecretsEnabled = true;
-window.priceActionBookSetup = window.priceActionBookSetup || null;
 
 /*
     ECI parameters
@@ -2865,10 +2817,6 @@ function getMarketConfig() {
         };
     }
 
-    if (selectedMarket === "ZEC") {
-        return { label: "ZEC/USDT", name: "Zcash", yahoo: null, dataSymbol: "ZEC-USDT", bingxSymbol: "ZEC-USDT", binanceSymbol: null, tradingView: "BINGX:ZECUSDT.P", paperOnly: true };
-    }
-
     if (selectedMarket === "BTC") {
         return {
             label: "BTC/USD",
@@ -2879,14 +2827,6 @@ function getMarketConfig() {
             binanceSymbol: "BTCUSDT",
             tradingView: "BINANCE:BTCUSDT.P"
         };
-    }
-
-    if (selectedMarket === "OIL_BRENT") {
-        return { label: "Brent Crude / USD", name: "Oil Brent", yahoo: "BZ=F", dataSymbol: null, bingxSymbol: null, binanceSymbol: null, tradingView: "TVC:UKOIL", chartOnly: true, oil: true, chartSymbol: "TVC:UKOIL" };
-    }
-
-    if (selectedMarket === "OIL_WTI") {
-        return { label: "WTI Crude / USD", name: "Oil WTI", yahoo: "CL=F", dataSymbol: null, bingxSymbol: null, binanceSymbol: null, tradingView: "TVC:USOIL", chartOnly: true, oil: true, chartSymbol: "TVC:USOIL" };
     }
 
     if (selectedMarket === "SILVER") {
@@ -2918,7 +2858,6 @@ function getMarketPriceSourceName(marketCode = selectedMarket) {
     }
     if (marketCode === "GOLD") return "Binance Spot PAXG/USDT";
     if (marketCode === "BTC") return "Binance Futures";
-    if (marketCode === "ZEC") return "BingX Perpetual Futures";
     return "BingX";
 }
 
@@ -2930,79 +2869,31 @@ function getMarketPriceSourceBadge(marketCode = selectedMarket) {
     }
     if (marketCode === "GOLD") return "BINANCE SPOT PAXG/USDT LAST PRICE";
     if (marketCode === "BTC") return "BINANCE FUTURES LAST PRICE";
-    if (marketCode === "ZEC") return "BINGX ZEC-USDT PERPETUAL LAST PRICE";
     return "BINGX LAST PRICE";
 }
 
-// ZEC read-only fallback: BingX USDT-M perpetual public market endpoints.
-// This does not authenticate or place orders. Live ZEC trading remains disabled.
-async function fetchDirectBingXPrice(symbol = "ZEC-USDT") {
-    // Try the primary public USDT-M perpetual ticker, then BingX's documented
-    // swap ticker endpoint. Neither endpoint needs API credentials.
-    const endpoints = [
-        `https://open-api.bingx.com/openApi/swap/v2/quote/price?symbol=${encodeURIComponent(symbol)}`,
-        `https://open-api.bingx.com/openApi/swap/v1/ticker/price?symbol=${encodeURIComponent(symbol)}`
-    ];
-    const failures = [];
-    for (const url of endpoints) {
-        try {
-            const response = await fetch(url, { cache: "no-store", headers: { "Accept": "application/json" } });
-            const payload = await response.json().catch(() => null);
-            if (!response.ok || !payload || Number(payload.code) !== 0) {
-                throw new Error(`HTTP ${response.status}: ${payload?.msg || payload?.message || "invalid response"}`);
-            }
-            const rows = Array.isArray(payload.data) ? payload.data : [payload.data];
-            const row = rows.find(item => !item?.symbol || String(item.symbol).toUpperCase() === symbol.toUpperCase());
-            const price = Number(row?.price ?? row?.lastPrice ?? row?.last);
-            if (!Number.isFinite(price) || price <= 0) throw new Error("BingX response did not contain a valid price.");
-            return price;
-        } catch (error) {
-            failures.push(error?.message || String(error));
-        }
-    }
-    throw new Error(`BingX ${symbol} perpetual price unavailable. ${failures.join(" | ")}`);
-}
-
-async function fetchDirectBingXCandlePayload(symbol = "ZEC-USDT", interval = "1m", limit = 500) {
-    const params = new URLSearchParams({ symbol, interval: String(interval), limit: String(Math.min(Math.max(Number(limit) || 500, 50), 1440)) });
-    const url = `https://open-api.bingx.com/openApi/swap/v3/quote/klines?${params.toString()}`;
-    const response = await fetch(url, { cache: "no-store", headers: { "Accept": "application/json" } });
-    const payload = await response.json().catch(() => null);
-    if (!response.ok || !payload || Number(payload.code) !== 0 || !Array.isArray(payload.data)) {
-        throw new Error(`BingX ${interval} candle API failed (${response.status}): ${payload?.msg || payload?.message || "invalid response"}`);
-    }
-    // Accept both array and object rows returned by different BingX kline response versions.
-    const intervalMs = {"1m":60000,"3m":180000,"5m":300000,"15m":900000,"30m":1800000,"1h":3600000,"2h":7200000,"4h":14400000,"1d":86400000}[String(interval)] || 60000;
-    const bars = payload.data.map(row => {
-        if (Array.isArray(row) && row.length >= 5) {
-            const openTime = Number(row[0]);
-            const closeTime = Number(row[6] ?? (openTime + intervalMs - 1));
-            return { openTime, open: row[1], high: row[2], low: row[3], close: row[4], volume: row[5], closeTime, isOpen: closeTime >= Date.now() };
-        }
-        if (row && typeof row === "object") {
-            const openTime = Number(row.time ?? row.timestamp ?? row.openTime ?? row.open_time);
-            const closeTime = Number(row.closeTime ?? row.close_time ?? (openTime + intervalMs - 1));
-            return { openTime, open: row.open, high: row.high, low: row.low, close: row.close, volume: row.volume, closeTime, isOpen: closeTime >= Date.now() };
-        }
-        return null;
-    }).filter(bar => bar && Number.isFinite(bar.openTime) && [bar.open, bar.high, bar.low, bar.close].every(v => Number.isFinite(Number(v)) && Number(v) > 0));
-    if (!bars.length) throw new Error(`BingX returned no valid ${interval} ZEC-USDT candles.`);
-    return { bars, source: `BingX USDT-M Perpetual (${symbol})` };
-}
-
 async function fetchMarketData(symbol, interval, limit = 300, historyRange = null) {
-    const params = new URLSearchParams({ market: selectedMarket, candles: "1", interval: String(interval), limit: String(Math.min(Math.max(limit, 50), 1440)), t: String(Date.now()) });
-    try {
-        const response = await fetch(`${CLOUDFLARE_API}?${params.toString()}`, { cache: "no-store", headers: { "Accept": "application/json" } });
-        const payload = await response.json().catch(() => ({}));
-        if (!response.ok || !Array.isArray(payload?.bars) || !payload.bars.length) throw new Error(`Worker candle request failed (${response.status}): ${payload?.message || payload?.error || "empty bars array"}`);
-        return payload.bars;
-    } catch (error) {
-        if (selectedMarket !== "ZEC") throw error;
-        console.warn("ZEC Worker feed unavailable; trying BingX public candles.", error?.message || String(error));
-        const fallback = await fetchDirectBingXCandlePayload("ZEC-USDT", interval, limit);
-        return fallback.bars;
+    // All dashboard candle history now comes from the same active exchange feed
+    // used by the Cloudflare ECI engine and displayed current last price.
+    const params = new URLSearchParams({
+        market: selectedMarket,
+        candles: "1",
+        interval: String(interval),
+        limit: String(Math.min(Math.max(limit, 50), 1440)),
+        t: String(Date.now())
+    });
+    const response = await fetch(`${CLOUDFLARE_API}?${params.toString()}`, {
+        cache: "no-store",
+        headers: { "Accept": "application/json" }
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+        throw new Error(`Market candle request failed (${getMarketPriceSourceName()}): ${response.status}: ${payload?.message || payload?.error || "no details"}`);
     }
+    if (!Array.isArray(payload?.bars) || !payload.bars.length) {
+        throw new Error(`No ${interval} candles returned by ${getMarketPriceSourceName()}: ${payload?.message || payload?.error || "empty bars array"}`);
+    }
+    return payload.bars;
 }
 
 function marketBarsToCandles(bars, intervalMinutes = 15) {
@@ -3107,47 +2998,24 @@ async function updateBtcDirectionAnalysis() {
 
 async function fetchCurrentPrice() {
     try {
-        if (selectedMarket === "ZEC") {
-            const params = new URLSearchParams({ market: "ZEC", price: "1", t: String(Date.now()) });
-            try {
-                const response = await fetch(`${CLOUDFLARE_API}?${params.toString()}`, { cache: "no-store", headers: { "Accept": "application/json" } });
-                const payload = await response.json().catch(() => ({}));
-                const workerPrice = Number(payload?.price);
-                if (!response.ok || payload?.error || !Number.isFinite(workerPrice) || workerPrice <= 0) throw new Error(payload?.message || payload?.error || `Worker returned HTTP ${response.status}`);
-                currentPrice = workerPrice;
-            } catch (workerError) {
-                console.warn("ZEC Worker price request failed; trying BingX public price endpoint.", workerError?.message || String(workerError));
-                currentPrice = await fetchDirectBingXPrice("ZEC-USDT");
-            }
-            document.getElementById("marketPrice").textContent = formatPrice(currentPrice);
-            const live = document.getElementById("marketPriceLive");
-            if (live) { live.innerHTML = `<span class="live-dot"></span><span>LIVE • ${getMarketPriceSourceBadge()}</span>`; live.style.color = "#22c55e"; }
-            const market = getMarketConfig();
-            const priceLine = document.getElementById("priceLine");
-            if (priceLine) priceLine.textContent = `${market.name} ${getMarketPriceSourceName()} Last Price: ${formatPrice(currentPrice)}`;
-            return;
-        }
         const params = new URLSearchParams({
             market: selectedMarket,
             price: "1",
             t: String(Date.now())
         });
-        let price;
-        try {
-            const response = await fetch(`${CLOUDFLARE_API}?${params.toString()}`, { cache: "no-store", headers: { "Accept": "application/json" } });
-            const payload = await response.json().catch(() => ({}));
-            if (!response.ok || payload?.error) throw new Error(`${getMarketPriceSourceName()} price request failed (${response.status}): ${payload?.message || payload?.error || "no details"}`);
-            price = Number(payload?.price);
-            if (!Number.isFinite(price) || price <= 0) throw new Error("Invalid market last price returned by Worker");
-        } catch (workerError) {
-            if (selectedMarket !== "ZEC") throw workerError;
-            console.warn("ZEC Worker price unavailable; trying BingX public price.", workerError?.message || String(workerError));
-            price = await fetchDirectBingXPrice("ZEC-USDT");
+        const response = await fetch(`${CLOUDFLARE_API}?${params.toString()}`, {
+            cache: "no-store",
+            headers: { "Accept": "application/json" }
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload?.error) {
+            throw new Error(`${getMarketPriceSourceName()} price request failed (${response.status}): ${payload?.message || payload?.error || "no details"}`);
         }
+        const price = Number(payload?.price);
+        if (!Number.isFinite(price) || price <= 0) throw new Error("Invalid market last price returned by Worker");
 
         currentPrice = price;
         document.getElementById("marketPrice").textContent = formatPrice(currentPrice);
-        if (selectedMarket === "GOLD") { const capPrice = document.getElementById("terminalMarketCapValue"); if (capPrice) capPrice.textContent = `$${(currentPrice / 1000).toFixed(2)}K`; }
         const marketPriceLive = document.getElementById("marketPriceLive");
         if (marketPriceLive) {
             marketPriceLive.innerHTML = `<span class="live-dot"></span><span>LIVE • ${getMarketPriceSourceBadge()}</span>`;
@@ -3163,12 +3031,9 @@ async function fetchCurrentPrice() {
         document.getElementById("marketPrice").textContent = "Unavailable";
         const marketPriceLive = document.getElementById("marketPriceLive");
         if (marketPriceLive) {
-            marketPriceLive.innerHTML = '<span class="live-dot" style="background:#ef4444;animation:none;"></span><span>OFFLINE · BINGX PERPETUAL</span>';
+            marketPriceLive.innerHTML = '<span class="live-dot" style="background:#ef4444;animation:none;"></span><span>OFFLINE</span>';
             marketPriceLive.style.color = "#ef4444";
-            marketPriceLive.title = error?.message || "BingX price feed unavailable";
         }
-        const priceLine = document.getElementById("priceLine");
-        if (priceLine) priceLine.textContent = `${getMarketConfig().name} BingX Perpetual Futures: price feed unavailable`;
     }
 }
 
@@ -3473,106 +3338,257 @@ function updateECIUI(
    UPDATE SCALP
 ========================================================= */
 
-/* =========================================================
-   PRICE ACTION TRADING SECRETS: MAEE + MBEE
-   Replaces ECI crossover/direction as the dashboard's entry signal.
-   Uses closed candles only; no live order is submitted by this signal engine.
-========================================================= */
-function calculateBookSetup(closedData) {
-    if (!Array.isArray(closedData) || closedData.length < 65) return null;
-    const bars = closedData.map(c => ({
-        t: Number(c[0]), o: Number(c[1]), h: Number(c[2]), l: Number(c[3]), c: Number(c[4])
-    })).filter(c => [c.t,c.o,c.h,c.l,c.c].every(Number.isFinite) && c.h >= c.l && c.c > 0);
-    if (bars.length < 65) return null;
-    const i = bars.length - 1, cur = bars[i], prev = bars[i-1];
-    const tr = bars.map((b,j) => j===0 ? b.h-b.l : Math.max(b.h-b.l,Math.abs(b.h-bars[j-1].c),Math.abs(b.l-bars[j-1].c)));
-    const atrPeriod = 14;
-    const atrSlice = tr.slice(-atrPeriod);
-    const atr = atrSlice.reduce((a,b)=>a+b,0)/atrSlice.length;
-    if (!Number.isFinite(atr) || atr <= 0) return null;
-    const mean = (arr, key) => arr.reduce((a,b)=>a+b[key],0)/arr.length;
-    const ema = (key, period) => {
-        let value = mean(bars.slice(0,period),key), alpha=2/(period+1);
-        for (let j=period;j<bars.length;j++) value=bars[j][key]*alpha+value*(1-alpha);
-        return value;
-    };
-    const ema20 = ema('c',20), ema50 = ema('c',50);
-    const old = bars.slice(-41,-21), recent = bars.slice(-20,-1);
-    const oldHigh = Math.max(...old.map(b=>b.h)), oldLow = Math.min(...old.map(b=>b.l));
-    const recentHigh = Math.max(...recent.map(b=>b.h)), recentLow = Math.min(...recent.map(b=>b.l));
-    const upStructure = recentHigh > oldHigh && recentLow > oldLow && cur.c > ema50;
-    const downStructure = recentHigh < oldHigh && recentLow < oldLow && cur.c < ema50;
-    const bullish = cur.c > cur.o, bearish = cur.c < cur.o;
-    const bullEngulf = prev.c < prev.o && bullish && cur.o <= prev.c && cur.c >= prev.o;
-    const bearEngulf = prev.c > prev.o && bearish && cur.o >= prev.c && cur.c <= prev.o;
-    const lowerWick = Math.min(cur.o,cur.c)-cur.l;
-    const upperWick = cur.h-Math.max(cur.o,cur.c);
-    const bullishReject = bullish && lowerWick >= Math.max(Math.abs(cur.c-cur.o)*0.8,atr*0.12) && cur.c >= cur.l+(cur.h-cur.l)*0.62;
-    const bearishReject = bearish && upperWick >= Math.max(Math.abs(cur.c-cur.o)*0.8,atr*0.12) && cur.c <= cur.l+(cur.h-cur.l)*0.38;
+function updateScalp(
+    eci,
+    closedData,
+    ma200
+) {
 
-    // MAEE: trend/market structure + area of value (EMA20 or recent swing zone) + closed-candle trigger.
-    const nearValueLong = Math.abs(cur.l-ema20) <= atr*0.65 || cur.l <= recentLow+atr*0.35;
-    const nearValueShort = Math.abs(cur.h-ema20) <= atr*0.65 || cur.h >= recentHigh-atr*0.35;
-    if (upStructure && nearValueLong && (bullEngulf || bullishReject)) {
-        const stop = Math.min(cur.l,prev.l,recentLow)-atr;
-        return {strategy:'MAEE',side:'Buy Long',direction:'long',time:cur.t,entry:cur.c,stop,atr,level:recentLow,candle:cur,reason:'Uptrend structure + pullback area of value + bullish rejection'};
-    }
-    if (downStructure && nearValueShort && (bearEngulf || bearishReject)) {
-        const stop = Math.max(cur.h,prev.h,recentHigh)+atr;
-        return {strategy:'MAEE',side:'Sell Short',direction:'short',time:cur.t,entry:cur.c,stop,atr,level:recentHigh,candle:cur,reason:'Downtrend structure + pullback area of value + bearish rejection'};
+    if (!eci || !closedData.length) {
+        return;
     }
 
-    // MBEE: tight volatility buildup, then a candle CLOSES outside the completed buildup range.
-    const n = 10, buildup = bars.slice(i-n,i), prior = bars.slice(Math.max(0,i-30),i-n);
-    if (buildup.length===n && prior.length>=5) {
-        const hi=Math.max(...buildup.map(b=>b.h)), lo=Math.min(...buildup.map(b=>b.l));
-        const priorRanges=prior.map(b=>b.h-b.l), avgPriorRange=priorRanges.reduce((a,b)=>a+b,0)/priorRanges.length;
-        const buildupRange=hi-lo;
-        const compressed=buildupRange <= atr*4.5 && buildupRange <= avgPriorRange*n*1.25;
-        const avgBuildupRange=buildup.reduce((a,b)=>a+(b.h-b.l),0)/n;
-        const lastRange=cur.h-cur.l;
-        if (compressed && lastRange >= Math.max(avgBuildupRange*1.15,atr*0.35) && cur.c>hi && bullish) {
-            return {strategy:'MBEE',side:'Buy Long',direction:'long',time:cur.t,entry:cur.c,stop:lo-atr,atr,level:hi,candle:cur,reason:'Tight buildup + bullish close above buildup resistance'};
+
+    /*
+        This is the newest CLOSED candle for the active signal timeframe.
+    */
+
+    const latestClosedCandle =
+        closedData[
+            closedData.length - 1
+        ];
+
+
+    const latestClosedTime =
+        latestClosedCandle[0];
+
+
+    /*
+        CRITICAL FIX:
+
+        Do not process the same signal-timeframe candle every
+        15 seconds. Process a new signal only after a candle closes.
+    */
+
+    if (
+        lastProcessedCandleTime ===
+        latestClosedTime
+    ) {
+
+        return;
+    }
+
+
+    lastProcessedCandleTime =
+        latestClosedTime;
+
+
+    /*
+        Determine the ECI crossover first.
+        If there is no NEW crossover, retain the currently active
+        ECI direction instead of leaving Entry/Stop Loss blank.
+
+        This uses the active ECI and its closed-candle data.
+    */
+
+    const crossoverSignal =
+        getECISignal(eci);
+
+
+    const lastClose =
+        parseFloat(
+            latestClosedCandle[4]
+        );
+
+
+    /*
+        Overall Status is intentionally not set here.
+        It is controlled by the Multi-Timeframe WMA200 consensus below.
+        ECI signal generation remains unchanged and independent.
+    */
+
+
+    /*
+        If a fresh crossover occurred, use it.
+        Otherwise determine the current ECI direction from the
+        latest CLOSED 15m candle.
+
+        Buy Long = close above the ECI short stop.
+        Sell Short = close below the ECI long stop.
+    */
+
+    let signal = crossoverSignal;
+
+    if (signal === "Neutral") {
+
+        if (lastClose > eci.last.stopShort) {
+            signal = "Buy Long";
         }
-        if (compressed && lastRange >= Math.max(avgBuildupRange*1.15,atr*0.35) && cur.c<lo && bearish) {
-            return {strategy:'MBEE',side:'Sell Short',direction:'short',time:cur.t,entry:cur.c,stop:hi+atr,atr,level:lo,candle:cur,reason:'Tight buildup + bearish close below buildup support'};
+        else if (lastClose < eci.last.stopLong) {
+            signal = "Sell Short";
+        }
+        else {
+            return;
         }
     }
-    return null;
-}
 
-function updateScalp(eci, closedData, ma200) {
-    if (!Array.isArray(closedData) || !closedData.length) return;
-    const latest = closedData[closedData.length-1], latestTime = Number(latest[0]);
-    if (!Number.isFinite(latestTime) || lastProcessedCandleTime === latestTime) return;
-    lastProcessedCandleTime = latestTime;
-    const setup = calculateBookSetup(closedData);
-    if (setup) {
-        window.priceActionBookSetup = setup;
-        lastScalpSignal = setup.side;
-        scalpEntry = setup.entry;
-        scalpStop = setup.stop;
-        const statusElement=document.getElementById('pullbackStatus'), biasElement=document.getElementById('biasLine');
-        if (statusElement) { statusElement.textContent=`${setup.strategy} · ${setup.side}`; statusElement.className=`status-value ${setup.direction==='long'?'buy':'sell'}`; }
-        if (biasElement) { biasElement.textContent=`${getMarketConfig().label} · ${setup.strategy} ${setup.direction.toUpperCase()}`; biasElement.className=`bias-line ${setup.direction==='long'?'buy':'sell'}`; }
-        const entryEl=document.getElementById('scalpEntry'), stopEl=document.getElementById('scalpStop'), timeEl=document.getElementById('signalTime');
-        if (entryEl) entryEl.textContent=formatPrice(setup.entry);
-        if (stopEl) stopEl.textContent=formatPrice(setup.stop);
-        if (timeEl) timeEl.textContent=`${setup.strategy} setup confirmed on closed ${getSignalIntervalLabel()} candle · ${new Date(setup.time).toLocaleString()}`;
-        const tp1=document.getElementById('tp1Value'), tp2=document.getElementById('tp2Value');
-        const risk=Math.abs(setup.entry-setup.stop);
-        if(tp1) tp1.textContent=formatPrice(setup.direction==='long'?setup.entry+2*risk:setup.entry-2*risk);
-        if(tp2) tp2.textContent=formatPrice(setup.direction==='long'?setup.entry+3*risk:setup.entry-3*risk);
-        console.info('[Price Action Trading Secrets]', setup.strategy, setup.reason, setup);
-    } else {
-        const statusElement=document.getElementById('pullbackStatus'), biasElement=document.getElementById('biasLine');
-        if (statusElement) { statusElement.textContent='Waiting for MAEE / MBEE setup'; statusElement.className='status-value neutral-text'; }
-        if (biasElement) { biasElement.textContent=`${getMarketConfig().label} · PRICE ACTION SCANNING`; biasElement.className='bias-line waiting'; }
-        const timeEl=document.getElementById('signalTime');
-        if(timeEl) timeEl.textContent=`Scanning closed ${getSignalIntervalLabel()} candles for market structure, area of value, rejection, or buildup breakout.`;
-        // Do not clear a setup until the paper robot has had a chance to consume it.
-        lastScalpSignal=null; scalpEntry=null; scalpStop=null;
+
+    /*
+        A fresh opposite crossover replaces the active signal.
+        A repeated direction keeps the existing signal active.
+    */
+
+    if (
+        lastScalpSignal === signal &&
+        scalpEntry !== null &&
+        scalpStop !== null
+    ) {
+
+        return;
     }
+
+
+    /*
+        The candle immediately BEFORE the
+        signal candle supplies the SL.
+    */
+
+    const signalIndex =
+        closedData.length - 1;
+
+    const previousIndex =
+        signalIndex - 1;
+
+
+    if (previousIndex < 0) {
+        return;
+    }
+
+
+    const previousCandle =
+        closedData[previousIndex];
+
+
+    const previousHigh =
+        parseFloat(
+            previousCandle[2]
+        );
+
+    const previousLow =
+        parseFloat(
+            previousCandle[3]
+        );
+
+
+    /*
+        ENTRY:
+
+        Current BTC market price if available.
+
+        Otherwise use the signal candle close.
+    */
+
+    // Entry is the latest closed candle close for the active signal timeframe.
+    const entry = lastClose;
+
+
+    /*
+        STOP LOSS:
+
+        Buy Long:
+            lower ECI line (stopShort)
+
+        Sell Short:
+            upper ECI line (stopLong)
+    */
+
+    // ECI stop: Buy uses the lower ECI line; Sell uses the upper ECI line.
+    const stop =
+        signal === "Buy Long"
+            ? eci.last.stopShort
+            : eci.last.stopLong;
+
+
+    /*
+        Save signal.
+    */
+
+    lastScalpSignal =
+        signal;
+
+    scalpEntry =
+        entry;
+
+    scalpStop =
+        stop;
+
+
+    /*
+        Update UI.
+    */
+
+    const statusElement =
+        document.getElementById(
+            "pullbackStatus"
+        );
+
+    const biasElement =
+        document.getElementById(
+            "biasLine"
+        );
+
+
+    if (signal === "Buy Long") {
+
+        statusElement.textContent =
+            "Buy Long";
+
+        statusElement.className =
+            "status-value buy";
+
+        biasElement.textContent =
+            `${getMarketConfig().label} - BUY LONG`;
+
+        biasElement.className =
+            "bias-line buy";
+
+    }
+    else {
+
+        statusElement.textContent =
+            "Sell Short";
+
+        statusElement.className =
+            "status-value sell";
+
+        biasElement.textContent =
+            `${getMarketConfig().label} - SELL SHORT`;
+
+        biasElement.className =
+            "bias-line sell";
+    }
+
+
+    document.getElementById(
+        "scalpEntry"
+    ).textContent =
+        formatPrice(entry);
+
+
+    document.getElementById(
+        "scalpStop"
+    ).textContent =
+        formatPrice(stop);
+
+
+    document.getElementById(
+        "signalTime"
+    ).textContent =
+        `${getSignalIntervalLabel()} ECI signal confirmed at ` +
+        new Date(
+            latestClosedTime
+        ).toLocaleString();
+
 }
 
 
@@ -3773,7 +3789,7 @@ document.addEventListener("fullscreenchange", () => {
 });
 
 function switchMarket(value) {
-    selectedMarket = (["GOLD", "BTC", "ZEC", "SILVER", "NASDAQ"].includes(value) || String(value).startsWith("CUSTOM:")) ? value : "GOLD";
+    selectedMarket = (["GOLD", "BTC", "SILVER", "NASDAQ"].includes(value) || String(value).startsWith("CUSTOM:")) ? value : "GOLD";
     // Asset changes should always display that asset's TradingView chart, not leave an exchange website selected.
     exchangeWebsiteMode = false;
     const chartSelector = document.getElementById("exchangeWebsiteSelector");
@@ -3842,8 +3858,8 @@ function switchMarket(value) {
         tv.src =
             `https://s.tradingview.com/widgetembed/` +
             `?frameElementId=tradingview_chart_${cacheBust}` +
-            `&tvwidgetsymbol=${encodeURIComponent(market.chartSymbol || market.tradingView)}` +
-            `&symbol=${encodeURIComponent(market.chartSymbol || market.tradingView)}` +
+            `&tvwidgetsymbol=${encodeURIComponent(market.tradingView)}` +
+            `&symbol=${encodeURIComponent(market.tradingView)}` +
             `&interval=${encodeURIComponent(selectedMarket === "BTC" ? getSignalIntervalOption().tvInterval : "15")}` +
             `&hidesidetoolbar=0` +
             `&symboledit=1` +
@@ -3863,7 +3879,7 @@ function switchMarket(value) {
     if (chartTitle && !exchangeWebsiteMode) {
         chartTitle.textContent = `TradingView — ${market.label} ${getSignalIntervalLabel()}`;
         const chartNotice = document.getElementById("exchangeFrameNotice");
-        if (chartNotice) chartNotice.innerHTML = (market.chartOnly ? '<span style="color:#fbbf24;font-size:11px">Oil chart only · no ECI candles or robot execution configured for this asset.</span>' : '<span class="indicator-legend" aria-label="Chart indicator legend"><span class="indicator-legend-item"><span class="indicator-dot indicator-dot-wma100" aria-hidden="true"></span>WMA 100</span><span class="indicator-legend-item"><span class="indicator-dot indicator-dot-wma200" aria-hidden="true"></span>WMA 200</span><span class="indicator-legend-item"><span class="indicator-dot indicator-dot-ema20" aria-hidden="true"></span>EMA 20</span></span>');
+        if (chartNotice) chartNotice.innerHTML = '<span class="indicator-legend" aria-label="Chart indicator legend"><span class="indicator-legend-item"><span class="indicator-dot indicator-dot-wma100" aria-hidden="true"></span>WMA 100</span><span class="indicator-legend-item"><span class="indicator-dot indicator-dot-wma200" aria-hidden="true"></span>WMA 200</span><span class="indicator-legend-item"><span class="indicator-dot indicator-dot-ema20" aria-hidden="true"></span>EMA 20</span></span>';
     }
 
     initialize();
@@ -3930,7 +3946,7 @@ function changeBtcSignalTimeframe(value) {
         }
         if (title) title.textContent = `TradingView — ${market.label} ${timeframeLabel}`;
         const chartNotice = document.getElementById("exchangeFrameNotice");
-        if (chartNotice) chartNotice.innerHTML = (market.chartOnly ? '<span style="color:#fbbf24;font-size:11px">Oil chart only · no ECI candles or robot execution configured for this asset.</span>' : '<span class="indicator-legend" aria-label="Chart indicator legend"><span class="indicator-legend-item"><span class="indicator-dot indicator-dot-wma100" aria-hidden="true"></span>WMA 100</span><span class="indicator-legend-item"><span class="indicator-dot indicator-dot-wma200" aria-hidden="true"></span>WMA 200</span><span class="indicator-legend-item"><span class="indicator-dot indicator-dot-ema20" aria-hidden="true"></span>EMA 20</span></span>');
+        if (chartNotice) chartNotice.innerHTML = '<span class="indicator-legend" aria-label="Chart indicator legend"><span class="indicator-legend-item"><span class="indicator-dot indicator-dot-wma100" aria-hidden="true"></span>WMA 100</span><span class="indicator-legend-item"><span class="indicator-dot indicator-dot-wma200" aria-hidden="true"></span>WMA 200</span><span class="indicator-legend-item"><span class="indicator-dot indicator-dot-ema20" aria-hidden="true"></span>EMA 20</span></span>';
     }
 
     if (selectedMarket === "BTC") updateBtcDirectionAnalysis();
@@ -4069,14 +4085,6 @@ const mtfHistoryCache = new Map();
 const MTF_HISTORY_CACHE_MS = 5000;
 
 async function fetchMtfCandleHistory(marketCode, frame) {
-    if (marketCode === "ZEC") {
-        const direct = await fetchDirectBingXCandlePayload("ZEC-USDT", frame.interval, 500);
-        const candles = marketBarsToCandles(direct.bars, frame.minutes).sort((a, b) => a[0] - b[0]);
-        const valid = candles.filter(c => [c[1], c[2], c[3], c[4]].every(v => Number.isFinite(v) && v > 0));
-        if (!valid.length) throw new Error(`No valid BingX ZEC ${frame.interval} candles.`);
-        const normalizedCandles = mergeMtfCandles([], valid);
-        return { candles: normalizedCandles, referenceCandles: getMtfReferenceCandles(normalizedCandles), sourceBars: direct.bars.length, rejectedBars: direct.bars.length - valid.length, source: direct.source };
-    }
     const cacheKey = `${marketCode}|${frame.interval}`;
     const now = Date.now();
     const cached = mtfHistoryCache.get(cacheKey);
@@ -4119,10 +4127,7 @@ async function fetchMtfCandleHistory(marketCode, frame) {
             }
         } catch (error) {
             workerFailure = error;
-            if (marketCode === "ZEC") {
-                payload = await fetchDirectBingXCandlePayload("ZEC-USDT", frame.interval, 500);
-                console.warn(`[Dashboard candle feed] Cloudflare failed for ZEC ${frame.interval}; using BingX public fallback.`, workerFailure?.message || String(workerFailure));
-            } else if (marketCode !== "BTC") {
+            if (marketCode !== "BTC") {
                 const detail = error?.message || String(error);
                 if (/failed to fetch|networkerror|load failed/i.test(detail)) {
                     const pageOrigin = window.location && window.location.origin ? window.location.origin : "unknown";
@@ -4670,7 +4675,7 @@ function updateDashboardFromCloudflare(data) {
         document.getElementById("signalTime").textContent =
             Number.isNaN(parsed.getTime())
                 ? `${signalIntervalLabel} ECI signal: ${data.signalTime}`
-                : `${signalIntervalLabel} Price Action signal confirmed at ${parsed.toLocaleString()}`;
+                : `${signalIntervalLabel} ECI signal confirmed at ${parsed.toLocaleString()}`;
     }
 
     /* -----------------------------------------------
@@ -5104,7 +5109,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
     const $ = (id) => document.getElementById(id);
 
     function marketName(code) {
-        const names = { GOLD: 'Gold', BTC: 'Bitcoin', ZEC: 'Zcash', SILVER: 'Silver', NASDAQ: 'NASDAQ' };
+        const names = { GOLD: 'Gold', BTC: 'Bitcoin', SILVER: 'Silver', NASDAQ: 'NASDAQ' };
         return names[code] || code || 'Unknown market';
     }
 
@@ -5396,10 +5401,10 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 const scanningDetail = scanningEl.querySelector('small');
                 if (scanningTitle) scanningTitle.textContent = state.forceLimitMode ? 'SCANNING FOR FORCE LIMIT ENTRY' : (state.forceLimitRequest ? 'SEARCHING FOR ENTRY' : 'SCANNING THE MARKET');
                 if (scanningDetail) scanningDetail.textContent = state.forceLimitMode
-                    ? 'Checking the MAEE/MBEE setup and waiting for a valid closed candle…'
+                    ? 'Checking signal direction and waiting for a valid closed 5-minute candle…'
                     : state.forceLimitRequest
                         ? 'Checking for a valid completed 5-minute candle and aligned direction…'
-                        : 'Checking MAEE structure/value/rejection and MBEE buildup/breakout…';
+                        : 'Checking direction, support/resistance and entry confirmation…';
                 // Keep the animated GIF visible whenever the robot is actively scanning,
                 // not only when Force Limit Entry is selected.
                 if (scanGif) scanGif.style.display = 'block';
@@ -5562,17 +5567,14 @@ setInterval(refreshMultiTimeframePanel, 60000);
     }
 
     async function fetchPriceForMarket(market) {
-        if (market === 'ZEC') return await fetchDirectBingXPrice('ZEC-USDT');
         const params = new URLSearchParams({ market, price: '1', t: String(Date.now()) });
         const response = await fetch(`${CLOUDFLARE_API}?${params.toString()}`, {
             cache: 'no-store',
             headers: { 'Accept': 'application/json' }
         });
-        let payload = await response.json().catch(() => ({}));
-        if (!response.ok || payload?.error || !Number.isFinite(Number(payload?.price)) || Number(payload?.price) <= 0) {
-            if (market !== 'ZEC') throw new Error(payload?.message || payload?.error || `Price request failed (${response.status})`);
-            const directPrice = await fetchDirectBingXPrice('ZEC-USDT');
-            return directPrice;
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload?.error) {
+            throw new Error(payload?.message || payload?.error || `Price request failed (${response.status})`);
         }
         const price = Number(payload?.price);
         if (!Number.isFinite(price) || price <= 0) throw new Error('Price feed returned an invalid value.');
@@ -5718,9 +5720,8 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 const candles = Array.isArray(history?.candles) ? history.candles : [];
                 if (!candles.length) throw new Error(`No validated ${intervalKey} candles were returned.`);
                 const recent = candles.slice(-Math.max(200, limit || CANDLE_LIMIT));
-                const minimumCandles = intervalKey === '1m' && window.priceActionTradingSecretsEnabled ? 65 : (intervalKey === '1m' ? 200 : 1);
-                if (recent.length < minimumCandles) {
-                    throw new Error(`Only ${recent.length} ${intervalKey} candles were returned; this strategy requires at least ${minimumCandles}.`);
+                if (recent.length < 200 && intervalKey === '1m') {
+                    throw new Error(`Only ${recent.length} ${intervalKey} candles were returned; at least 200 are required for WMA 100/200.`);
                 }
                 return recent;
             } catch (error) {
@@ -5750,26 +5751,23 @@ setInterval(refreshMultiTimeframePanel, 60000);
             setMessage('Entry price is unavailable; no demo entry recorded.');
             return false;
         }
-        const isBookStrategy = options.bookStrategy === true;
+        const hourlyGuard = checkHourlyPullbackRejection(direction, entryPrice, state.structureClosed, state.hourlyClosed, market);
+        if (hourlyGuard.blocked) {
+            setMessage(`ENTRY FILTER: ${hourlyGuard.reason}`);
+            logEvent(`${marketName(market)} ${direction.toUpperCase()} entry blocked by the 1h pullback/rejection filter: ${hourlyGuard.reason}`);
+            return false;
+        }
         const isLimitFill = options.mode === 'limit';
-        if (!isBookStrategy) {
-            const hourlyGuard = checkHourlyPullbackRejection(direction, entryPrice, state.structureClosed, state.hourlyClosed, market);
-            if (hourlyGuard.blocked) {
-                setMessage(`ENTRY FILTER: ${hourlyGuard.reason}`);
-                logEvent(`${marketName(market)} ${direction.toUpperCase()} entry blocked by the 1h pullback/rejection filter: ${hourlyGuard.reason}`);
-                return false;
-            }
-            const maxChase = tolerance * 2.5;
-            if (!isLimitFill && direction === 'long' && (entryPrice < level.price || entryPrice - level.price > maxChase)) {
-                setMessage('Confirmation candle appeared, but price moved too far from support. No chasing; waiting for another setup.');
-                logEvent('No entry: confirmation was valid, but price had moved too far from support.');
-                return false;
-            }
-            if (!isLimitFill && direction === 'short' && (entryPrice > level.price || level.price - entryPrice > maxChase)) {
-                setMessage('Confirmation candle appeared, but price moved too far from resistance. No chasing; waiting for another setup.');
-                logEvent('No entry: confirmation was valid, but price had moved too far from resistance.');
-                return false;
-            }
+        const maxChase = tolerance * 2.5;
+        if (!isLimitFill && direction === 'long' && (entryPrice < level.price || entryPrice - level.price > maxChase)) {
+            setMessage('Confirmation candle appeared, but price moved too far from support. No chasing; waiting for another setup.');
+            logEvent('No entry: confirmation was valid, but price had moved too far from support.');
+            return false;
+        }
+        if (!isLimitFill && direction === 'short' && (entryPrice > level.price || level.price - entryPrice > maxChase)) {
+            setMessage('Confirmation candle appeared, but price moved too far from resistance. No chasing; waiting for another setup.');
+            logEvent('No entry: confirmation was valid, but price had moved too far from resistance.');
+            return false;
         }
 
         const buffer = Math.max((Number.isFinite(atr) ? atr : 0) * 0.25, entryPrice * 0.00004);
@@ -5779,12 +5777,10 @@ setInterval(refreshMultiTimeframePanel, 60000);
         const dashboardStop = Number(scalpStop);
         const dashboardStopValid = Number.isFinite(dashboardStop) &&
             (direction === 'long' ? dashboardStop < entryPrice : dashboardStop > entryPrice);
-        // Ebook MAEE/MBEE setups supply their own ATR/structure stop; legacy stops are not mixed in.
-        const stop = isBookStrategy && Number.isFinite(Number(options.stopPrice))
-            ? Number(options.stopPrice)
-            : dashboardStopValid
-                ? (direction === 'long' ? Math.min(structuralStop, dashboardStop) : Math.max(structuralStop, dashboardStop))
-                : structuralStop;
+        // Use the wider of the structural stop and the dashboard ECI stop when valid.
+        const stop = dashboardStopValid
+            ? (direction === 'long' ? Math.min(structuralStop, dashboardStop) : Math.max(structuralStop, dashboardStop))
+            : structuralStop;
         const risk = direction === 'long' ? entryPrice - stop : stop - entryPrice;
         if (!Number.isFinite(risk) || risk <= 0) {
             setMessage('Stop placement is invalid for this setup. No demo entry recorded.');
@@ -5828,8 +5824,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
             profitProtectionStop: null,
             openedAt: new Date(),
             level: level.price,
-            entryMode: options.bookStrategy ? `paper_${options.bookStrategyName || 'MAEE_MBEE'}` : (isLimitFill ? 'paper_limit' : 'confirmed_rejection'),
-            strategyName: options.bookStrategyName || 'legacy',
+            entryMode: isLimitFill ? 'paper_limit' : 'confirmed_rejection',
             confirmTime: confirmCandle?.[0] || Date.now()
         };
         state.position = position;
@@ -5837,7 +5832,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
         // explicitly enabled, this same qualified BTC setup is also submitted
         // through the authenticated Worker; a live rejection never mutates the
         // paper position or paper trade accounting.
-        if (!isBookStrategy && market === 'BTC' && window.goldEciLiveMode && window.goldEciLiveMode.isEnabled()) {
+        if (market === 'BTC' && window.goldEciLiveMode && window.goldEciLiveMode.isEnabled()) {
             window.goldEciLiveMode.submit(position).catch(error => {
                 const liveStatus = document.getElementById('liveExchangeStatus');
                 if (liveStatus) liveStatus.textContent = 'Live order failed · ' + (error?.message || 'Worker request failed');
@@ -6147,17 +6142,15 @@ setInterval(refreshMultiTimeframePanel, 60000);
             closeLocation >= 0.60 && candleClose > previousClose;
 
         if (direction === 'short') {
-            // Apply the special 1h rejection rule only when price is actually near the prior hour high.
-            if (!nearHigh) return { blocked: false, reason: 'Outside 1h high extension zone; standard confirmations apply.' };
-            if (!bearishHour) return { blocked: true, reason: 'SHORT near the 1h high is blocked because the previous closed 1h candle was not bearish.' };
-            if (!rejectionAtHigh) return { blocked: true, reason: 'Price is near the 1h high, but the latest closed 15m candle has not confirmed bearish rejection.' };
+            if (!bearishHour) return { blocked: true, reason: 'SHORT requires the previous fully closed 1h candle to be bearish (close below open). Waiting.' };
+            if (!nearHigh) return { blocked: true, reason: 'SHORT requires price near the previous closed 1h high; waiting at the top entry zone.' };
+            if (!rejectionAtHigh) return { blocked: true, reason: 'Price is in the 1h high zone, but the latest closed 15m candle has not confirmed bearish rejection. Waiting before SHORT entry.' };
             return { blocked: false, reason: '1h high zone and 15m bearish rejection confirmed' };
         }
         if (direction === 'long') {
-            // Apply the special 1h rejection rule only when price is actually near the prior hour low.
-            if (!nearLow) return { blocked: false, reason: 'Outside 1h low extension zone; standard confirmations apply.' };
-            if (!bullishHour) return { blocked: true, reason: 'LONG near the 1h low is blocked because the previous closed 1h candle was not bullish.' };
-            if (!rejectionAtLow) return { blocked: true, reason: 'Price is near the 1h low, but the latest closed 15m candle has not confirmed bullish rejection.' };
+            if (!bullishHour) return { blocked: true, reason: 'LONG requires the previous fully closed 1h candle to be bullish/green (close above open). Waiting.' };
+            if (!nearLow) return { blocked: true, reason: 'LONG requires price near the previous closed 1h low; waiting at the bottom entry zone.' };
+            if (!rejectionAtLow) return { blocked: true, reason: 'Price is in the 1h low zone, but the latest closed 15m candle has not confirmed bullish rejection. Waiting before LONG entry.' };
             return { blocked: false, reason: '1h low zone and 15m bullish rejection confirmed' };
         }
         return { blocked: true, reason: 'Unknown trade direction; entry blocked.' };
@@ -6256,7 +6249,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
                         const oppositeSignal = currentSignalDirection && currentSignalDirection !== openDirection;
                         const trendLabel = state.trend ? state.trend.label : 'Unavailable';
                         setMessage(oppositeSignal
-                            ? `Managing existing PAPER ${openDirection.toUpperCase()} opened at ${formatPrice(state.position.entry)}. Current Price Action strategy is ${lastScalpSignal}, opposite to this position; signals do not auto-close or reverse an open trade. No new entry will be considered until this position closes. 1m WMA: ${trendLabel}.`
+                            ? `Managing existing PAPER ${openDirection.toUpperCase()} opened at ${formatPrice(state.position.entry)}. Current dashboard ECI is ${lastScalpSignal}, opposite to this position; signals do not auto-close or reverse an open trade. No new entry will be considered until this position closes. 1m WMA: ${trendLabel}.`
                             : `Managing existing PAPER ${openDirection.toUpperCase()} opened at ${formatPrice(state.position.entry)}. Current dashboard ECI: ${lastScalpSignal || 'No active signal'}. 1m WMA: ${trendLabel}. The position remains subject to its simulated stop/targets; no second position is opened.`);
                     }
                 }
@@ -6285,21 +6278,17 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 state.confirmClosed = state.confirmAll.filter(c => c[6] !== true);
                 state.lastConfirmFetch = Date.now();
             }
-            // Legacy 15m structure and 1h guard feeds are not prerequisites for MAEE/MBEE.
-            // Fetch them only when the retired ECI entry engine is active.
-            if (!window.priceActionTradingSecretsEnabled) {
-                if (!state.structureClosed.length || Date.now() - state.lastStructureFetch >= STRUCTURE_REFRESH_MS) {
-                    const all15m = await fetchDemoBars(market, '15m', STRUCTURE_INTERVAL_MINUTES, CANDLE_LIMIT);
-                    if (market !== selectedMarket) return;
-                    state.structureClosed = all15m.filter(c => c[6] !== true);
-                    state.lastStructureFetch = Date.now();
-                }
-                if (market === 'BTC' && (!state.hourlyClosed.length || Date.now() - state.lastHourlyFetch >= STRUCTURE_REFRESH_MS)) {
-                    const all1h = await fetchDemoBars(market, '1h', HOURLY_INTERVAL_MINUTES, CANDLE_LIMIT);
-                    if (market !== selectedMarket) return;
-                    state.hourlyClosed = all1h.filter(c => c[6] !== true);
-                    state.lastHourlyFetch = Date.now();
-                }
+            if (!state.structureClosed.length || Date.now() - state.lastStructureFetch >= STRUCTURE_REFRESH_MS) {
+                const all15m = await fetchDemoBars(market, '15m', STRUCTURE_INTERVAL_MINUTES, CANDLE_LIMIT);
+                if (market !== selectedMarket) return;
+                state.structureClosed = all15m.filter(c => c[6] !== true);
+                state.lastStructureFetch = Date.now();
+            }
+            if (market === 'BTC' && (!state.hourlyClosed.length || Date.now() - state.lastHourlyFetch >= STRUCTURE_REFRESH_MS)) {
+                const all1h = await fetchDemoBars(market, '1h', HOURLY_INTERVAL_MINUTES, CANDLE_LIMIT);
+                if (market !== selectedMarket) return;
+                state.hourlyClosed = all1h.filter(c => c[6] !== true);
+                state.lastHourlyFetch = Date.now();
             }
 
             const price = selectedMarket === market && Number.isFinite(currentPrice) && currentPrice > 0
@@ -6309,63 +6298,12 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 setMessage('Waiting for a valid live price from the dashboard feed. No entry can be recorded.');
                 return;
             }
-            // New default strategy: Rayner Teo's MAEE reversal / MBEE breakout framework.
-            // This branch deliberately bypasses the retired ECI/WMA/swing-rejection entry stack.
-            // Existing position management and paper risk controls remain in place.
-            if (window.priceActionTradingSecretsEnabled) {
-                if (state.confirmClosed.length < 65) {
-                    setMessage(`Waiting for 65 closed candles for MAEE/MBEE analysis (${state.confirmClosed.length} available).`);
-                    savePersistentState();
-                    renderUi();
-                    return;
-                }
-                const bookAtr = averageTrueRange(state.confirmClosed, 14);
-                const bookTolerance = Math.max(price * 0.00025, Number.isFinite(bookAtr) ? bookAtr * 0.35 : 0);
-                if (state.pending) resetPending('old ECI pending setup cleared after strategy migration');
-                state.forceLimitRequest = null;
-                const bookSetup = window.priceActionBookSetup;
-                const consumed = window.__priceActionBookConsumedTime;
-                const bookSetupFresh = bookSetup && Number.isFinite(Number(bookSetup.time)) && Date.now() - Number(bookSetup.time) <= 30 * 60 * 1000;
-                if (bookSetup && !bookSetupFresh && bookSetup.time !== consumed) {
-                    window.__priceActionBookConsumedTime = bookSetup.time;
-                }
-                if (!state.position && bookSetupFresh && bookSetup.time !== consumed && bookSetup.time > 0 && bookSetup.direction) {
-                    window.__priceActionBookConsumedTime = bookSetup.time;
-                    const direction = bookSetup.direction;
-                    const entry = Number.isFinite(price) ? price : Number(bookSetup.entry);
-                    const stop = Number(bookSetup.stop);
-                    const setupCandle = bookSetup.candle || {};
-                    const confirm = [bookSetup.time, setupCandle.o, setupCandle.h, setupCandle.l, setupCandle.c];
-                    const level = { type: direction === 'long' ? 'SUPPORT' : 'RESISTANCE', price: Number(bookSetup.level) };
-                    if (Number.isFinite(entry) && Number.isFinite(stop) && (direction === 'long' ? stop < entry : stop > entry)) {
-                        const opened = openPaperPosition(direction, level, confirm, Number(bookSetup.atr) || bookAtr, bookTolerance, entry, market, {
-                            bookStrategy: true, bookStrategyName: bookSetup.strategy, stopPrice: stop
-                        });
-                        if (opened) {
-                            state.position.strategyName = bookSetup.strategy;
-                            state.position.bookSetupReason = bookSetup.reason;
-                            setMessage(`${bookSetup.strategy} ${direction.toUpperCase()} paper position opened. ${bookSetup.reason}. Initial stop is 1 ATR beyond the setup structure. Live order submission is disabled for this new strategy pending review.`);
-                            logEvent(`${marketName(market)} ${bookSetup.strategy} PAPER ${direction.toUpperCase()} opened at ${formatPrice(entry)}; stop ${formatPrice(stop)}. ${bookSetup.reason}.`);
-                        }
-                    } else {
-                        setMessage(`${bookSetup.strategy} setup ignored because its entry or ATR/structure stop was invalid.`);
-                        logEvent(`${bookSetup.strategy} setup rejected: invalid entry or stop placement.`);
-                    }
-                } else if (!state.position) {
-                    setMessage('Scanning Price Action Trading Secrets: MAEE market structure + area of value + rejection, and MBEE buildup + breakout. No valid closed-candle setup yet.');
-                }
-                savePersistentState();
-                renderUi();
-                return;
-            }
-
-
-            // Legacy strategy-only calculations are reached only when the ebook engine is disabled.
             if (state.confirmClosed.length < 200) {
                 state.trend = { direction: 'neutral', label: `Need 200 closed 1m bars (${state.confirmClosed.length} available)` };
                 setMessage('Waiting for enough closed 1-minute candles to calculate WMA 100/200.');
                 return;
             }
+
             const trend = calcTrend(state.confirmClosed);
             state.trend = trend;
             const atr = averageTrueRange(state.confirmClosed, 14);
@@ -6373,6 +6311,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
             const levels = findStableSwingLevels(state.structureClosed, price, tolerance, state.levels, state.levelsMarket, market);
             state.levels = levels;
             state.levelsMarket = market;
+
             const signalDirection = directionFromSignal(lastScalpSignal);
             const latestClosed = state.confirmClosed[state.confirmClosed.length - 1];
             const previousClosed = state.confirmClosed[state.confirmClosed.length - 2];
@@ -6391,7 +6330,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 return;
             }
             if (state.sidewaysPaused) {
-                logEvent(`${marketName(market)} sideways-market filter cleared. Existing MAEE/MBEE rules must still confirm before a new entry.`);
+                logEvent(`${marketName(market)} sideways-market filter cleared. Existing ECI, WMA, structure, and candle-confirmation rules must still agree before a new entry.`);
                 state.sidewaysPaused = false;
             }
 
@@ -6482,7 +6421,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
                         savePersistentState();
                     }
                 } else if (signalDirection !== pending.direction) {
-                    resetPending('Price Action strategy direction no longer matches the setup');
+                    resetPending('dashboard ECI direction no longer matches the setup');
                 } else if (trend.direction !== pending.direction) {
                     resetPending('1-minute WMA trend no longer agrees or became neutral');
                 } else if (isLimitOrder && latestClosed && ((pending.direction === 'long' && latestClosed[4] < pending.level.price - pending.tolerance) || (pending.direction === 'short' && latestClosed[4] > pending.level.price + pending.tolerance))) {
@@ -6526,11 +6465,11 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 } else if (Date.now() < state.cooldownUntil) {
                     setMessage('Cooling down after the last paper trade. Waiting before looking for another setup.');
                 } else if (!signalDirection) {
-                    setMessage('Waiting for a confirmed MAEE reversal or MBEE breakout setup.');
+                    setMessage('Waiting for an active Buy Long or Sell Short signal from the dashboard ECI.');
                 } else if (trend.direction === 'neutral') {
                     setMessage('Waiting for a clear 1-minute WMA 100/200 trend.');
                 } else if (!aligned) {
-                    setMessage(`No entry: Price Action strategy is ${lastScalpSignal}, but the 1-minute WMA trend is ${trend.label}. Direction must agree.`);
+                    setMessage(`No entry: dashboard ECI is ${lastScalpSignal}, but the 1-minute WMA trend is ${trend.label}. Direction must agree.`);
                 } else {
                     const level = signalDirection === 'long' ? levels.support : levels.resistance;
                     if (!level) {
@@ -6687,12 +6626,6 @@ setInterval(refreshMultiTimeframePanel, 60000);
         logEvent(`Estimated trading fee assumption set to ${value.toFixed(3)}% per side. Confirm this against your exchange fee tier.`);
     });
     const forceLimitModeInput = $('demoRobotForceLimitMode');
-    if (forceLimitModeInput) {
-        forceLimitModeInput.checked = false;
-        forceLimitModeInput.disabled = true;
-        const forceLabel = forceLimitModeInput.closest('label');
-        if (forceLabel) forceLabel.title = 'Legacy Force Limit Entry is disabled after migration to MAEE/MBEE so the old ECI entry pipeline cannot mix with the ebook strategy.';
-    }
     const autoEntryInput = $('demoRobotAutoEntry');
     const forceLimitRefreshButton = $('demoRobotForceLimitRefresh');
     if (autoEntryInput) {
@@ -7036,7 +6969,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
     const session = data && data.session;
     if (!session?.access_token) throw new Error("Live order cancelled: authenticated session is missing.");
     if (String(position.market).toUpperCase() !== "BTC") {
-      throw new Error("Live order blocked: only BTC-USDT has been enabled. ZEC, Gold and Silver remain paper-only until their contracts and live execution safeguards are separately verified.");
+      throw new Error("Live order blocked: only BTC-USDT has been enabled. Gold and Silver remain paper-only until their BingX contracts are verified.");
     }
     const stopDistance = Math.abs(Number(position.entry) - Number(position.initialStop));
     if (!Number.isFinite(stopDistance) || stopDistance <= 0) throw new Error("Live order blocked: invalid stop distance.");
@@ -7312,22 +7245,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
       if (!response.ok || !data.ok) throw new Error(data.error || `Worker returned HTTP ${response.status}`);
       highEl.textContent = money(data.high, market);
       lowEl.textContent = money(data.low, market);
-      const candles = data.candles || [];
-      renderChart(candles);
-      if (market === "GOLD" && candles.length >= 2) {
-        const first = Number(candles[0].close), last = Number(candles[candles.length - 1].close);
-        const changeEl = document.getElementById("terminalGoldChange");
-        const capLabel = document.getElementById("terminalMarketCapLabel");
-        const capValue = document.getElementById("terminalMarketCapValue");
-        if (capLabel) capLabel.textContent = "GOLD MARKET CAP ESTIMATE · SPOT PRICE";
-        if (capValue && selectedMarket === "GOLD" && Number.isFinite(last) && last > 0) capValue.textContent = `$${(last / 1000).toFixed(2)}K`;
-        if (changeEl && Number.isFinite(first) && first > 0 && Number.isFinite(last)) {
-          const delta = last - first, pct = delta / first * 100;
-          const signedDelta = `${delta >= 0 ? "+" : "-"}$${Math.abs(delta).toFixed(2)}`;
-          changeEl.textContent = `${pct >= 0 ? "+" : ""}${pct.toFixed(2)}% (${signedDelta}) · LIVE`;
-          changeEl.style.color = delta >= 0 ? "#2dd4bf" : "#fb7185";
-        }
-      }
+      renderChart(data.candles || []);
       updatedEl.textContent = `BingX perpetual · Updated ${new Date(data.updatedAt || Date.now()).toLocaleTimeString()}`;
     } catch (error) {
       badgeEl.textContent = "DATA UNAVAILABLE";
@@ -7487,33 +7405,12 @@ setInterval(refreshMultiTimeframePanel, 60000);
     if(picker){picker.className+=' terminal-market-picker';const label=picker.querySelector('.label');const row=document.createElement('div');row.className='terminal-market-row';picker.appendChild(row);row.appendChild(logo);row.appendChild(marketSelect);left.appendChild(picker);}
     header.insertBefore(left,header.firstChild);
     status.append(bias,overall);if(signalTime)status.appendChild(signalTime);header.appendChild(status);
-    const cap=document.createElement('div');cap.className='terminal-volume-note terminal-market-cap';cap.innerHTML='<span id="terminalMarketCapLabel">GOLD MARKET CAP ESTIMATE</span><strong id="terminalMarketCapValue">Loading gold spot price…</strong><small id="terminalGoldChange" class="market-cap-change">Waiting for live 24H change…</small>';meta.appendChild(cap);
     const trend=document.querySelector('.trend-mini-panel');if(trend)meta.appendChild(trend);
     const volume=document.createElement('div');volume.className='terminal-volume-note';volume.innerHTML='<span>24H VOLUME</span><strong id="terminal24hVolume">Not supplied by current feed</strong>';meta.appendChild(volume);header.appendChild(meta);
     const timeframe=document.getElementById('btcTimeframeControl');if(timeframe)left.appendChild(timeframe);
     const directionCard=document.getElementById('btcDirectionAnalysisCard');if(directionCard)status.appendChild(directionCard);
     function selectedMarket(){return (marketSelect.value||'GOLD').toUpperCase();}
-    function updateMarketLogo(){
-      const m=selectedMarket();
-      const marks={
-        GOLD:{color:'#f6c94b',bg:'rgba(246,201,75,.13)',svg:'<svg viewBox="0 0 48 48" aria-hidden="true"><ellipse cx="24" cy="37" rx="17" ry="5" fill="#8c5d12" opacity=".45"/><path d="M8 18 18 9h20l-8 9z" fill="#ffe38a"/><path d="M8 18h22v17H8z" fill="#d99b20"/><path d="M30 18 38 9v17l-8 9z" fill="#f6c94b"/><path d="M12 22h14M12 27h14" stroke="#fff0b5" stroke-width="1.5" opacity=".8"/></svg>'},
-        BTC:{color:'#f7931a',bg:'rgba(247,147,26,.13)',svg:'<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="20" fill="#f7931a"/><circle cx="24" cy="24" r="16" fill="none" stroke="#ffd29a" stroke-width="1.4"/><text x="24" y="32" text-anchor="middle" font-size="27" font-weight="800" fill="white">₿</text></svg>'},
-        ZEC:{color:'#f4b728',bg:'rgba(244,183,40,.13)',svg:'<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="20" fill="#f4b728"/><path d="M14 15h20v4L20 29h14v4H14v-4l14-10H14z" fill="#fff" stroke="#fff" stroke-linejoin="round" stroke-width="1.2"/></svg>'},
-        SILVER:{color:'#d8e4ef',bg:'rgba(216,228,239,.13)',svg:'<svg viewBox="0 0 48 48" aria-hidden="true"><ellipse cx="24" cy="37" rx="17" ry="5" fill="#667789" opacity=".4"/><path d="M8 18 18 9h20l-8 9z" fill="#f7fbff"/><path d="M8 18h22v17H8z" fill="#9eafbf"/><path d="M30 18 38 9v17l-8 9z" fill="#dce6ef"/><path d="M12 22h14M12 27h14" stroke="#fff" stroke-width="1.5" opacity=".85"/></svg>'},
-        NASDAQ:{color:'#60a5fa',bg:'rgba(96,165,250,.13)',svg:'<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="5" width="38" height="38" rx="10" fill="#17345a"/><path d="M11 32 19 24 25 28 36 15" fill="none" stroke="#60a5fa" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M29 15h7v7" fill="none" stroke="#60a5fa" stroke-width="3" stroke-linecap="round"/></svg>'},
-        OIL_BRENT:{color:'#d6e2ed',bg:'rgba(148,163,184,.14)',svg:'<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 4C18 14 10 21 10 30a14 14 0 0 0 28 0C38 21 30 14 24 4Z" fill="#d7e1eb" stroke="#8ea2b6" stroke-width="1.5"/><path d="M17 31c1 5 4 7 8 7" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg>'},
-        OIL_WTI:{color:'#f59e0b',bg:'rgba(245,158,11,.13)',svg:'<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 4C18 14 10 21 10 30a14 14 0 0 0 28 0C38 21 30 14 24 4Z" fill="#d88b24" stroke="#fbbf24" stroke-width="1.5"/><path d="M17 31c1 5 4 7 8 7" fill="none" stroke="#fff0c2" stroke-width="2.5" stroke-linecap="round"/></svg>'}
-      };
-      const x=marks[m]||marks.GOLD;logo.innerHTML=x.svg;logo.style.color=x.color;logo.style.background=x.bg;logo.setAttribute('aria-label',m+' asset logo');
-      const capLabel=document.getElementById('terminalMarketCapLabel'),capValue=document.getElementById('terminalMarketCapValue');
-      if(capLabel&&capValue){const change=document.getElementById('terminalGoldChange');if(m==='BTC'){capLabel.textContent='BTC MARKET CAP';capValue.textContent='Loading…';if(change)change.style.display='none';refreshBtcMarketCap();}else if(m==='GOLD'){capLabel.textContent='GOLD MARKET CAP ESTIMATE';capValue.textContent=document.getElementById('marketPrice')?.textContent||'Loading gold spot price…';if(change){change.style.display='block';change.textContent='Waiting for live 24H change…';change.style.color='#8fa9c2';}}else if(m==='OIL_BRENT'||m==='OIL_WTI'){capLabel.textContent=m==='OIL_BRENT'?'BRENT CRUDE SPOT':'WTI CRUDE SPOT';capValue.textContent='Chart quote';if(change){change.style.display='block';change.textContent='TradingView chart only';change.style.color='#8fa9c2';}}else{capLabel.textContent='MARKET CAP';capValue.textContent=m==='SILVER'?'Global commodity value · estimate unavailable':'Index · no market cap';if(change)change.style.display='none';}}
-      volume.querySelector('strong').textContent='Not supplied by current feed';
-      const title=document.getElementById('chartTitle');if(title&&!document.getElementById('exchangeWebsiteSelector')?.value?.match(/^(OANDA|BINANCE|BINGX)$/)){const name=({GOLD:'Gold · XAU/USD',BTC:'Bitcoin · BTC/USD',ZEC:'Zcash · ZEC/USDT',SILVER:'Silver · XAG/USD',NASDAQ:'NASDAQ · US Tech 100',OIL_BRENT:'Oil Brent · USD',OIL_WTI:'Oil WTI · USD'})[m]||m;title.textContent=`${name} · TradingView ${getChartIntervalForTopbar()}`;}
-    }
-    function getChartIntervalForTopbar(){const sel=document.getElementById('btcSignalTimeframe');return selectedMarket()==='BTC'?(sel?.value||'15m'):'15m';}
-    let capBusy=false;
-    async function refreshBtcMarketCap(){if(capBusy||selectedMarket()!=='BTC')return;capBusy=true;try{const r=await fetch('https://api.coingecko.com/api/v3/coins/bitcoin?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false',{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);const d=await r.json();const v=Number(d?.market_data?.market_cap?.usd);if(!Number.isFinite(v)||v<=0)throw new Error('missing value');const el=document.getElementById('terminalMarketCapValue');if(el&&selectedMarket()==='BTC')el.textContent='$'+(v/1e12).toFixed(3)+'T';}catch(_){const el=document.getElementById('terminalMarketCapValue');if(el&&selectedMarket()==='BTC')el.textContent='Unavailable';}finally{capBusy=false;}}
-    setInterval(()=>{if(selectedMarket()==='BTC')refreshBtcMarketCap();},120000);
+    function updateMarketLogo(){const m=selectedMarket();const map={GOLD:{text:'Au',color:'#f6c94b',bg:'rgba(246,201,75,.12)'},BTC:{text:'₿',color:'#f7931a',bg:'rgba(247,147,26,.13)'},SILVER:{text:'Ag',color:'#d8e4ef',bg:'rgba(216,228,239,.12)'},NASDAQ:{text:'N',color:'#60a5fa',bg:'rgba(96,165,250,.13)'}};const x=map[m]||map.GOLD;logo.textContent=x.text;logo.style.color=x.color;logo.style.background=x.bg;volume.querySelector('strong').textContent='Not supplied by current feed';}
     function updateLoginLabel(){const connected=!!(connectedBadge&&!connectedBadge.hidden);login.textContent=connected?'LOG OUT':'LOG IN';login.setAttribute('aria-label',connected?'Log out':'Log in');}
     login.addEventListener('click',function(){
       const connected=!!(connectedBadge&&!connectedBadge.hidden);
@@ -7526,38 +7423,6 @@ setInterval(refreshMultiTimeframePanel, 60000);
     marketSelect.addEventListener('change',updateMarketLogo);
     updateMarketLogo();updateLoginLabel();
   } catch(error){console.warn('Terminal topbar visual setup skipped:',error);}
-})();
-</script>
-
-
-<script id="mobile-view-switch">
-(function(){
-  function initMobileView(){
-    var container=document.querySelector('.container');
-    if(!container || document.getElementById('mobileViewToggle')) return;
-    var btn=document.createElement('button');
-    btn.type='button'; btn.id='mobileViewToggle';
-    btn.setAttribute('aria-pressed','true');
-    btn.innerHTML='<span aria-hidden="true">▣</span><span class="mobile-view-label">Mobile compact view · Show full dashboard</span>';
-    var auth=container.querySelector('#supabaseAuthCard, .supabase-auth-card');
-    if(auth && auth.parentNode===container) auth.insertAdjacentElement('afterend',btn);
-    else container.insertAdjacentElement('afterbegin',btn);
-    function setCompact(compact){
-      document.body.classList.toggle('mobile-compact',compact);
-      document.body.classList.toggle('mobile-full',!compact);
-      btn.setAttribute('aria-pressed',String(compact));
-      btn.querySelector('.mobile-view-label').textContent=compact?'Mobile compact view · Show full dashboard':'Full dashboard · Switch to compact view';
-    }
-    var mobile=window.matchMedia && window.matchMedia('(max-width: 700px)').matches;
-    setCompact(mobile);
-    btn.addEventListener('click',function(){setCompact(!document.body.classList.contains('mobile-compact'));});
-    if(window.matchMedia){
-      var mq=window.matchMedia('(max-width: 700px)');
-      var handle=function(e){if(e.matches){setCompact(true)}else{document.body.classList.remove('mobile-compact','mobile-full')}};
-      if(mq.addEventListener) mq.addEventListener('change',handle); else if(mq.addListener) mq.addListener(handle);
-    }
-  }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initMobileView); else initMobileView();
 })();
 </script>
 
