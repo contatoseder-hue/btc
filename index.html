@@ -1,4 +1,4 @@
-
+o
 
 <!DOCTYPE html>
 <html lang="en">
@@ -1429,7 +1429,9 @@ a{color:#68dfff!important}
 }
 
 /* Scanner progress indicators: driven from existing dashboard status fields. */
-.scanner-radar-icon{width:25px;height:25px;object-fit:contain;border-radius:50%;flex:0 0 25px;filter:drop-shadow(0 0 7px rgba(22,230,154,.45));}
+.scanner-radar-icon{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;flex:0 0 28px;font-size:23px;line-height:1;transform-origin:center;filter:drop-shadow(0 0 7px rgba(22,230,154,.55));animation:scannerEmojiPulse 1.15s ease-in-out infinite!important;}
+@keyframes scannerEmojiPulse{0%,100%{transform:scale(1) rotate(-8deg);filter:drop-shadow(0 0 3px rgba(22,230,154,.35));opacity:.78}50%{transform:scale(1.16) rotate(8deg);filter:drop-shadow(0 0 12px rgba(22,230,154,.95));opacity:1}}
+@media(prefers-reduced-motion:reduce){.scanner-radar-icon{animation:scannerEmojiPulse 1.15s ease-in-out infinite!important}}
 .scanner-step-icon{display:inline-flex;align-items:center;justify-content:center;min-width:22px;min-height:22px;font-size:17px;}
 .scanner-step.is-done .scanner-step-icon{color:#16e69a;filter:drop-shadow(0 0 5px rgba(22,230,154,.45));}
 .scanner-step.is-done .scanner-step-state{color:#16e69a!important;}
@@ -2020,7 +2022,7 @@ a{color:#68dfff!important}
     <!-- MARKET SCANNER: visual-only panel; existing signal logic remains untouched -->
     <section class="card market-scanner-card" id="marketScannerVisual" aria-label="Market Scanner">
       <div class="scanner-heading">
-        <div class="scanner-title"><img class="scanner-radar-icon" src="https://media.tenor.com/Gparo0eD0KIAAAAC/nerd-radar-mayclan.gif" alt="" aria-hidden="true"><span>Market Scanner</span></div>
+        <div class="scanner-title"><span class="scanner-radar-icon" aria-hidden="true">📡</span><span>Market Scanner</span></div>
         <div class="scanner-live"><span class="scanner-live-dot"></span>Scanning</div>
       </div>
       <div class="scanner-track">
@@ -5716,8 +5718,9 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 const candles = Array.isArray(history?.candles) ? history.candles : [];
                 if (!candles.length) throw new Error(`No validated ${intervalKey} candles were returned.`);
                 const recent = candles.slice(-Math.max(200, limit || CANDLE_LIMIT));
-                if (recent.length < 200 && intervalKey === '1m') {
-                    throw new Error(`Only ${recent.length} ${intervalKey} candles were returned; at least 200 are required for WMA 100/200.`);
+                const minimumCandles = intervalKey === '1m' && window.priceActionTradingSecretsEnabled ? 65 : (intervalKey === '1m' ? 200 : 1);
+                if (recent.length < minimumCandles) {
+                    throw new Error(`Only ${recent.length} ${intervalKey} candles were returned; this strategy requires at least ${minimumCandles}.`);
                 }
                 return recent;
             } catch (error) {
@@ -6282,17 +6285,21 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 state.confirmClosed = state.confirmAll.filter(c => c[6] !== true);
                 state.lastConfirmFetch = Date.now();
             }
-            if (!state.structureClosed.length || Date.now() - state.lastStructureFetch >= STRUCTURE_REFRESH_MS) {
-                const all15m = await fetchDemoBars(market, '15m', STRUCTURE_INTERVAL_MINUTES, CANDLE_LIMIT);
-                if (market !== selectedMarket) return;
-                state.structureClosed = all15m.filter(c => c[6] !== true);
-                state.lastStructureFetch = Date.now();
-            }
-            if (market === 'BTC' && (!state.hourlyClosed.length || Date.now() - state.lastHourlyFetch >= STRUCTURE_REFRESH_MS)) {
-                const all1h = await fetchDemoBars(market, '1h', HOURLY_INTERVAL_MINUTES, CANDLE_LIMIT);
-                if (market !== selectedMarket) return;
-                state.hourlyClosed = all1h.filter(c => c[6] !== true);
-                state.lastHourlyFetch = Date.now();
+            // Legacy 15m structure and 1h guard feeds are not prerequisites for MAEE/MBEE.
+            // Fetch them only when the retired ECI entry engine is active.
+            if (!window.priceActionTradingSecretsEnabled) {
+                if (!state.structureClosed.length || Date.now() - state.lastStructureFetch >= STRUCTURE_REFRESH_MS) {
+                    const all15m = await fetchDemoBars(market, '15m', STRUCTURE_INTERVAL_MINUTES, CANDLE_LIMIT);
+                    if (market !== selectedMarket) return;
+                    state.structureClosed = all15m.filter(c => c[6] !== true);
+                    state.lastStructureFetch = Date.now();
+                }
+                if (market === 'BTC' && (!state.hourlyClosed.length || Date.now() - state.lastHourlyFetch >= STRUCTURE_REFRESH_MS)) {
+                    const all1h = await fetchDemoBars(market, '1h', HOURLY_INTERVAL_MINUTES, CANDLE_LIMIT);
+                    if (market !== selectedMarket) return;
+                    state.hourlyClosed = all1h.filter(c => c[6] !== true);
+                    state.lastHourlyFetch = Date.now();
+                }
             }
 
             const price = selectedMarket === market && Number.isFinite(currentPrice) && currentPrice > 0
@@ -6302,30 +6309,18 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 setMessage('Waiting for a valid live price from the dashboard feed. No entry can be recorded.');
                 return;
             }
-            // WMA 100/200 is a legacy filter and must not gate the ebook MAEE/MBEE entry engine.
-            // The book strategy uses closed signal-timeframe candles plus its own structure/ATR stop.
-            if (state.confirmClosed.length < 200 && !window.priceActionTradingSecretsEnabled) {
-                state.trend = { direction: 'neutral', label: `Need 200 closed 1m bars (${state.confirmClosed.length} available)` };
-                setMessage('Waiting for enough closed 1-minute candles to calculate WMA 100/200.');
-                return;
-            }
-
-            const trend = calcTrend(state.confirmClosed);
-            state.trend = trend;
-            const atr = averageTrueRange(state.confirmClosed, 14);
-            const tolerance = Math.max(price * 0.00025, Number.isFinite(atr) ? atr * 0.35 : 0);
-            const levels = findStableSwingLevels(state.structureClosed, price, tolerance, state.levels, state.levelsMarket, market);
-            state.levels = levels;
-            state.levelsMarket = market;
-
-            const signalDirection = directionFromSignal(lastScalpSignal);
-            const latestClosed = state.confirmClosed[state.confirmClosed.length - 1];
-            const previousClosed = state.confirmClosed[state.confirmClosed.length - 2];
-
             // New default strategy: Rayner Teo's MAEE reversal / MBEE breakout framework.
             // This branch deliberately bypasses the retired ECI/WMA/swing-rejection entry stack.
             // Existing position management and paper risk controls remain in place.
             if (window.priceActionTradingSecretsEnabled) {
+                if (state.confirmClosed.length < 65) {
+                    setMessage(`Waiting for 65 closed candles for MAEE/MBEE analysis (${state.confirmClosed.length} available).`);
+                    savePersistentState();
+                    renderUi();
+                    return;
+                }
+                const bookAtr = averageTrueRange(state.confirmClosed, 14);
+                const bookTolerance = Math.max(price * 0.00025, Number.isFinite(bookAtr) ? bookAtr * 0.35 : 0);
                 if (state.pending) resetPending('old ECI pending setup cleared after strategy migration');
                 state.forceLimitRequest = null;
                 const bookSetup = window.priceActionBookSetup;
@@ -6343,7 +6338,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
                     const confirm = [bookSetup.time, setupCandle.o, setupCandle.h, setupCandle.l, setupCandle.c];
                     const level = { type: direction === 'long' ? 'SUPPORT' : 'RESISTANCE', price: Number(bookSetup.level) };
                     if (Number.isFinite(entry) && Number.isFinite(stop) && (direction === 'long' ? stop < entry : stop > entry)) {
-                        const opened = openPaperPosition(direction, level, confirm, Number(bookSetup.atr) || atr, tolerance, entry, market, {
+                        const opened = openPaperPosition(direction, level, confirm, Number(bookSetup.atr) || bookAtr, bookTolerance, entry, market, {
                             bookStrategy: true, bookStrategyName: bookSetup.strategy, stopPrice: stop
                         });
                         if (opened) {
@@ -6363,6 +6358,24 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 renderUi();
                 return;
             }
+
+
+            // Legacy strategy-only calculations are reached only when the ebook engine is disabled.
+            if (state.confirmClosed.length < 200) {
+                state.trend = { direction: 'neutral', label: `Need 200 closed 1m bars (${state.confirmClosed.length} available)` };
+                setMessage('Waiting for enough closed 1-minute candles to calculate WMA 100/200.');
+                return;
+            }
+            const trend = calcTrend(state.confirmClosed);
+            state.trend = trend;
+            const atr = averageTrueRange(state.confirmClosed, 14);
+            const tolerance = Math.max(price * 0.00025, Number.isFinite(atr) ? atr * 0.35 : 0);
+            const levels = findStableSwingLevels(state.structureClosed, price, tolerance, state.levels, state.levelsMarket, market);
+            state.levels = levels;
+            state.levelsMarket = market;
+            const signalDirection = directionFromSignal(lastScalpSignal);
+            const latestClosed = state.confirmClosed[state.confirmClosed.length - 1];
+            const previousClosed = state.confirmClosed[state.confirmClosed.length - 2];
 
             // Pause all NEW entry paths (including force-limit and pending limits) in sideways conditions.
             // Existing positions have already been managed earlier in cycle(), so SL/TP/profit protection continue.
