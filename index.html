@@ -1476,6 +1476,219 @@ a{color:#68dfff!important}
 }
 </style>
 
+
+
+<style id="mobile-responsive-readability-patch">
+/* Responsive UI only. No signal, indicator, data-feed, or order logic is changed. */
+.mobile-chart-toggle,
+.mobile-chart-close { display: none !important; }
+
+/* Tablet widths: keep the existing multi-panel dashboard flexible without narrow columns. */
+@media (min-width: 641px) and (max-width: 768px) {
+  .container {
+    width: 100% !important;
+    max-width: 100% !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    gap: 10px !important;
+    padding: 10px !important;
+  }
+  .container > * { min-width: 0 !important; max-width: 100% !important; }
+  .container > .card:has(#tvChart) .chart-container,
+  .container > .card:has(#tvChart) .exchange-frame-container { min-height: 340px !important; }
+  .container > .card:has(#tvChart) iframe#tvChart { min-height: 340px !important; }
+  .grid, #eciDetailsCard .grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .demo-robot-grid, .demo-position-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .mtf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
+
+/* Small phones and narrow tablet portrait: normal document flow, one card per row. */
+@media (max-width: 640px) {
+  html, body { width: 100% !important; max-width: 100% !important; }
+  body { overflow-x: hidden !important; }
+  .container {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 auto !important;
+    padding: 8px !important;
+    gap: 10px !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-areas: none !important;
+  }
+  .container > *,
+  .container > .header,
+  .container > .card,
+  .container > .trading-mode-card,
+  .container > .public-beta-notice {
+    grid-area: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  .card, .supabase-auth-card, .trading-mode-card, .public-beta-notice {
+    padding: 13px !important;
+    margin-bottom: 0 !important;
+    border-radius: 12px !important;
+  }
+  .header {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-areas: "left" "status" "meta" !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    padding: 13px !important;
+    overflow: visible !important;
+  }
+  .header > *, .terminal-left-rail, .terminal-market-picker,
+  .terminal-asset-status, .terminal-market-meta { min-width: 0 !important; max-width: 100% !important; }
+  .terminal-left-rail { flex-direction: column !important; align-items: stretch !important; gap: 8px !important; margin: 0 !important; }
+  .terminal-market-picker { width: 100% !important; max-width: 100% !important; }
+  .terminal-market-row { width: 100% !important; min-width: 0 !important; }
+  .terminal-market-row select { width: 100% !important; max-width: 100% !important; min-width: 0 !important; }
+  .terminal-market-meta { display: grid !important; grid-template-columns: minmax(0, 1fr) !important; gap: 8px !important; }
+  #biasLine {
+    font-size: clamp(21px, 6vw, 27px) !important;
+    line-height: 1.2 !important;
+    text-align: center !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+  }
+  #overallStatus { text-align: center !important; font-size: 12px !important; line-height: 1.4 !important; white-space: normal !important; }
+  #signalTime { font-size: 12px !important; line-height: 1.45 !important; text-align: center !important; white-space: normal !important; overflow-wrap: anywhere !important; }
+  .section-title { font-size: 16px !important; line-height: 1.35 !important; overflow-wrap: anywhere !important; }
+  .status-row { display: grid !important; grid-template-columns: minmax(0, 1fr) !important; align-items: stretch !important; gap: 12px !important; }
+  .status-main, .entry-distance-box, .trend-mini-panel { width: 100% !important; min-width: 0 !important; grid-column: auto !important; }
+  .status-value { font-size: clamp(22px, 6vw, 28px) !important; line-height: 1.25 !important; overflow-wrap: anywhere !important; }
+  .entry-distance-value, .entry-distance-percent, .entry-distance-proximity { font-size: clamp(21px, 6vw, 27px) !important; line-height: 1.25 !important; white-space: normal !important; overflow-wrap: anywhere !important; }
+  .grid, #eciDetailsCard .grid, .simulator, .demo-robot-grid, .demo-position-grid,
+  .demo-account-controls, .live-sizing-controls, .supabase-auth-grid,
+  .supabase-auth-actions, .mtf-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    gap: 9px !important;
+  }
+  .grid > *, .simulator > *, .demo-robot-grid > *, .demo-position-grid > *,
+  .mtf-grid > *, .demo-account-controls > *, .live-sizing-controls > *,
+  .supabase-auth-grid > *, .supabase-auth-actions > * { min-width: 0 !important; max-width: 100% !important; }
+  .stat, .demo-robot-stat, .demo-position-stat, .mtf-cell {
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 12px !important;
+  }
+  .label, .status-title, .small, .btc-timeframe-note, .demo-robot-subtitle,
+  .demo-robot-message, .demo-robot-footnote, .trading-mode-copy,
+  .mtf-note, .mtf-guidance, .scanner-footnote {
+    max-width: 100% !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+    line-height: 1.45 !important;
+  }
+  .value, .price, .status-value, .mtf-status, .mtf-overall-value,
+  .demo-position-stat-value, .demo-position-pnl, .demo-robot-stat .value {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+    font-variant-numeric: tabular-nums;
+  }
+  .value { font-size: clamp(19px, 5vw, 23px) !important; line-height: 1.3 !important; }
+  .price { font-size: clamp(25px, 7vw, 31px) !important; line-height: 1.25 !important; }
+  #scalpEntry, #scalpStop, #marketPrice, #rsiValue, #trendStatusValue, #eciTimeframeValue {
+    display: block !important; width: 100% !important; min-width: 0 !important; overflow-wrap: anywhere !important;
+  }
+  .live-indicator { display: inline-flex !important; flex-wrap: wrap !important; white-space: normal !important; vertical-align: middle; }
+  .mtf-overall { align-items: flex-start !important; flex-direction: column !important; gap: 7px !important; }
+  .mtf-overall-value { text-align: left !important; justify-content: flex-start !important; }
+  .scanner-step { grid-template-columns: 22px minmax(0, 1fr) auto !important; gap: 7px !important; min-width: 0 !important; }
+  .scanner-step > span { min-width: 0 !important; overflow-wrap: anywhere !important; }
+  .demo-robot-top, .demo-position-header, .accuracy-header { align-items: flex-start !important; flex-direction: column !important; gap: 8px !important; }
+  .demo-position-pnl-wrap { text-align: left !important; margin-left: 0 !important; }
+  .demo-robot-controls { display: flex !important; flex-direction: column !important; align-items: stretch !important; }
+  .demo-robot-controls button, .demo-position-actions button,
+  .trading-mode-controls button { width: 100% !important; max-width: 100% !important; flex: 1 1 100% !important; }
+  .trading-mode-controls { display: grid !important; grid-template-columns: minmax(0, 1fr) !important; }
+  button { min-height: 44px !important; max-width: 100% !important; white-space: normal !important; overflow-wrap: anywhere !important; }
+  select, input, textarea { width: 100% !important; max-width: 100% !important; min-width: 0 !important; font-size: 16px !important; }
+  .demo-history-wrap { max-width: 100% !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
+  .demo-history-table { min-width: 920px !important; }
+  #exchangeFrameNotice { align-items: flex-start !important; max-width: 100% !important; }
+  .indicator-legend { display: flex !important; flex-wrap: wrap !important; gap: 8px 10px !important; white-space: normal !important; }
+  .indicator-legend-item { white-space: nowrap !important; }
+
+  /* Keep the chart available but out of the way until the user requests it. */
+  .mobile-chart-toggle {
+    display: block !important;
+    width: 100% !important;
+    min-height: 44px !important;
+    margin: 14px 0 0 !important;
+    padding: 12px 14px !important;
+    border: 1px solid rgba(56,218,250,.48) !important;
+    border-radius: 10px !important;
+    background: linear-gradient(100deg, #0e3550, #10263c) !important;
+    color: #e7f8ff !important;
+    font-size: 13px !important;
+    font-weight: 850 !important;
+    letter-spacing: .08em !important;
+  }
+  #tradingViewChartCard { display: none !important; }
+  .chart-controls { display: none !important; }
+  #mobileChartClose { display: inline-flex !important; flex: 0 0 auto !important; width: auto !important; margin: 0 !important; padding: 8px 10px !important; min-height: 36px !important; font-size: 11px !important; }
+  body.mobile-chart-open { overflow: hidden !important; }
+  body.mobile-chart-open #tradingViewChartCard {
+    display: flex !important;
+    flex-direction: column !important;
+    position: fixed !important;
+    inset: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)) !important;
+    z-index: 99999 !important;
+    width: auto !important;
+    max-width: none !important;
+    max-height: none !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 12px !important;
+    overflow: auto !important;
+    background: #07111f !important;
+    box-shadow: 0 0 0 100vmax rgba(0,0,0,.78), 0 14px 50px rgba(0,0,0,.6) !important;
+  }
+  body.mobile-chart-open #chartTitle { display: block !important; flex: 0 0 auto !important; padding-right: 112px !important; }
+  body.mobile-chart-open #mobileChartClose { position: absolute !important; top: 12px !important; right: 12px !important; z-index: 2 !important; }
+  body.mobile-chart-open #exchangeFrameNotice { flex: 0 0 auto !important; }
+  body.mobile-chart-open #exchangeFrameContainer,
+  body.mobile-chart-open .chart-container {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    height: calc(100dvh - 145px) !important;
+    min-height: 250px !important;
+    max-height: none !important;
+  }
+  body.mobile-chart-open #tvChart { display: block !important; width: 100% !important; height: 100% !important; min-height: 250px !important; max-height: none !important; }
+}
+
+@media (max-width: 480px) {
+  /* A real single-column reading flow, not a shrunken desktop grid. */
+  .container { gap: 9px !important; padding: 7px !important; }
+  .header { padding: 12px !important; }
+  .status-box { padding: 12px !important; }
+  .label { font-size: 12px !important; letter-spacing: .04em !important; }
+  .bias-line { text-align: center !important; }
+  .demo-history-table { min-width: 920px !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #mobileChartToggle, #mobileChartClose { transition: none !important; }
+}
+</style>
+
 </head>
 
 <body>
@@ -1715,6 +1928,7 @@ a{color:#68dfff!important}
             </div>
 
         </div>
+        <button type="button" id="mobileChartToggle" class="mobile-chart-toggle" aria-expanded="false" aria-controls="tradingViewChartCard">VIEW CHART</button>
     </div>
 
 
@@ -2164,13 +2378,14 @@ a{color:#68dfff!important}
     </script>
 
     <!-- TRADINGVIEW / EXCHANGE WEBSITE PANEL (added option only) -->
-    <div class="card">
+    <div class="card tradingview-card" id="tradingViewChartCard">
 
         <div class="section-title" id="chartTitle">
             TradingView — XAU/USD 15m
         </div>
+        <button type="button" id="mobileChartClose" class="mobile-chart-close" aria-label="Close expanded chart">CLOSE CHART</button>
 
-        <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:end; margin-bottom:12px;">
+        <div class="chart-controls" style="display:flex; flex-wrap:wrap; gap:10px; align-items:end; margin-bottom:12px;">
             <div style="flex:1; min-width:190px;">
                 <div class="label">Open Exchange Website Inside Dashboard</div>
                 <select id="exchangeWebsiteSelector" onchange="openExchangeWebsite()">
@@ -7497,6 +7712,39 @@ setInterval(refreshMultiTimeframePanel, 60000);
     marketSelect.addEventListener('change',updateMarketLogo);
     updateMarketLogo();updateLoginLabel();
   } catch(error){console.warn('Terminal topbar visual setup skipped:',error);}
+})();
+</script>
+
+
+<script id="mobile-chart-view-controls">
+/* Mobile chart overlay controls are presentation-only and do not touch trading logic. */
+(function () {
+  'use strict';
+  const openButton = document.getElementById('mobileChartToggle');
+  const closeButton = document.getElementById('mobileChartClose');
+  const chartCard = document.getElementById('tradingViewChartCard');
+  if (!openButton || !closeButton || !chartCard) return;
+
+  function closeMobileChart() {
+    document.body.classList.remove('mobile-chart-open');
+    openButton.setAttribute('aria-expanded', 'false');
+    openButton.textContent = 'VIEW CHART';
+    openButton.focus({ preventScroll: true });
+  }
+
+  openButton.addEventListener('click', function () {
+    if (!window.matchMedia('(max-width: 640px)').matches) return;
+    document.body.classList.add('mobile-chart-open');
+    openButton.setAttribute('aria-expanded', 'true');
+    openButton.textContent = 'CHART OPEN';
+    closeButton.focus({ preventScroll: true });
+  });
+  closeButton.addEventListener('click', closeMobileChart);
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape' && document.body.classList.contains('mobile-chart-open')) {
+      closeMobileChart();
+    }
+  });
 })();
 </script>
 
