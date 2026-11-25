@@ -2062,8 +2062,10 @@ a{color:#68dfff!important}
                 <div class="demo-position-stat"><div class="demo-position-stat-label">Take Profit 2</div><div id="demoPositionTp2" class="demo-position-stat-value">—</div></div>
                 <div class="demo-position-stat"><div class="demo-position-stat-label">Leverage Used</div><div id="demoPositionLeverage" class="demo-position-stat-value demo-leverage-note">10× paper leverage</div></div>
                 <div class="demo-position-stat"><div class="demo-position-stat-label">Notional Exposure (remaining)</div><div id="demoPositionNotional" class="demo-position-stat-value">—</div></div>
+                <div class="demo-position-stat"><div class="demo-position-stat-label">Peak Trade PnL</div><div id="demoPositionPeakPnl" class="demo-position-stat-value">—</div></div>
+                <div class="demo-position-stat"><div class="demo-position-stat-label">Giveback from Peak</div><div id="demoPositionGiveback" class="demo-position-stat-value">—</div></div>
             </div>
-            <div id="demoPositionPnlBreakdown" class="demo-position-note">Percentages update with the open position: ROI = floating PnL ÷ estimated remaining margin at 10×; account impact = floating PnL ÷ starting funding. Realized return uses closed PnL ÷ starting funding. Paper only; no exchange order is placed.</div>
+            <div id="demoPositionPnlBreakdown" class="demo-position-note">Percentages update with the open position: ROI = floating PnL ÷ estimated remaining margin at 10×; account impact = floating PnL ÷ starting funding. Peak Trade PnL tracks the highest combined realized plus floating PnL; Giveback is the decline from that peak to the current PnL. Values use available mark updates, so very brief peaks between polling updates may be missed. For a position already open when this version loads, tracking starts at the first observed mark. Paper only; no exchange order is placed.</div>
             <div class="demo-position-actions"><button id="demoRobotClosePosition" class="demo-position-close" type="button">Close Position at Current Mark</button></div>
         </div>
 
@@ -5367,6 +5369,54 @@ setInterval(refreshMultiTimeframePanel, 60000);
         return `${sign}$${Math.abs(n).toFixed(2)}`;
     }
 
+    function fmtUsdAmount(value) {
+        const n = Number(value);
+        if (!Number.isFinite(n)) return '—';
+        return `$${Math.abs(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+
+    // Observability only: track the highest combined trade PnL and its decline.
+    // This function does not change any stop, target, entry, or exit decision.
+    function updatePositionPnlMetrics(position, markPrice) {
+        const p = position;
+        const mark = Number(markPrice);
+        if (!p || !Number.isFinite(mark) || mark <= 0 || !Number.isFinite(Number(p.entry)) || Number(p.entry) <= 0) {
+            return { currentPnlUsd: 0, peakPnlUsd: 0, givebackUsd: 0, peakUpdated: false };
+        }
+        const remainingQty = Number.isFinite(Number(p.remainingQuantity))
+            ? Number(p.remainingQuantity)
+            : Number(p.quantity) || 0;
+        const realized = Number(p.realizedPnlUsd) || 0;
+        const floating = (p.direction === 'long' ? mark - Number(p.entry) : Number(p.entry) - mark) * remainingQty;
+        const currentPnlUsd = realized + floating;
+        const now = Date.now();
+        const wasInitialized = p.pnlMetricsTrackingInitialized === true;
+        const oldPeak = wasInitialized && Number.isFinite(Number(p.peakTotalPnlUsd))
+            ? Math.max(0, Number(p.peakTotalPnlUsd))
+            : 0;
+        const peakPnlUsd = wasInitialized ? Math.max(oldPeak, currentPnlUsd) : Math.max(0, currentPnlUsd);
+        const peakUpdated = peakPnlUsd > oldPeak + 1e-9;
+        p.pnlMetricsTrackingInitialized = true;
+        p.peakTotalPnlUsd = peakPnlUsd;
+        p.currentTradePnlUsd = currentPnlUsd;
+        p.givebackFromPeakUsd = Math.max(0, peakPnlUsd - currentPnlUsd);
+        if (peakUpdated) p.peakPnlAt = now;
+
+        // Persist a new baseline immediately, then throttle high-water-mark writes
+        // so live BTC mark updates do not repeatedly serialize all trade history.
+        const lastPersistedAt = Number(p.pnlMetricsLastSavedAt) || 0;
+        if (!wasInitialized || (peakUpdated && now - lastPersistedAt >= 5000)) {
+            p.pnlMetricsLastSavedAt = now;
+            savePersistentState();
+        }
+        return {
+            currentPnlUsd,
+            peakPnlUsd,
+            givebackUsd: Math.max(0, peakPnlUsd - currentPnlUsd),
+            peakUpdated
+        };
+    }
+
     function fmtQuantity(value) {
         const n = Number(value);
         if (!Number.isFinite(n)) return '—';
@@ -5496,6 +5546,10 @@ setInterval(refreshMultiTimeframePanel, 60000);
                     quantity: Number(p.quantity),
                     remainingQuantity: Number.isFinite(Number(p.remainingQuantity)) ? Number(p.remainingQuantity) : Number(p.quantity),
                     realizedPnlUsd: Number(p.realizedPnlUsd) || 0,
+                    peakTotalPnlUsd: Number.isFinite(Number(p.peakTotalPnlUsd)) ? Math.max(0, Number(p.peakTotalPnlUsd)) : 0,
+                    pnlMetricsTrackingInitialized: p.pnlMetricsTrackingInitialized === true,
+                    pnlMetricsLastSavedAt: Number(p.pnlMetricsLastSavedAt) || 0,
+                    peakPnlAt: Number(p.peakPnlAt) || null,
                     riskUsd: Number(p.riskUsd) || DEMO_RISK_USD,
                     hitTP1: Boolean(p.hitTP1),
                     profitProtectionActive: Boolean(p.profitProtectionActive),
@@ -5749,6 +5803,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 const mark = Number.isFinite(p.markPrice) && p.markPrice > 0 ? p.markPrice : p.entry;
                 const remainingQty = Number.isFinite(p.remainingQuantity) ? p.remainingQuantity : p.quantity;
                 const floatingPnl = (p.direction === 'long' ? mark - p.entry : p.entry - mark) * remainingQty;
+                const pnlMetrics = updatePositionPnlMetrics(p, mark);
                 const totalOpenPnl = (Number(p.realizedPnlUsd) || 0) + floatingPnl;
                 const pnlEl = $('demoPositionPnl');
                 const titleEl = $('demoPositionTitle');
@@ -5787,6 +5842,16 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 if ($('demoPositionTp2')) $('demoPositionTp2').textContent = formatPrice(p.tp2);
                 if ($('demoPositionLeverage')) $('demoPositionLeverage').textContent = '10× (paper model)';
                 if ($('demoPositionNotional')) $('demoPositionNotional').textContent = fmtUsdPnl(Math.abs(mark * remainingQty)).replace(/^\+/, '');
+                const peakPnlEl = $('demoPositionPeakPnl');
+                if (peakPnlEl) {
+                    peakPnlEl.textContent = fmtUsdPnl(pnlMetrics.peakPnlUsd);
+                    peakPnlEl.style.color = pnlMetrics.peakPnlUsd > 0 ? '#22c55e' : (pnlMetrics.peakPnlUsd < 0 ? '#ef4444' : '');
+                }
+                const givebackEl = $('demoPositionGiveback');
+                if (givebackEl) {
+                    givebackEl.textContent = fmtUsdAmount(pnlMetrics.givebackUsd);
+                    givebackEl.style.color = pnlMetrics.givebackUsd > 0.005 ? '#fbbf24' : '#9ca3af';
+                }
                 if ($('demoPositionPnlBreakdown')) {
                     const realized = Number(p.realizedPnlUsd) || 0;
                     const remainingNotional = Math.abs(mark * remainingQty);
@@ -6067,6 +6132,12 @@ setInterval(refreshMultiTimeframePanel, 60000);
             notionalExposureAtEntry: Math.abs(entryPrice * quantity),
             leverageModel: '10x_paper_model',
             realizedPnlUsd: 0,
+            peakTotalPnlUsd: 0,
+            currentTradePnlUsd: 0,
+            givebackFromPeakUsd: 0,
+            pnlMetricsTrackingInitialized: true,
+            pnlMetricsLastSavedAt: Date.now(),
+            peakPnlAt: Date.now(),
             tp1: entryPrice + sign * risk * 2,
             tp2: entryPrice + sign * risk * 3,
             hitTP1: false,
@@ -6121,7 +6192,13 @@ setInterval(refreshMultiTimeframePanel, 60000);
     function closePaperPosition(outcomeR, reason, markPrice) {
         const p = state.position;
         if (!p) return;
+        updatePositionPnlMetrics(p, markPrice);
         const cashPnlUsd = outcomeR * p.riskUsd;
+        const peakPnlUsd = Math.max(0, Number(p.peakTotalPnlUsd) || 0);
+        const givebackFromPeakUsd = Math.max(0, peakPnlUsd - cashPnlUsd);
+        const earlyReversalExit = /early reversal confirmed/i.test(String(reason || ''));
+        const metricsSuffix = `Peak PnL ${fmtUsdPnl(peakPnlUsd)}; exit PnL ${fmtUsdPnl(cashPnlUsd)}; giveback from peak ${fmtUsdAmount(givebackFromPeakUsd)}.`;
+        const historyReason = earlyReversalExit ? `${reason} | ${metricsSuffix}` : reason;
         const closed = {
             market: p.market,
             direction: p.direction,
@@ -6130,9 +6207,13 @@ setInterval(refreshMultiTimeframePanel, 60000);
             outcomeR,
             cashPnlUsd,
             riskUsd: p.riskUsd,
+            peakTotalPnlUsd: peakPnlUsd,
+            exitTotalPnlUsd: cashPnlUsd,
+            givebackFromPeakUsd,
+            peakPnlAt: Number(p.peakPnlAt) || null,
             notionalExposureAtEntry: Number(p.notionalExposureAtEntry) || Math.abs(Number(p.entry) * Number(p.quantity)),
             leverageModel: 'not_applied',
-            reason,
+            reason: historyReason,
             openedAt: p.openedAt,
             closedAt: new Date()
         };
@@ -6150,7 +6231,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
         state.lastPositionStructureFetch = 0;
         state.cooldownUntil = state.autoEntry ? 0 : Date.now() + 60000;
         setMessage(state.autoEntry ? `Paper trade closed: ${reason}. Result ${fmtR(outcomeR)}. Auto Entry remains enabled and is searching for the next valid setup.` : `Paper trade closed: ${reason}. Result ${fmtR(outcomeR)}. A one-minute cooldown is active.`);
-        logEvent(`${marketName(p.market)} PAPER trade closed at ${formatPrice(markPrice)}: ${reason}, ${fmtR(outcomeR)}.`);
+        logEvent(`${marketName(p.market)} PAPER trade closed at ${formatPrice(markPrice)}: ${historyReason}, ${fmtR(outcomeR)}.`);
         savePersistentState();
         requestAutoEntryRescanAfterClose();
     }
@@ -6159,16 +6240,21 @@ setInterval(refreshMultiTimeframePanel, 60000);
         const p = state.position;
         if (!p) { setMessage('There is no open paper position to close.'); renderUi(); return; }
         const mark = Number(p.markPrice) > 0 ? Number(p.markPrice) : Number(p.entry);
+        const pnlMetrics = updatePositionPnlMetrics(p, mark);
         const remainingQty = Number.isFinite(Number(p.remainingQuantity)) ? Number(p.remainingQuantity) : Number(p.quantity);
         const floating = (p.direction === 'long' ? mark - Number(p.entry) : Number(p.entry) - mark) * remainingQty;
         const cashPnlUsd = (Number(p.realizedPnlUsd) || 0) + floating;
         const riskUsd = Math.max(0.01, Number(p.riskUsd) || Number(state.maxRiskUsd) || DEMO_RISK_USD);
         const outcomeR = cashPnlUsd / riskUsd;
+        const peakPnlUsd = Math.max(0, Number(pnlMetrics.peakPnlUsd) || 0);
+        const givebackFromPeakUsd = Math.max(0, peakPnlUsd - cashPnlUsd);
         const closed = {
             market: p.market, direction: p.direction, entry: Number(p.entry), exit: mark,
             outcomeR, cashPnlUsd, riskUsd,
+            peakTotalPnlUsd: peakPnlUsd, exitTotalPnlUsd: cashPnlUsd, givebackFromPeakUsd,
+            peakPnlAt: Number(p.peakPnlAt) || null,
             notionalExposureAtEntry: Number(p.notionalExposureAtEntry) || Math.abs(Number(p.entry) * Number(p.quantity)),
-            leverageModel: '10x_paper_model', reason: 'manual close', openedAt: p.openedAt, closedAt: new Date()
+            leverageModel: '10x_paper_model', reason: `manual close | Peak PnL ${fmtUsdPnl(peakPnlUsd)}; exit PnL ${fmtUsdPnl(cashPnlUsd)}; giveback from peak ${fmtUsdAmount(givebackFromPeakUsd)}`, openedAt: p.openedAt, closedAt: new Date()
         };
         state.closedTrades.push(closed);
         state.netR += outcomeR;
@@ -6183,7 +6269,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
         state.lastPositionStructureFetch = 0;
         state.cooldownUntil = state.autoEntry ? 0 : Date.now() + 60000;
         setMessage(state.autoEntry ? `Paper position manually closed at ${formatPrice(mark)}. Realized PnL: ${fmtUsdPnl(cashPnlUsd)}. Auto Entry remains enabled and is searching for the next valid setup.` : `Paper position manually closed at ${formatPrice(mark)}. Realized PnL: ${fmtUsdPnl(cashPnlUsd)}. Added to cumulative closed PnL.`);
-        logEvent(`${marketName(p.market)} PAPER ${p.direction.toUpperCase()} manually closed at ${formatPrice(mark)}; realized ${fmtUsdPnl(cashPnlUsd)} (${fmtR(outcomeR)}).`);
+        logEvent(`${marketName(p.market)} PAPER ${p.direction.toUpperCase()} manually closed at ${formatPrice(mark)}; realized ${fmtUsdPnl(cashPnlUsd)} (${fmtR(outcomeR)}). Peak PnL ${fmtUsdPnl(peakPnlUsd)}; giveback from peak ${fmtUsdAmount(givebackFromPeakUsd)}.`);
         savePersistentState();
         requestAutoEntryRescanAfterClose();
         renderUi();
@@ -6262,12 +6348,16 @@ setInterval(refreshMultiTimeframePanel, 60000);
 
                 if (structureBreak) {
                     const qty = Number.isFinite(Number(p.remainingQuantity)) ? Number(p.remainingQuantity) : Number(p.quantity);
+                    const pnlMetrics = updatePositionPnlMetrics(p, markPrice);
                     const realized = Number(p.realizedPnlUsd) || 0;
                     const floating = (direction === 'long' ? Number(markPrice) - Number(p.entry) : Number(p.entry) - Number(markPrice)) * qty;
+                    const exitPnlUsd = realized + floating;
+                    const peakPnlUsd = Math.max(0, Number(pnlMetrics.peakPnlUsd) || 0);
+                    const givebackFromPeakUsd = Math.max(0, peakPnlUsd - exitPnlUsd);
                     const risk = Math.max(0.01, Number(p.riskUsd) || DEMO_RISK_USD);
-                    const outcomeR = (realized + floating) / risk;
+                    const outcomeR = exitPnlUsd / risk;
                     const reason = `early reversal confirmed: closed 5m candle broke ${direction === 'long' ? 'swing support' : 'swing resistance'} at ${formatPrice(swingLevel)}`;
-                    logEvent(`Early Reversal CONFIRMED: ${direction.toUpperCase()} position; completed 5m candle closed beyond the prior ${swingLookbackBars}-candle swing level ${formatPrice(swingLevel)}. Closing the paper position.`);
+                    logEvent(`Early Reversal CONFIRMED: ${direction.toUpperCase()} position; completed 5m candle closed beyond the prior ${swingLookbackBars}-candle swing level ${formatPrice(swingLevel)}. Peak PnL ${fmtUsdPnl(peakPnlUsd)}; PnL at exit ${fmtUsdPnl(exitPnlUsd)}; giveback from peak ${fmtUsdAmount(givebackFromPeakUsd)}. Closing the paper position.`);
                     state.earlyReversalRetestSetup = null;
                     closePaperPosition(outcomeR, reason, markPrice);
                     return true;
@@ -6335,6 +6425,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
         if (!p || !Number.isFinite(markPrice) || markPrice <= 0) return;
         p.markPrice = markPrice;
         p.lastMarkTime = Date.now();
+        updatePositionPnlMetrics(p, markPrice);
 
         const stopHit = p.direction === 'long' ? markPrice <= p.activeStop : markPrice >= p.activeStop;
         if (stopHit) {
