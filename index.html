@@ -2087,7 +2087,7 @@ a{color:#68dfff!important}
         <div class="demo-limit-controls" id="demoRobotEarlyReversalControls">
             <label class="demo-limit-toggle" for="demoRobotEarlyReversal">
                 <input id="demoRobotEarlyReversal" type="checkbox" checked>
-                <span><strong>Early Reversal Protection · PAPER TEST</strong><small>After the first opposing closed 5-minute candle, record its open as the retest level. Exit only if the next closed candle retests near that level, closes against the position again, and does not close through the level. A close through the level cancels that setup. Paper-only; does not reverse automatically.</small></span>
+                <span><strong>Early Reversal Protection · PAPER TEST</strong><small>An opposing closed 5-minute candle creates a warning, not an exit. Close only after a later completed 5-minute candle breaks the preceding 3-candle swing level in the reversal direction. Cancel the warning if price closes back through the warning candle open. The warning expires after 3 subsequent closed candles. Paper-only; does not reverse automatically.</small></span>
             </label>
             <div class="demo-limit-note">The original stop loss remains active. This is a paper-only exit rule and does not send or manage live exchange orders.</div>
         </div>
@@ -6079,6 +6079,10 @@ setInterval(refreshMultiTimeframePanel, 60000);
             confirmTime: confirmCandle?.[0] || Date.now()
         };
         state.position = position;
+        state.earlyReversalRetestSetup = null;
+        state.lastEarlyReversalCandleTime = 0;
+        state.positionReversalCandles = [];
+        state.lastPositionReversalFetch = 0;
         // Paper behavior and records continue unchanged. When live mode is
         // explicitly enabled, this same qualified BTC setup is also submitted
         // through the authenticated Worker; a live rejection never mutates the
@@ -6139,6 +6143,9 @@ setInterval(refreshMultiTimeframePanel, 60000);
         else if (outcomeR < 0) state.losses++;
         state.position = null;
         state.earlyReversalRetestSetup = null;
+        state.lastEarlyReversalCandleTime = 0;
+        state.positionReversalCandles = [];
+        state.lastPositionReversalFetch = 0;
         state.positionStructureClosed = [];
         state.lastPositionStructureFetch = 0;
         state.cooldownUntil = state.autoEntry ? 0 : Date.now() + 60000;
@@ -6168,6 +6175,10 @@ setInterval(refreshMultiTimeframePanel, 60000);
         state.netPnlUsd += cashPnlUsd;
         if (cashPnlUsd > 0) state.wins++; else if (cashPnlUsd < 0) state.losses++;
         state.position = null;
+        state.earlyReversalRetestSetup = null;
+        state.lastEarlyReversalCandleTime = 0;
+        state.positionReversalCandles = [];
+        state.lastPositionReversalFetch = 0;
         state.positionStructureClosed = [];
         state.lastPositionStructureFetch = 0;
         state.cooldownUntil = state.autoEntry ? 0 : Date.now() + 60000;
@@ -6181,77 +6192,141 @@ setInterval(refreshMultiTimeframePanel, 60000);
     function checkEarlyReversalExit(markPrice) {
         const p = state.position;
         const bars = state.positionReversalCandles;
-        if (!state.earlyReversalProtection || !p || !Array.isArray(bars) || bars.length < 2) return false;
+        const candleMs = 5 * 60 * 1000;
+        const confirmWindowBars = 3;
+        const swingLookbackBars = 3;
+        if (!state.earlyReversalProtection || !p || !Array.isArray(bars) || bars.length < swingLookbackBars + 1) return false;
+
         const closed = bars.filter(c => c && c[6] !== true &&
             Number.isFinite(Number(c[0])) && Number.isFinite(Number(c[1])) &&
             Number.isFinite(Number(c[2])) && Number.isFinite(Number(c[3])) &&
-            Number.isFinite(Number(c[4])));
-        if (closed.length < 2) return false;
+            Number.isFinite(Number(c[4])))
+            .sort((a, b) => Number(a[0]) - Number(b[0]));
+        if (closed.length < swingLookbackBars + 1) return false;
 
-        const last = closed[closed.length - 1];
-        const candleTime = Number(last[0]);
-        if (candleTime <= Number(state.lastEarlyReversalCandleTime || 0)) return false;
-        state.lastEarlyReversalCandleTime = candleTime;
-
-        const open = Number(last[1]);
-        const high = Number(last[2]);
-        const low = Number(last[3]);
-        const close = Number(last[4]);
-        const isBearish = close < open;
-        const isBullish = close > open;
+        const openedAt = p.openedAt instanceof Date
+            ? p.openedAt.getTime()
+            : new Date(p.openedAt || 0).getTime();
+        const validOpenedAt = Number.isFinite(openedAt) && openedAt > 0 ? openedAt : 0;
         const direction = p.direction;
         let setup = state.earlyReversalRetestSetup;
+        let processedAny = false;
 
-        // A setup lasts for exactly the next completed 5-minute candle.
-        // A close through the reference level cancels it; a wick retest can still reject.
-        if (setup && setup.direction !== direction) setup = null;
-        if (setup && candleTime > Number(setup.candleTime)) {
-            const reference = Number(setup.reference);
-            const tolerance = 0.0015; // 0.15% allowance for a near retest
-            let invalidated = false;
-            let confirmed = false;
+        // Process every newly completed 5m candle in order. This prevents a delayed
+        // polling cycle from skipping a confirmation candle and avoids using bars
+        // that were already fully closed before this position was opened.
+        for (let i = 0; i < closed.length; i++) {
+            const candle = closed[i];
+            const candleTime = Number(candle[0]);
+            if (candleTime <= Number(state.lastEarlyReversalCandleTime || 0)) continue;
 
-            if (direction === 'long') {
-                invalidated = close > reference;
-                const retested = high >= reference * (1 - tolerance);
-                confirmed = !invalidated && retested && isBearish && close < reference;
-            } else if (direction === 'short') {
-                invalidated = close < reference;
-                const retested = low <= reference * (1 + tolerance);
-                confirmed = !invalidated && retested && isBullish && close > reference;
+            state.lastEarlyReversalCandleTime = candleTime;
+            processedAny = true;
+
+            // A bar is eligible when it closed after the position was opened.
+            if (validOpenedAt && candleTime + candleMs <= validOpenedAt) {
+                setup = null;
+                state.earlyReversalRetestSetup = null;
+                continue;
             }
 
-            // Consume the setup after the next candle, whether it confirms or fails.
-            state.earlyReversalRetestSetup = null;
-            if (confirmed) {
-                const qty = Number.isFinite(Number(p.remainingQuantity)) ? Number(p.remainingQuantity) : Number(p.quantity);
-                const realized = Number(p.realizedPnlUsd) || 0;
-                const floating = (direction === 'long' ? Number(markPrice) - Number(p.entry) : Number(p.entry) - Number(markPrice)) * qty;
-                const risk = Math.max(0.01, Number(p.riskUsd) || DEMO_RISK_USD);
-                const outcomeR = (realized + floating) / risk;
-                const reason = `early reversal exit: 5m retest rejection at ${formatPrice(reference)}`;
-                logEvent(`Early Reversal Protection: ${direction.toUpperCase()} retest rejection confirmed on the next closed 5m candle near ${formatPrice(reference)}; closing paper position.`);
-                closePaperPosition(outcomeR, reason, markPrice);
-                return true;
+            const open = Number(candle[1]);
+            const high = Number(candle[2]);
+            const low = Number(candle[3]);
+            const close = Number(candle[4]);
+            const isBearish = close < open;
+            const isBullish = close > open;
+            let setupResolvedOnThisBar = false;
+
+            if (setup && setup.direction !== direction) {
+                setup = null;
+                state.earlyReversalRetestSetup = null;
             }
-            if (invalidated) {
-                logEvent(`Early Reversal setup cancelled: the closed 5m candle broke through ${formatPrice(reference)}. Holding position and waiting for a new setup.`);
-                return false;
+
+            if (setup && candleTime > Number(setup.warningTime)) {
+                const barsAfterWarning = (Number(setup.barsAfterWarning) || 0) + 1;
+                const warningOpen = Number(setup.warningOpen);
+                const swingLevel = Number(setup.swingLevel);
+                let recovered = false;
+                let structureBreak = false;
+
+                if (direction === 'long') {
+                    // A long is protected against a genuine bearish structure break.
+                    recovered = close >= warningOpen;
+                    structureBreak = isBearish && close < swingLevel;
+                } else if (direction === 'short') {
+                    // A short is protected against a genuine bullish structure break.
+                    recovered = close <= warningOpen;
+                    structureBreak = isBullish && close > swingLevel;
+                }
+
+                if (structureBreak) {
+                    const qty = Number.isFinite(Number(p.remainingQuantity)) ? Number(p.remainingQuantity) : Number(p.quantity);
+                    const realized = Number(p.realizedPnlUsd) || 0;
+                    const floating = (direction === 'long' ? Number(markPrice) - Number(p.entry) : Number(p.entry) - Number(markPrice)) * qty;
+                    const risk = Math.max(0.01, Number(p.riskUsd) || DEMO_RISK_USD);
+                    const outcomeR = (realized + floating) / risk;
+                    const reason = `early reversal confirmed: closed 5m candle broke ${direction === 'long' ? 'swing support' : 'swing resistance'} at ${formatPrice(swingLevel)}`;
+                    logEvent(`Early Reversal CONFIRMED: ${direction.toUpperCase()} position; completed 5m candle closed beyond the prior ${swingLookbackBars}-candle swing level ${formatPrice(swingLevel)}. Closing the paper position.`);
+                    state.earlyReversalRetestSetup = null;
+                    closePaperPosition(outcomeR, reason, markPrice);
+                    return true;
+                }
+
+                if (recovered) {
+                    logEvent(`Early Reversal warning CANCELLED: ${direction.toUpperCase()} price recovered through the warning candle open ${formatPrice(warningOpen)}. Position remains open.`);
+                    setup = null;
+                    state.earlyReversalRetestSetup = null;
+                    setupResolvedOnThisBar = true;
+                } else if (barsAfterWarning >= confirmWindowBars) {
+                    logEvent(`Early Reversal warning EXPIRED: no confirmed ${direction === 'long' ? 'bearish' : 'bullish'} 5m swing break within ${confirmWindowBars} subsequent closed candles. Position remains open.`);
+                    setup = null;
+                    state.earlyReversalRetestSetup = null;
+                    setupResolvedOnThisBar = true;
+                } else {
+                    setup.barsAfterWarning = barsAfterWarning;
+                    state.earlyReversalRetestSetup = setup;
+                }
             }
-            // No qualifying rejection: wait for a fresh opposing candle to start another setup.
+
+            // The first opposing candle is only an alert. Record the prior 3-candle
+            // swing boundary and wait for a later CLOSE beyond that level.
+            if (!setup && !setupResolvedOnThisBar && i >= swingLookbackBars) {
+                const prior = closed.slice(i - swingLookbackBars, i);
+                const priorLows = prior.map(c => Number(c[3])).filter(Number.isFinite);
+                const priorHighs = prior.map(c => Number(c[2])).filter(Number.isFinite);
+
+                if (direction === 'long' && isBearish && priorLows.length === swingLookbackBars) {
+                    const swingLevel = Math.min(...priorLows);
+                    setup = {
+                        direction,
+                        warningOpen: open,
+                        warningHigh: high,
+                        warningLow: low,
+                        swingLevel,
+                        warningTime: candleTime,
+                        barsAfterWarning: 0
+                    };
+                    state.earlyReversalRetestSetup = setup;
+                    logEvent(`Early Reversal WARNING for LONG: bearish 5m candle closed. No exit yet. Waiting up to ${confirmWindowBars} completed candles for a bearish close below prior swing support ${formatPrice(swingLevel)}.`);
+                } else if (direction === 'short' && isBullish && priorHighs.length === swingLookbackBars) {
+                    const swingLevel = Math.max(...priorHighs);
+                    setup = {
+                        direction,
+                        warningOpen: open,
+                        warningHigh: high,
+                        warningLow: low,
+                        swingLevel,
+                        warningTime: candleTime,
+                        barsAfterWarning: 0
+                    };
+                    state.earlyReversalRetestSetup = setup;
+                    logEvent(`Early Reversal WARNING for SHORT: bullish 5m candle closed. No exit yet. Waiting up to ${confirmWindowBars} completed candles for a bullish close above prior swing resistance ${formatPrice(swingLevel)}.`);
+                }
+            }
         }
 
-        // Start a new setup only on a fresh opposing candle. For a LONG, the
-        // reference is that bearish candle's open; for a SHORT, the bullish candle's open.
-        if (!state.earlyReversalRetestSetup) {
-            if (direction === 'long' && isBearish) {
-                state.earlyReversalRetestSetup = { direction, reference: open, candleTime };
-                logEvent(`Early Reversal watching LONG: first bearish 5m candle closed; waiting for the next candle to retest ${formatPrice(open)} and reject.`);
-            } else if (direction === 'short' && isBullish) {
-                state.earlyReversalRetestSetup = { direction, reference: open, candleTime };
-                logEvent(`Early Reversal watching SHORT: first bullish 5m candle closed; waiting for the next candle to retest ${formatPrice(open)} and reject.`);
-            }
-        }
+        if (processedAny) state.earlyReversalRetestSetup = setup;
         return false;
     }
 
@@ -6937,11 +7012,15 @@ setInterval(refreshMultiTimeframePanel, 60000);
     if (earlyReversalInput) {
         earlyReversalInput.addEventListener('change', () => {
             state.earlyReversalProtection = Boolean(earlyReversalInput.checked);
-            if (!state.earlyReversalProtection) state.earlyReversalRetestSetup = null;
+            if (!state.earlyReversalProtection) {
+                state.earlyReversalRetestSetup = null;
+                // Do not replay candles that closed while the feature was disabled.
+                state.lastEarlyReversalCandleTime = Date.now();
+            }
             logEvent(`Early Reversal Protection ${state.earlyReversalProtection ? 'enabled' : 'disabled'} for paper trades.`);
             setMessage(state.earlyReversalProtection
-                ? 'Early Reversal Protection ON: first opposing 5m candle sets a reference; the next closed candle must retest and reject it. The original stop remains active.'
-                : 'Early Reversal Protection OFF. Existing stop-loss and take-profit rules remain unchanged.');
+                ? 'Early Reversal Protection ON: an opposing 5m candle is only a warning. A later completed candle must break the prior 3-candle swing level; recovery cancels the warning. The original stop remains active.'
+                : 'Early Reversal Protection OFF. No early-reversal exits will be triggered; existing stop-loss and take-profit rules remain unchanged.');
             savePersistentState();
             renderUi();
         });
