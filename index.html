@@ -669,6 +669,18 @@
 }
 
 
+/* Advanced manual 1m extreme entry: PAPER ONLY, isolated UI styles. */
+.advanced-manual-direction-row { display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+.advanced-manual-direction { display:flex; align-items:center; gap:8px; flex:1 1 130px; min-width:0; padding:10px 12px; border:1px solid #475569; border-radius:8px; background:rgba(2,6,23,.55); color:#e5e7eb; cursor:pointer; font-size:13px; font-weight:800; }
+.advanced-manual-direction input { margin:0; accent-color:#60a5fa; flex:0 0 auto; }
+.advanced-manual-actions { display:flex; gap:9px; flex-wrap:wrap; margin-top:11px; }
+.advanced-manual-actions button { width:auto; flex:1 1 170px; min-width:0; margin:0; }
+#demoRobotAdvancedManualEntryControls .demo-limit-note { overflow-wrap:anywhere; }
+@media (max-width: 600px) {
+  .advanced-manual-direction { flex:1 1 calc(50% - 5px); }
+  .advanced-manual-actions button { flex:1 1 100%; }
+}
+
 /* Optional paper-only limit-entry controls */
 .demo-limit-controls { margin: 12px 0 14px; padding: 12px; border: 1px solid #334155; border-radius: 10px; background: rgba(15,23,42,.48); }
 .demo-limit-toggle { display:flex; align-items:flex-start; gap:10px; color:#e5e7eb; cursor:pointer; font-size:13px; line-height:1.45; }
@@ -2006,7 +2018,7 @@ a{color:#68dfff!important}
                 <div id="demoRobotNetR" class="value">0.00R</div>
             </div>
             <div class="demo-robot-stat">
-                <div class="label"></div>
+                <div class="label">Closed PnL (USD)</div>
                 <div id="demoRobotNetPnl" class="value">$0.00</div>
                 <div class="label" style="margin-top:4px;">Realized return</div>
                 <div id="demoRobotNetPnlPct" class="value" style="font-size:0.95rem;">0.00%</div>
@@ -2022,7 +2034,7 @@ a{color:#68dfff!important}
             <div class="demo-account-field"><label for="demoRobotAllocation">Trade Allocation / Margin (USD)</label><input id="demoRobotAllocation" type="number" min="5" step="any" value="100"></div>
             <div class="demo-account-field"><label for="demoRobotRisk">Max Initial Stop Risk (USD)</label><input id="demoRobotRisk" type="number" min="0.5" step="any" value="10"></div>
             <div class="demo-account-field"><label for="demoRobotFeeRate">Estimated Trading Fee per Side (%)</label><input id="demoRobotFeeRate" type="number" min="0" max="1" step="0.001" value="0.05"><small style="display:block;color:#9ca3af;font-size:11px;margin-top:4px;">Default 0.05% per side; adjust to your actual fee tier.</small></div>
-            <div class="demo-account-stat"><span>Current Demo Equity: <strong id="demoRobotEquity">$2,000.00</strong></span><span>Estimated margin per trade: <strong id="demoRobotMargin">$100.00</strong></span><span>Leverage model: <strong>10×</strong></span></div>
+            <div class="demo-account-stat"><span>Current Demo Equity: <strong id="demoRobotEquity">$1,000.00</strong></span><span>Estimated margin per trade: <strong id="demoRobotMargin">$100.00</strong></span><span>Leverage model: <strong>10×</strong></span></div>
         </div>
 
         <div id="demoRobotMessage" class="demo-robot-message" aria-live="polite">
@@ -2105,6 +2117,26 @@ a{color:#68dfff!important}
             <div class="demo-limit-note">Paper trading only.</div>
         </div>
 
+
+        <div class="demo-limit-controls" id="demoRobotAdvancedManualEntryControls">
+            <div><strong>Advanced Manual Limit Entry · PAPER TEST</strong><small style="display:block;color:#9ca3af;font-size:12px;line-height:1.5;margin-top:4px;">One-shot manual override for evaluating entries without waiting for automatic filters. This does not submit live exchange orders.</small></div>
+            <div class="advanced-manual-direction-row" role="group" aria-label="Choose manual entry direction">
+                <label class="advanced-manual-direction" for="demoRobotAdvancedLong">
+                    <input id="demoRobotAdvancedLong" type="checkbox">
+                    <span>LONG · 1m candle low</span>
+                </label>
+                <label class="advanced-manual-direction" for="demoRobotAdvancedShort">
+                    <input id="demoRobotAdvancedShort" type="checkbox">
+                    <span>SHORT · 1m candle high</span>
+                </label>
+            </div>
+            <div class="advanced-manual-actions">
+                <button id="demoRobotAdvancedArm" class="demo-robot-clear" type="button" disabled>Arm Selected 1m Limit</button>
+                <button id="demoRobotAdvancedCancel" class="demo-robot-clear" type="button" disabled>Cancel Advanced Entry</button>
+            </div>
+            <div id="demoRobotAdvancedStatus" class="demo-limit-note">Choose one direction, then arm it. LONG uses the current developing 1-minute candle low; SHORT uses its high. The limit price stays fixed and can fill only while that same candle is active. It expires at candle close if unfilled.</div>
+            <div class="demo-limit-note"><strong>Override scope:</strong> bypasses ECI, WMA, sideways, structure, rejection-candle and hourly entry filters for this one PAPER entry. Existing simulated stop-loss, TP1/TP2, Auto Pre-TP1 Protection and Early Reversal management continue to apply. No live BingX order is sent.</div>
+        </div>
 
         <div class="demo-limit-controls" id="demoRobotLimitControls">
             <label class="demo-limit-toggle" for="demoRobotLimitMode">
@@ -5312,6 +5344,8 @@ setInterval(refreshMultiTimeframePanel, 60000);
         lastPositionReversalFetch: 0,
         autoEntryRescanRequested: false,
         forceLimitRequest: null,
+        advancedEntryRequest: null,
+        advancedManualDirection: null,
         trend: null,
         logs: [],
         closedTrades: [],
@@ -5431,7 +5465,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
     function savePersistentState() {
         try {
             const toSave = {
-                version: 4,
+                version: 5,
                 savedAt: new Date().toISOString(),
                 // Resume only if the user had left the paper robot running before refresh.
                 enabled: Boolean(state.enabled),
@@ -5446,6 +5480,8 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 autoPreTp1Protection: Boolean(state.autoPreTp1Protection),
                 earlyReversalProtection: Boolean(state.earlyReversalProtection),
                 forceLimitRequest: state.forceLimitRequest,
+                advancedEntryRequest: state.advancedEntryRequest,
+                advancedManualDirection: state.advancedManualDirection,
                 position: state.position,
                 closedTrades: state.closedTrades.slice(-MAX_SAVED_CLOSED_TRADES),
                 wins: state.wins,
@@ -5475,7 +5511,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
             const raw = localStorage.getItem(STORAGE_KEY);
             if (!raw) return;
             const saved = JSON.parse(raw);
-            if (!saved || ![2, 3, 4].includes(saved.version)) return;
+            if (!saved || ![2, 3, 4, 5].includes(saved.version)) return;
 
             state.enabled = saved.version >= 3 && Boolean(saved.enabled);
             state.activeMarket = saved.activeMarket || null;
@@ -5490,6 +5526,10 @@ setInterval(refreshMultiTimeframePanel, 60000);
             state.forceLimitRequest = saved.forceLimitRequest && typeof saved.forceLimitRequest === 'object'
                 ? { ...saved.forceLimitRequest, requestedAt: Number(saved.forceLimitRequest.requestedAt) || Date.now(), minCandleTime: Number.isFinite(Number(saved.forceLimitRequest.minCandleTime)) ? Number(saved.forceLimitRequest.minCandleTime) : null }
                 : null;
+            state.advancedEntryRequest = saved.advancedEntryRequest && typeof saved.advancedEntryRequest === 'object' && ['long', 'short'].includes(saved.advancedEntryRequest.direction)
+                ? { ...saved.advancedEntryRequest, requestedAt: Number(saved.advancedEntryRequest.requestedAt) || Date.now() }
+                : null;
+            state.advancedManualDirection = ['long', 'short'].includes(saved.advancedManualDirection) ? saved.advancedManualDirection : null;
             if (saved.levels && typeof saved.levels === 'object') {
                 const validLevel = (level, side) => level && Number.isFinite(Number(level.price)) && Number(level.price) > 0 && (side === 'support' ? 'Support' : 'Resistance') === level.type
                     ? { price: Number(level.price), time: Number(level.time) || 0, type: level.type }
@@ -5706,17 +5746,22 @@ setInterval(refreshMultiTimeframePanel, 60000);
             }
         }
         if (entryFoundEl) {
-            const foundLimit = state.forceLimitMode && state.pending && state.pending.kind === 'force-limit';
+            const isAdvancedManualPending = Boolean(state.pending && state.pending.kind === 'advanced-manual-limit');
+            const foundLimit = Boolean(state.pending && (state.pending.kind === 'force-limit' || isAdvancedManualPending));
             entryFoundEl.style.display = foundLimit ? 'flex' : 'none';
             if (foundLimit) {
                 const direction = state.pending.direction;
-                const remaining = Math.max(0, MAX_LIMIT_PENDING_MINUTES - Math.floor((Date.now() - state.pending.startedAt) / 60000));
+                const remaining = isAdvancedManualPending
+                    ? Math.max(0, Math.ceil((Number(state.pending.expiresAt) - Date.now()) / 1000))
+                    : Math.max(0, MAX_LIMIT_PENDING_MINUTES - Math.floor((Date.now() - state.pending.startedAt) / 60000));
                 const title = $('demoRobotEntryFoundTitle');
                 const price = $('demoRobotEntryFoundPrice');
                 const detail = $('demoRobotEntryFoundDetail');
-                if (title) title.textContent = `ENTRY FOUND · ${direction.toUpperCase()} LIMIT`;
+                if (title) title.textContent = isAdvancedManualPending ? `MANUAL PAPER ${direction.toUpperCase()} LIMIT` : `ENTRY FOUND · ${direction.toUpperCase()} LIMIT`;
                 if (price) price.textContent = formatPrice(state.pending.limitPrice);
-                if (detail) detail.textContent = `Paper limit at the previous closed 5-minute candle price · ${direction === 'long' ? 'buy below market' : 'sell above market'} · expires in ${remaining} min`;
+                if (detail) detail.textContent = isAdvancedManualPending
+                    ? `1m candle ${direction === 'long' ? 'low' : 'high'} · expires in ${remaining}s · paper only`
+                    : `Paper limit at the previous closed 5-minute candle price · ${direction === 'long' ? 'buy below market' : 'sell above market'} · expires in ${remaining} min`;
             }
         }
         if (badge) {
@@ -5744,6 +5789,20 @@ setInterval(refreshMultiTimeframePanel, 60000);
         const preTp1ProtectionToggle = $('demoRobotAutoPreTp1Protection');
         const earlyReversalToggle = $('demoRobotEarlyReversal');
         const forceRefreshButton = $('demoRobotForceLimitRefresh');
+        const advancedLongToggle = $('demoRobotAdvancedLong');
+        const advancedShortToggle = $('demoRobotAdvancedShort');
+        const advancedArmButton = $('demoRobotAdvancedArm');
+        const advancedCancelButton = $('demoRobotAdvancedCancel');
+        const advancedStatus = $('demoRobotAdvancedStatus');
+        if (advancedLongToggle) advancedLongToggle.checked = state.advancedManualDirection === 'long';
+        if (advancedShortToggle) advancedShortToggle.checked = state.advancedManualDirection === 'short';
+        if (advancedArmButton) advancedArmButton.disabled = !state.enabled || Boolean(state.position) || !state.advancedManualDirection || Boolean(state.advancedEntryRequest) || Boolean(state.pending && state.pending.kind === 'advanced-manual-limit');
+        if (advancedCancelButton) advancedCancelButton.disabled = !state.advancedEntryRequest && !(state.pending && state.pending.kind === 'advanced-manual-limit');
+        if (advancedStatus) advancedStatus.textContent = state.pending && state.pending.kind === 'advanced-manual-limit'
+            ? `Manual PAPER ${state.pending.direction.toUpperCase()} limit armed at ${formatPrice(state.pending.limitPrice)}. It will expire when the current 1-minute candle closes.`
+            : state.advancedEntryRequest
+                ? `Manual PAPER ${state.advancedEntryRequest.direction.toUpperCase()} entry requested. Waiting for a valid current 1-minute candle extreme.`
+                : 'Choose one direction, then arm it. LONG uses the current developing 1-minute candle low; SHORT uses its high. The limit price stays fixed and expires at candle close if unfilled.';
         if (modeToggle && modeToggle.checked !== state.limitMode) modeToggle.checked = state.limitMode;
         if (forceModeToggle && forceModeToggle.checked !== state.forceLimitMode) forceModeToggle.checked = state.forceLimitMode;
         if (autoEntryToggle && autoEntryToggle.checked !== state.autoEntry) autoEntryToggle.checked = state.autoEntry;
@@ -6063,7 +6122,9 @@ setInterval(refreshMultiTimeframePanel, 60000);
             setMessage('Entry price is unavailable; no demo entry recorded.');
             return false;
         }
-        const hourlyGuard = checkHourlyPullbackRejection(direction, entryPrice, state.structureClosed, state.hourlyClosed, market);
+        const hourlyGuard = options.manualAdvanced
+            ? { blocked: false, reason: 'advanced manual entry override' }
+            : checkHourlyPullbackRejection(direction, entryPrice, state.structureClosed, state.hourlyClosed, market);
         if (hourlyGuard.blocked) {
             setMessage(`ENTRY FILTER: ${hourlyGuard.reason}`);
             logEvent(`${marketName(market)} ${direction.toUpperCase()} entry blocked by the 1h pullback/rejection filter: ${hourlyGuard.reason}`);
@@ -6146,7 +6207,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
             profitProtectionStop: null,
             openedAt: new Date(),
             level: level.price,
-            entryMode: isLimitFill ? 'paper_limit' : 'confirmed_rejection',
+            entryMode: options.manualAdvanced ? 'advanced_manual_limit' : (isLimitFill ? 'paper_limit' : 'confirmed_rejection'),
             confirmTime: confirmCandle?.[0] || Date.now()
         };
         state.position = position;
@@ -6158,7 +6219,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
         // explicitly enabled, this same qualified BTC setup is also submitted
         // through the authenticated Worker; a live rejection never mutates the
         // paper position or paper trade accounting.
-        if (market === 'BTC' && window.goldEciLiveMode && window.goldEciLiveMode.isEnabled()) {
+        if (!options.manualAdvanced && market === 'BTC' && window.goldEciLiveMode && window.goldEciLiveMode.isEnabled()) {
             window.goldEciLiveMode.submit(position).catch(error => {
                 const liveStatus = document.getElementById('liveExchangeStatus');
                 if (liveStatus) liveStatus.textContent = 'Live order failed · ' + (error?.message || 'Worker request failed');
@@ -6167,10 +6228,12 @@ setInterval(refreshMultiTimeframePanel, 60000);
         state.positionStructureClosed = Array.isArray(state.structureClosed) ? state.structureClosed.slice() : [];
         state.lastPositionStructureFetch = 0; // refresh from the position market at the next cycle
         state.pending = null;
-        setMessage(isLimitFill
-            ? `Paper ${direction.toUpperCase()} limit filled at ${formatPrice(entryPrice)}. Monitoring simulated stop and targets.`
-            : `Paper ${direction.toUpperCase()} opened after confirmation at ${formatPrice(entryPrice)}. Monitoring simulated stop and targets.`);
-        logEvent(`${marketName(market)} PAPER ${direction.toUpperCase()} ${isLimitFill ? 'LIMIT FILLED' : 'confirmation entry'} at ${formatPrice(entryPrice)}; margin-based sizing $${allocationMarginUsd.toFixed(2)} × 10 = $${targetNotionalUsd.toFixed(2)} target notional, quantity ${fmtQuantity(quantity)}, estimated initial stop risk $${actualRiskUsd.toFixed(2)} (configured warning threshold $${riskCapUsd.toFixed(2)})${riskCapExceeded ? ' — WARNING: STOP RISK EXCEEDS CONFIGURED MAXIMUM' : ''}, SL ${formatPrice(stop)}, TP1 ${formatPrice(position.tp1)}, TP2 ${formatPrice(position.tp2)}.`);
+        setMessage(options.manualAdvanced
+            ? `Advanced manual PAPER ${direction.toUpperCase()} limit filled at ${formatPrice(entryPrice)}. Automatic entry filters were bypassed for this entry only; normal paper position management is active.`
+            : (isLimitFill
+                ? `Paper ${direction.toUpperCase()} limit filled at ${formatPrice(entryPrice)}. Monitoring simulated stop and targets.`
+                : `Paper ${direction.toUpperCase()} opened after confirmation at ${formatPrice(entryPrice)}. Monitoring simulated stop and targets.`));
+        logEvent(`${marketName(market)} PAPER ${direction.toUpperCase()} ${options.manualAdvanced ? 'ADVANCED MANUAL 1M LIMIT FILLED' : (isLimitFill ? 'LIMIT FILLED' : 'confirmation entry')} at ${formatPrice(entryPrice)}; margin-based sizing $${allocationMarginUsd.toFixed(2)} × 10 = $${targetNotionalUsd.toFixed(2)} target notional, quantity ${fmtQuantity(quantity)}, estimated initial stop risk $${actualRiskUsd.toFixed(2)} (configured warning threshold $${riskCapUsd.toFixed(2)})${riskCapExceeded ? ' — WARNING: STOP RISK EXCEEDS CONFIGURED MAXIMUM' : ''}, SL ${formatPrice(stop)}, TP1 ${formatPrice(position.tp1)}, TP2 ${formatPrice(position.tp2)}.${options.manualAdvanced ? ' PAPER ONLY; no live order submitted.' : ''}`);
         if (riskCapExceeded) {
             setMessage(`PAPER POSITION OPEN. Risk warning: estimated initial stop loss $${actualRiskUsd.toFixed(2)} exceeds your configured maximum $${riskCapUsd.toFixed(2)}. Margin-based sizing is enabled; quantity was not reduced.`);
         }
@@ -6576,6 +6639,176 @@ setInterval(refreshMultiTimeframePanel, 60000);
         return { blocked: true, reason: 'Unknown trade direction; entry blocked.' };
     }
 
+    function getActiveDevelopingOneMinuteCandle() {
+        const now = Date.now();
+        for (let i = state.confirmAll.length - 1; i >= 0; i--) {
+            const candle = state.confirmAll[i];
+            const start = Number(candle && candle[0]);
+            const stillInsideCurrentMinute = Number.isFinite(start) && start <= now + 5000 && start + 60000 > now;
+            // The shared candle normalizer marks the last 5 seconds as closed; for this
+            // one-minute manual order, keep using that candle until its actual close time.
+            if (candle && (candle[6] === true || stillInsideCurrentMinute) && Number.isFinite(start) && Number(candle[1]) > 0) {
+                return candle;
+            }
+        }
+        return null;
+    }
+
+    // Manual Advanced Entry is a one-shot, paper-only limit override. The selected
+    // candle extreme is frozen at arm time; it does not chase a changing high/low.
+    // It is processed before WMA, sideways, structure and hourly entry filters.
+    function processAdvancedManualEntry(market, price, atrValue) {
+        const request = state.advancedEntryRequest;
+        const pending = state.pending && state.pending.kind === 'advanced-manual-limit' ? state.pending : null;
+        if (!request && !pending) return false;
+
+        if (request) {
+            if (request.market !== market) {
+                state.advancedEntryRequest = null;
+                setMessage('Advanced manual entry cancelled because the selected market changed. Select a direction and arm it again.');
+                logEvent('Advanced manual entry request cancelled: selected market changed.');
+                savePersistentState(); renderUi();
+                return true;
+            }
+            if (state.position) {
+                state.advancedEntryRequest = null;
+                setMessage('Advanced manual entry cancelled: a paper position is already open.');
+                logEvent('Advanced manual entry request cancelled because a position was already open.');
+                savePersistentState(); renderUi();
+                return true;
+            }
+
+            if (Date.now() - (Number(request.requestedAt) || Date.now()) > 60000) {
+                state.advancedEntryRequest = null;
+                setMessage('Advanced manual entry request expired while waiting for fresh 1-minute data. Re-select the direction and arm it again.');
+                logEvent('Advanced manual entry request expired before a valid developing 1m candle was available.');
+                savePersistentState(); renderUi();
+                return true;
+            }
+            const active = getActiveDevelopingOneMinuteCandle();
+            if (!active || Number(active[0]) + 60000 <= Date.now()) {
+                setMessage(`Advanced manual PAPER ${request.direction.toUpperCase()} is waiting for a valid developing 1-minute candle.`);
+                renderUi();
+                return true;
+            }
+            const direction = request.direction;
+            const limitPrice = direction === 'long' ? Number(active[3]) : Number(active[2]);
+            if (!Number.isFinite(limitPrice) || limitPrice <= 0) {
+                state.advancedEntryRequest = null;
+                setMessage('Advanced manual entry cancelled: the 1-minute candle extreme is invalid.');
+                logEvent('Advanced manual entry cancelled: invalid 1-minute candle extreme.');
+                savePersistentState(); renderUi();
+                return true;
+            }
+            const validWaitingSide = direction === 'long' ? limitPrice < price : limitPrice > price;
+            if (!validWaitingSide) {
+                state.advancedEntryRequest = null;
+                setMessage(`Advanced manual ${direction.toUpperCase()} limit not armed: the current 1-minute ${direction === 'long' ? 'low' : 'high'} at ${formatPrice(limitPrice)} is already touched or not on the waiting side of the current mark ${formatPrice(price)}. Re-arm on the next candle; no market chase was made.`);
+                logEvent(`Advanced manual ${direction.toUpperCase()} entry not armed: 1m extreme ${formatPrice(limitPrice)} was already crossed or invalid relative to mark ${formatPrice(price)}.`);
+                savePersistentState(); renderUi();
+                return true;
+            }
+
+            const level = {
+                price: limitPrice,
+                type: direction === 'long' ? 'Support' : 'Resistance',
+                time: Number(active[0]) || Date.now()
+            };
+            const tolerance = Math.max(price * 0.00025, Number.isFinite(Number(atrValue)) ? Number(atrValue) * 0.35 : 0);
+            state.pending = {
+                kind: 'advanced-manual-limit',
+                market,
+                direction,
+                limitPrice,
+                level,
+                startedAt: Date.now(),
+                candleTime: Number(active[0]),
+                expiresAt: Number(active[0]) + 60000,
+                atr: Number.isFinite(Number(atrValue)) ? Number(atrValue) : null,
+                tolerance,
+                armedHigh: Number(active[2]),
+                armedLow: Number(active[3]),
+                lastObservedMark: price
+            };
+            state.advancedEntryRequest = null;
+            setMessage(`Advanced manual PAPER ${direction.toUpperCase()} limit armed at ${formatPrice(limitPrice)} from the current developing 1-minute candle ${direction === 'long' ? 'low' : 'high'}. The limit is fixed for this candle only; standard paper stops and targets will manage the trade after a fill.`);
+            logEvent(`${marketName(market)} advanced manual PAPER ${direction.toUpperCase()} limit armed at ${formatPrice(limitPrice)} from the developing 1m candle ${direction === 'long' ? 'low' : 'high'}. All automatic entry filters bypassed for this one entry only; expires at candle close. No live exchange order will be sent.`);
+            savePersistentState(); renderUi();
+            return true;
+        }
+
+        if (!pending) return false;
+        if (pending.market !== market) {
+            resetPending('selected market changed before advanced manual limit filled');
+            setMessage('Advanced manual limit cancelled because the selected market changed.');
+            savePersistentState(); renderUi();
+            return true;
+        }
+
+        const active = getActiveDevelopingOneMinuteCandle();
+        const limit = Number(pending.limitPrice);
+        const epsilon = Math.max(Math.abs(limit) * 1e-8, 1e-8);
+        const sameCandleStillActive = active && Number(active[0]) === Number(pending.candleTime) && Date.now() < Number(pending.expiresAt);
+        if (!sameCandleStillActive) {
+            // If polling resumes just after the candle closes, inspect the just-closed
+            // candle for a new extreme beyond the armed level to detect a missed touch.
+            const justClosed = state.confirmClosed.find(c => Number(c[0]) === Number(pending.candleTime));
+            const completedCandleCrossed = justClosed && (pending.direction === 'short'
+                ? Number(justClosed[2]) > Number(pending.armedHigh) + epsilon
+                : Number(justClosed[3]) < Number(pending.armedLow) - epsilon);
+            if (completedCandleCrossed) {
+                const filled = openPaperPosition(
+                    pending.direction, pending.level, justClosed,
+                    Number.isFinite(Number(pending.atr)) ? Number(pending.atr) : atrValue,
+                    Number(pending.tolerance) || Math.max(price * 0.00025, 0),
+                    limit, market, { mode: 'limit', manualAdvanced: true }
+                );
+                if (!filled) {
+                    resetPending('advanced manual limit crossed during the 1m candle but a valid paper stop could not be calculated');
+                    setMessage('Advanced manual limit was crossed during the candle, but no position opened because the stop-loss calculation was invalid. Review the logs.');
+                    savePersistentState(); renderUi();
+                }
+                return true;
+            }
+            resetPending('the selected 1-minute candle closed before the advanced manual limit filled');
+            setMessage(`Advanced manual PAPER ${pending.direction.toUpperCase()} limit expired unfilled at the end of its 1-minute candle. Arm another entry if you still want it; no chase entry was submitted.`);
+            logEvent(`Advanced manual PAPER ${pending.direction.toUpperCase()} limit expired unfilled at ${formatPrice(pending.limitPrice)} when its 1m candle closed.`);
+            savePersistentState(); renderUi();
+            return true;
+        }
+
+        // If a mark is sampled beyond the limit, use the limit price. If polling misses
+        // the instantaneous touch, a new within-candle high/low beyond the armed extreme
+        // provides evidence that price crossed the fixed level after arming.
+        const markTouched = pending.direction === 'short' ? price >= limit : price <= limit;
+        const candleCrossedAfterArm = pending.direction === 'short'
+            ? Number(active[2]) > Number(pending.armedHigh) + epsilon
+            : Number(active[3]) < Number(pending.armedLow) - epsilon;
+        if (markTouched || candleCrossedAfterArm) {
+            const filled = openPaperPosition(
+                pending.direction,
+                pending.level,
+                active,
+                Number.isFinite(Number(pending.atr)) ? Number(pending.atr) : atrValue,
+                Number(pending.tolerance) || Math.max(price * 0.00025, 0),
+                limit,
+                market,
+                { mode: 'limit', manualAdvanced: true }
+            );
+            if (!filled) {
+                resetPending('advanced manual limit was touched but a valid paper stop could not be calculated');
+                setMessage('Advanced manual limit was touched, but no position opened because the existing stop-loss calculation could not produce a valid stop. Review the logs.');
+                savePersistentState(); renderUi();
+            }
+            return true;
+        }
+
+        pending.lastObservedMark = price;
+        setMessage(`Advanced manual PAPER ${pending.direction.toUpperCase()} limit waiting at ${formatPrice(limit)}. Current mark ${formatPrice(price)}; expires when this 1-minute candle closes. Automatic entry filters remain bypassed for this one armed entry only.`);
+        renderUi();
+        return true;
+    }
+
     async function cycle() {
         if (state.busy) return;
         if (!state.enabled && !state.position) {
@@ -6687,12 +6920,20 @@ setInterval(refreshMultiTimeframePanel, 60000);
             const market = selectedMarket;
             if (state.activeMarket !== market) {
                 const previousMarket = state.activeMarket;
+                if (state.pending && state.pending.kind === 'advanced-manual-limit') {
+                    resetPending('selected market changed before advanced manual limit filled');
+                }
+                if (state.advancedEntryRequest && state.advancedEntryRequest.market !== market) {
+                    state.advancedEntryRequest = null;
+                    logEvent('Advanced Manual Entry request cancelled because the selected market changed.');
+                }
                 resetMarketCaches(market);
                 if (previousMarket) logEvent(`Dashboard market changed to ${marketName(market)}; robot data cache reset.`);
             }
 
             const now = Date.now();
-            if (!state.confirmAll.length || now - state.lastConfirmFetch >= CONFIRM_REFRESH_MS) {
+            const advancedManualNeedsFreshCandle = Boolean(state.advancedEntryRequest || (state.pending && state.pending.kind === 'advanced-manual-limit'));
+            if (!state.confirmAll.length || advancedManualNeedsFreshCandle || now - state.lastConfirmFetch >= CONFIRM_REFRESH_MS) {
                 state.confirmAll = await fetchDemoBars(market, '1m', CONFIRM_INTERVAL_MINUTES, CANDLE_LIMIT);
                 if (market !== selectedMarket) return;
                 state.confirmClosed = state.confirmAll.filter(c => c[6] !== true);
@@ -6716,6 +6957,13 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 : null;
             if (!Number.isFinite(price)) {
                 setMessage('Waiting for a valid live price from the dashboard feed. No entry can be recorded.');
+                return;
+            }
+            // Advanced manual PAPER entry deliberately bypasses automatic entry filters,
+            // but still requires valid live price data and a current 1-minute candle.
+            if (state.advancedEntryRequest || (state.pending && state.pending.kind === 'advanced-manual-limit')) {
+                const advancedAtr = averageTrueRange(state.confirmClosed, 14);
+                processAdvancedManualEntry(market, price, advancedAtr);
                 return;
             }
             if (state.confirmClosed.length < 200) {
@@ -6960,6 +7208,10 @@ setInterval(refreshMultiTimeframePanel, 60000);
         } else {
             state.enabled = false;
             resetPending('new entries paused by user');
+            if (state.advancedEntryRequest) {
+                state.advancedEntryRequest = null;
+                logEvent('Advanced Manual Entry request cancelled because the robot was paused.');
+            }
             setMessage(state.position
                 ? 'New entries paused. The existing paper position will continue to be monitored.'
                 : 'Demo robot paused. No new setups will be scanned.');
@@ -7045,6 +7297,61 @@ setInterval(refreshMultiTimeframePanel, 60000);
         renderUi();
         logEvent(`Estimated trading fee assumption set to ${value.toFixed(3)}% per side. Confirm this against your exchange fee tier.`);
     });
+    const advancedLongInput = $('demoRobotAdvancedLong');
+    const advancedShortInput = $('demoRobotAdvancedShort');
+    const advancedArmButton = $('demoRobotAdvancedArm');
+    const advancedCancelButton = $('demoRobotAdvancedCancel');
+
+    function setAdvancedManualDirection(direction) {
+        state.advancedManualDirection = direction;
+        if (advancedLongInput) advancedLongInput.checked = direction === 'long';
+        if (advancedShortInput) advancedShortInput.checked = direction === 'short';
+        savePersistentState();
+        renderUi();
+    }
+    if (advancedLongInput) advancedLongInput.addEventListener('change', () => {
+        setAdvancedManualDirection(advancedLongInput.checked ? 'long' : (state.advancedManualDirection === 'long' ? null : state.advancedManualDirection));
+    });
+    if (advancedShortInput) advancedShortInput.addEventListener('change', () => {
+        setAdvancedManualDirection(advancedShortInput.checked ? 'short' : (state.advancedManualDirection === 'short' ? null : state.advancedManualDirection));
+    });
+    if (advancedArmButton) advancedArmButton.addEventListener('click', () => {
+        const direction = state.advancedManualDirection;
+        if (!['long', 'short'].includes(direction)) {
+            setMessage('Choose exactly one direction, LONG or SHORT, before arming Advanced Manual Entry.'); renderUi(); return;
+        }
+        if (!state.enabled) {
+            setMessage('Start the Demo Robot before arming an Advanced Manual Entry so the limit and open position can be monitored.'); renderUi(); return;
+        }
+        if (state.position) {
+            setMessage('Advanced Manual Entry is unavailable while a paper position is open. The existing position must finish or be closed first.'); renderUi(); return;
+        }
+        if (state.pending && state.pending.kind === 'advanced-manual-limit') {
+            setMessage('An Advanced Manual limit is already armed. Cancel it before arming another.'); renderUi(); return;
+        }
+        const confirmation = `Arm one PAPER-ONLY ${direction.toUpperCase()} limit entry on ${marketName(selectedMarket)}?\n\n${direction === 'long' ? 'The limit will use the low of the current developing 1-minute candle.' : 'The limit will use the high of the current developing 1-minute candle.'}\n\nThis bypasses automatic entry filters for this entry only. Existing paper stop-loss, TP1/TP2, Pre-TP1 and Early Reversal management remain active. The limit expires at the end of this same 1-minute candle if unfilled. Any other pending entry setup will be cancelled. No live BingX order will be sent.\n\nContinue?`;
+        if (!window.confirm(confirmation)) return;
+        if (state.pending) resetPending('replaced by Advanced Manual Entry override');
+        state.forceLimitRequest = null;
+        state.advancedEntryRequest = { market: selectedMarket, direction, requestedAt: Date.now() };
+        state.lastConfirmFetch = 0; // request a fresh 1m candle snapshot before choosing the extreme
+        savePersistentState();
+        setMessage(`Advanced manual PAPER ${direction.toUpperCase()} limit requested. Fetching the current developing 1-minute candle; no market order will be sent.`);
+        logEvent(`User armed one-shot Advanced Manual PAPER ${direction.toUpperCase()} limit entry on ${marketName(selectedMarket)}. Automatic entry filters will be bypassed for this entry only. No live order will be sent.`);
+        renderUi();
+        cycle();
+    });
+    if (advancedCancelButton) advancedCancelButton.addEventListener('click', () => {
+        let cancelled = false;
+        if (state.advancedEntryRequest) { state.advancedEntryRequest = null; cancelled = true; }
+        if (state.pending && state.pending.kind === 'advanced-manual-limit') { resetPending('cancelled by user'); cancelled = true; }
+        if (cancelled) {
+            setMessage('Advanced Manual Entry cancelled. No order was submitted.');
+            logEvent('Advanced Manual Entry cancelled by user; no exchange order was sent.');
+        }
+        savePersistentState(); renderUi();
+    });
+
     const forceLimitModeInput = $('demoRobotForceLimitMode');
     const autoEntryInput = $('demoRobotAutoEntry');
     const forceLimitRefreshButton = $('demoRobotForceLimitRefresh');
@@ -7256,9 +7563,11 @@ setInterval(refreshMultiTimeframePanel, 60000);
             state.enabled = false;
             setMessage('Robot was restored, but the selected custom asset is not supported by the paper robot. Select Gold, BTC, Silver or NASDAQ and start it again.');
         } else {
-            setMessage(state.pending?.kind === 'limit'
-                ? `Restored active paper robot and pending ${state.pending.direction.toUpperCase()} limit at ${formatPrice(state.pending.limitPrice)}. Monitoring resumed after refresh.`
-                : (state.pending ? 'Restored active paper robot and its pending confirmation setup. Monitoring resumed after refresh.' : 'Restored active paper robot after refresh. Monitoring resumed; no exchange orders are sent.'));
+            setMessage(state.pending?.kind === 'advanced-manual-limit'
+                ? `Restored Advanced Manual PAPER ${state.pending.direction.toUpperCase()} limit at ${formatPrice(state.pending.limitPrice)}. It remains valid only until its original 1-minute candle closes.`
+                : (state.pending?.kind === 'limit'
+                    ? `Restored active paper robot and pending ${state.pending.direction.toUpperCase()} limit at ${formatPrice(state.pending.limitPrice)}. Monitoring resumed after refresh.`
+                    : (state.pending ? 'Restored active paper robot and its pending confirmation setup. Monitoring resumed after refresh.' : (state.advancedEntryRequest ? `Restored Advanced Manual PAPER ${state.advancedEntryRequest.direction.toUpperCase()} entry request.` : 'Restored active paper robot after refresh. Monitoring resumed; no exchange orders are sent.'))));
             logEvent('Paper robot automatically resumed after page refresh, using saved state and trade history.');
         }
     }
