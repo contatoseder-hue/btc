@@ -6,13 +6,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<script async src="https://www.googletagmanager.com/gtm.js?id=G-9Z13YR0YK0"></script>
+<!-- Google Analytics 4: replace G-xxxxxxxxx with your Measurement ID -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-9Z13YR0YK0"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
+  gtag('config', 'G-xxxxxxxxx');
 </script>
-<title>XAU/USD Gold 15m Scalp Dashboard</title>
+
+<title>DEMO XAU/USD Gold 15m Scalp Dashboard</title>
 
 <style>
     * {
@@ -1037,6 +1040,55 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .terminal-market-logo{display:inline-flex!important;align-items:center;justify-content:center;flex:0 0 42px;width:42px;height:42px;padding:5px;border:1px solid rgba(148,163,184,.22);border-radius:12px;overflow:hidden;box-sizing:border-box}
 .terminal-market-logo svg{display:block;width:100%;height:100%}
 .terminal-market-cap strong{font-variant-numeric:tabular-nums}
+
+
+
+/* Mobile-only control text wrapping fix. Trading logic and desktop layout are unchanged. */
+@media (max-width: 768px) {
+  html, body { max-width: 100%; overflow-x: hidden; }
+  .container, .card, .demo-limit-controls, .demo-limit-toggle,
+  .demo-limit-toggle > span, .demo-limit-note,
+  #demoRobotAutoEntryControls, #demoRobotPreTp1ProtectionControls,
+  #demoRobotEarlyReversalControls, #demoRobotForceLimitControls {
+    min-width: 0; max-width: 100%;
+  }
+  .demo-limit-controls, .demo-limit-toggle, .demo-limit-toggle > span,
+  .demo-limit-toggle strong, .demo-limit-toggle small, .demo-limit-note {
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+  .demo-limit-toggle {
+    display: grid;
+    grid-template-columns: 18px minmax(0, 1fr);
+    align-items: start;
+    gap: 9px;
+    width: 100%;
+  }
+  .demo-limit-toggle input { max-width: 100%; }
+  #demoRobotForceLimitControls .demo-robot-controls {
+    display: flex; flex-wrap: wrap; width: 100%; min-width: 0;
+  }
+  #demoRobotForceLimitControls .demo-robot-controls button {
+    white-space: normal; overflow-wrap: anywhere; max-width: 100%;
+  }
+}
+
+/* Live signal indicator: pulsing radio-signal emoji plus the existing live dot. */
+.live-indicator::before {
+  content: "📡";
+  display: inline-block;
+  margin-right: 1px;
+  transform-origin: center;
+  animation: liveSignalFlash 1.15s ease-in-out infinite;
+}
+@keyframes liveSignalFlash {
+  0%, 100% { opacity: .55; transform: scale(.92); filter: brightness(.9); }
+  50% { opacity: 1; transform: scale(1.12); filter: brightness(1.35); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .live-indicator::before { animation: none; opacity: 1; }
+}
 
 </style>
 <style id="professionalTerminalVisualLayer">
@@ -3235,27 +3287,40 @@ function getMarketPriceSourceBadge(marketCode = selectedMarket) {
 }
 
 async function fetchMarketData(symbol, interval, limit = 300, historyRange = null) {
-    // All dashboard candle history now comes from the same active exchange feed
-    // used by the Cloudflare ECI engine and displayed current last price.
+    // Cloudflare Worker remains primary. Gold may use a read-only Binance Spot
+    // fallback if the Worker/network path fails; formulas and signal rules are unchanged.
+    const requestMarket = selectedMarket;
     const params = new URLSearchParams({
-        market: selectedMarket,
+        market: requestMarket,
         candles: "1",
         interval: String(interval),
         limit: String(Math.min(Math.max(limit, 50), 1440)),
         t: String(Date.now())
     });
-    const response = await fetch(`${CLOUDFLARE_API}?${params.toString()}`, {
-        cache: "no-store",
-        headers: { "Accept": "application/json" }
-    });
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok) {
-        throw new Error(`Market candle request failed (${getMarketPriceSourceName()}): ${response.status}: ${payload?.message || payload?.error || "no details"}`);
+    try {
+        const response = await fetch(`${CLOUDFLARE_API}?${params.toString()}`, {
+            cache: "no-store",
+            headers: { "Accept": "application/json" }
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload?.error) {
+            throw new Error(`Market candle request failed (${getMarketPriceSourceName(requestMarket)}): ${response.status}: ${payload?.message || payload?.error || "no details"}`);
+        }
+        if (!Array.isArray(payload?.bars) || !payload.bars.length) {
+            throw new Error(`No ${interval} candles returned by ${getMarketPriceSourceName(requestMarket)}: ${payload?.message || payload?.error || "empty bars array"}`);
+        }
+        return payload.bars;
+    } catch (workerError) {
+        if (requestMarket !== "GOLD") throw workerError;
+        try {
+            const fallback = await fetchDirectGoldSpotCandlePayload({ interval: String(interval) }, Math.min(Math.max(limit, 50), 1000));
+            if (requestMarket !== selectedMarket) throw new Error("Market changed while Gold fallback candles were loading.");
+            console.warn(`[Dashboard candle feed] Cloudflare failed for Gold ${interval}; using direct Binance Spot PAXGUSDT fallback.`, workerError?.message || String(workerError));
+            return fallback.bars;
+        } catch (fallbackError) {
+            throw new Error(`Gold ${interval} candles unavailable. Cloudflare failed (${workerError?.message || String(workerError)}); direct Binance Spot fallback failed (${fallbackError?.message || String(fallbackError)}).`);
+        }
     }
-    if (!Array.isArray(payload?.bars) || !payload.bars.length) {
-        throw new Error(`No ${interval} candles returned by ${getMarketPriceSourceName()}: ${payload?.message || payload?.error || "empty bars array"}`);
-    }
-    return payload.bars;
 }
 
 function marketBarsToCandles(bars, intervalMinutes = 15) {
@@ -3359,9 +3424,10 @@ async function updateBtcDirectionAnalysis() {
 }
 
 async function fetchCurrentPrice() {
+    const requestMarket = selectedMarket;
     try {
         const params = new URLSearchParams({
-            market: selectedMarket,
+            market: requestMarket,
             price: "1",
             t: String(Date.now())
         });
@@ -3371,25 +3437,53 @@ async function fetchCurrentPrice() {
         });
         const payload = await response.json().catch(() => ({}));
         if (!response.ok || payload?.error) {
-            throw new Error(`${getMarketPriceSourceName()} price request failed (${response.status}): ${payload?.message || payload?.error || "no details"}`);
+            throw new Error(`${getMarketPriceSourceName(requestMarket)} price request failed (${response.status}): ${payload?.message || payload?.error || "no details"}`);
         }
         const price = Number(payload?.price);
         if (!Number.isFinite(price) || price <= 0) throw new Error("Invalid market last price returned by Worker");
+        if (requestMarket !== selectedMarket) return;
 
         currentPrice = price;
         document.getElementById("marketPrice").textContent = formatPrice(currentPrice);
-        if (selectedMarket === "GOLD") { const capPrice = document.getElementById("terminalMarketCapValue"); if (capPrice) capPrice.textContent = `$${(currentPrice / 1000).toFixed(2)}K`; }
+        if (requestMarket === "GOLD") { const capPrice = document.getElementById("terminalMarketCapValue"); if (capPrice) capPrice.textContent = `$${(currentPrice / 1000).toFixed(2)}K`; }
         const marketPriceLive = document.getElementById("marketPriceLive");
         if (marketPriceLive) {
-            marketPriceLive.innerHTML = `<span class="live-dot"></span><span>LIVE • ${getMarketPriceSourceBadge()}</span>`;
+            marketPriceLive.innerHTML = `<span class="live-dot"></span><span>LIVE • ${getMarketPriceSourceBadge(requestMarket)}</span>`;
             marketPriceLive.style.color = "#22c55e";
         }
         const market = getMarketConfig();
         const priceLine = document.getElementById("priceLine");
         if (priceLine) priceLine.textContent = `${market.name} ${getMarketPriceSourceName()} Last Price: ${formatPrice(currentPrice)}`;
-        if (selectedMarket === "BTC") updateBtcDirectionAnalysis();
+        if (requestMarket === "BTC") updateBtcDirectionAnalysis();
     } catch (error) {
-        console.error(`${getMarketPriceSourceName()} price fallback error:`, error);
+        if (requestMarket !== selectedMarket) return;
+        if (requestMarket === "GOLD") {
+            try {
+                const price = await fetchDirectGoldSpotPrice();
+                if (requestMarket !== selectedMarket) return;
+                currentPrice = price;
+                document.getElementById("marketPrice").textContent = formatPrice(currentPrice);
+                updateEntryDistanceUI();
+                const capPrice = document.getElementById("terminalMarketCapValue");
+                if (capPrice) capPrice.textContent = `$${(currentPrice / 1000).toFixed(2)}K`;
+                const marketPriceLive = document.getElementById("marketPriceLive");
+                if (marketPriceLive) {
+                    marketPriceLive.innerHTML = '<span class="live-dot"></span><span>LIVE • BINANCE SPOT PAXG/USDT (DIRECT FALLBACK)</span>';
+                    marketPriceLive.style.color = "#22c55e";
+                }
+                const priceLine = document.getElementById("priceLine");
+                if (priceLine) priceLine.textContent = `Gold Binance Spot PAXG/USDT (direct fallback) Last Price: ${formatPrice(currentPrice)}`;
+                console.warn("[Dashboard price feed] Cloudflare failed for Gold; using direct Binance Spot PAXGUSDT fallback.", error?.message || String(error));
+                return;
+            } catch (fallbackError) {
+                console.error("[Dashboard price feed] Both Cloudflare and direct Binance Spot failed for Gold.", {
+                    workerError: error?.message || String(error),
+                    fallbackError: fallbackError?.message || String(fallbackError)
+                });
+            }
+        } else {
+            console.error(`${getMarketPriceSourceName()} price fallback error:`, error);
+        }
         currentPrice = null;
         document.getElementById("marketPrice").textContent = "Unavailable";
         const marketPriceLive = document.getElementById("marketPriceLive");
@@ -4400,6 +4494,79 @@ function getMtfTargetCandles(sourceCandles, frame) {
         : sourceCandles;
 }
 
+// Direct, read-only fallbacks for Gold market data. The Worker remains the primary
+// source. If it is unavailable, use Binance's public PAXGUSDT Spot market-data API
+// for the same instrument. These requests only read public prices/candles and cannot place orders.
+async function fetchDirectGoldSpotPrice() {
+    const bases = [
+        "https://data-api.binance.vision",
+        "https://api.binance.com"
+    ];
+    let lastError = null;
+    for (const base of bases) {
+        try {
+            const url = `${base}/api/v3/ticker/price?symbol=PAXGUSDT`;
+            const response = await fetch(url, { cache: "no-store", headers: { "Accept": "application/json" } });
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(`HTTP ${response.status}: ${payload?.msg || payload?.message || payload?.code || "no details"}`);
+            const price = Number(payload?.price);
+            if (payload?.symbol !== "PAXGUSDT" || !Number.isFinite(price) || price <= 0) {
+                throw new Error("Binance Spot returned an invalid PAXGUSDT quote.");
+            }
+            return price;
+        } catch (error) {
+            lastError = error;
+        }
+    }
+    throw new Error(`Direct Binance Spot PAXGUSDT price fallback failed: ${lastError?.message || String(lastError || "unknown error")}`);
+}
+
+async function fetchDirectGoldSpotCandlePayload(frame, limit = 500) {
+    const bases = [
+        "https://data-api.binance.vision",
+        "https://api.binance.com"
+    ];
+    let lastError = null;
+    for (const base of bases) {
+        try {
+            const params = new URLSearchParams({
+                symbol: "PAXGUSDT",
+                interval: String(frame.interval),
+                limit: String(Math.min(1000, Math.max(50, Number(limit) || 500)))
+            });
+            const response = await fetch(`${base}/api/v3/klines?${params.toString()}`, {
+                cache: "no-store",
+                headers: { "Accept": "application/json" }
+            });
+            const rows = await response.json().catch(() => null);
+            if (!response.ok) {
+                const detail = rows && !Array.isArray(rows) ? (rows.msg || rows.message || rows.code || JSON.stringify(rows)) : "no details";
+                throw new Error(`HTTP ${response.status}: ${detail}`);
+            }
+            if (!Array.isArray(rows) || !rows.length) throw new Error("Binance Spot returned no PAXGUSDT candles.");
+            const bars = rows
+                .filter(row => Array.isArray(row) && row.length >= 7)
+                .map(row => ({
+                    openTime: Number(row[0]),
+                    open: row[1],
+                    high: row[2],
+                    low: row[3],
+                    close: row[4],
+                    volume: row[5],
+                    isOpen: Number(row[6]) >= Date.now()
+                }))
+                .filter(bar => Number.isFinite(bar.openTime) &&
+                    [bar.open, bar.high, bar.low, bar.close].every(value => Number.isFinite(Number(value)) && Number(value) > 0) &&
+                    Number(bar.high) >= Number(bar.low));
+            if (!bars.length) throw new Error("Binance Spot PAXGUSDT candles failed OHLC validation.");
+            return { bars, source: "Binance Spot direct fallback (PAXGUSDT)" };
+        } catch (error) {
+            lastError = error;
+        }
+    }
+    throw new Error(`Direct Binance Spot PAXGUSDT ${frame.interval} candle fallback failed: ${lastError?.message || String(lastError || "unknown error")}`);
+}
+
 // Direct, read-only fallback for BTC candles. The Worker uses Binance USDⓈ-M Futures
 // for BTC, so this fallback queries the same public BTCUSDT futures klines directly.
 // It does not place orders and is used only when the shared Worker feed fails.
@@ -4490,7 +4657,26 @@ async function fetchMtfCandleHistory(marketCode, frame) {
             }
         } catch (error) {
             workerFailure = error;
-            if (marketCode !== "BTC") {
+            if (marketCode === "GOLD") {
+                try {
+                    payload = await fetchDirectGoldSpotCandlePayload(frame, 500);
+                    console.warn(
+                        `[Dashboard candle feed] Cloudflare failed for Gold ${frame.interval}; using direct Binance Spot PAXGUSDT fallback.`,
+                        workerFailure?.message || String(workerFailure)
+                    );
+                } catch (fallbackError) {
+                    console.error("[Dashboard candle feed] Both Cloudflare and direct Gold Spot fallback failed", {
+                        market: marketCode,
+                        interval: frame.interval,
+                        workerError: workerFailure?.message || String(workerFailure),
+                        fallbackError: fallbackError?.message || String(fallbackError)
+                    });
+                    throw new Error(
+                        `Gold ${frame.interval} candles unavailable. Cloudflare feed failed (${workerFailure?.message || String(workerFailure)}); ` +
+                        `direct Binance Spot PAXGUSDT fallback also failed (${fallbackError?.message || String(fallbackError)}).`
+                    );
+                }
+            } else if (marketCode !== "BTC") {
                 const detail = error?.message || String(error);
                 if (/failed to fetch|networkerror|load failed/i.test(detail)) {
                     const pageOrigin = window.location && window.location.origin ? window.location.origin : "unknown";
@@ -6106,17 +6292,28 @@ setInterval(refreshMultiTimeframePanel, 60000);
 
     async function fetchPriceForMarket(market) {
         const params = new URLSearchParams({ market, price: '1', t: String(Date.now()) });
-        const response = await fetch(`${CLOUDFLARE_API}?${params.toString()}`, {
-            cache: 'no-store',
-            headers: { 'Accept': 'application/json' }
-        });
-        const payload = await response.json().catch(() => ({}));
-        if (!response.ok || payload?.error) {
-            throw new Error(payload?.message || payload?.error || `Price request failed (${response.status})`);
+        try {
+            const response = await fetch(`${CLOUDFLARE_API}?${params.toString()}`, {
+                cache: 'no-store',
+                headers: { 'Accept': 'application/json' }
+            });
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok || payload?.error) {
+                throw new Error(payload?.message || payload?.error || `Price request failed (${response.status})`);
+            }
+            const price = Number(payload?.price);
+            if (!Number.isFinite(price) || price <= 0) throw new Error('Price feed returned an invalid value.');
+            return price;
+        } catch (workerError) {
+            if (market !== 'GOLD') throw workerError;
+            try {
+                const price = await fetchDirectGoldSpotPrice();
+                console.warn('[Paper robot price feed] Cloudflare failed for Gold; using direct Binance Spot PAXGUSDT fallback.', workerError?.message || String(workerError));
+                return price;
+            } catch (fallbackError) {
+                throw new Error(`Gold price unavailable. Cloudflare failed (${workerError?.message || String(workerError)}); direct Binance Spot fallback failed (${fallbackError?.message || String(fallbackError)}).`);
+            }
         }
-        const price = Number(payload?.price);
-        if (!Number.isFinite(price) || price <= 0) throw new Error('Price feed returned an invalid value.');
-        return price;
     }
 
     function averageTrueRange(candles, period = 14) {
