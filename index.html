@@ -1858,7 +1858,7 @@ a{color:#68dfff!important}
 <div class="container">
     <div class="development-demo-banner" role="status" aria-label="Development demo notice">
       <span class="development-demo-pill">DEMO</span>
-      <span>Under development. This dashboard is a demo and may change while features are being implemented.</span>
+      <span>Under development. This dashboard is a demo and may change while features are being tested.</span>
     </div>
 
     <!-- Supabase sign-in and Cloudflare token verification -->
@@ -2238,7 +2238,7 @@ a{color:#68dfff!important}
         <div class="demo-limit-controls" id="demoRobotEarlyReversalControls">
             <label class="demo-limit-toggle" for="demoRobotEarlyReversal">
                 <input id="demoRobotEarlyReversal" type="checkbox" checked>
-                <span><strong>Early Reversal Protection · PAPER TEST</strong><small>An opposing closed 5-minute candle creates a warning, not an exit. Close only after a later completed 5-minute candle breaks the preceding 3-candle swing level in the reversal direction. Cancel the warning if price closes back through the warning candle open. The warning expires after 3 subsequent closed candles. Paper-only; does not reverse automatically.</small></span>
+                <span><strong>Early Reversal Protection · PAPER TEST</strong><small>Automatic lifecycle · OFF when a position opens; activates only while price moves against the position. Uses the existing closed 5-minute warning and 3-candle swing-break confirmation. Turns OFF on confirmed recovery and permanently turns OFF for that position when Pre-TP1 protection or TP1 activates. Initial stop-loss remains active. PAPER only.</small></span>
             </label>
             <div class="demo-limit-note">The original stop loss remains active. This is a paper-only exit rule and does not send or manage live exchange orders.</div>
         </div>
@@ -6282,7 +6282,14 @@ setInterval(refreshMultiTimeframePanel, 60000);
                     const exitFeeEstimate = Math.abs(mark * remainingQty) * feeRate;
                     const roundTripFeeEstimate = entryFeeEstimate + exitFeeEstimate;
                     const protectionStatus = p.hitTP1 ? 'TP1 reached; runner stop uses the existing breakeven rule.' : (!state.autoPreTp1Protection ? 'Auto Pre-TP1 Protection is OFF; original stop loss remains active.' : (p.profitProtectionActive ? `Pre-TP1 fee-covering stop ACTIVE at ${formatPrice(p.activeStop)}; estimated round-trip fees $${roundTripFeeEstimate.toFixed(2)}.` : `Pre-TP1 fee protection waiting; estimated round-trip fees $${roundTripFeeEstimate.toFixed(2)} at ${(Number(state.assumedFeeRatePct) || 0).toFixed(3)}% per side.`));
-                                        $('demoPositionPnlBreakdown').textContent = `Initial margin allocation: $${estimatedMargin.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · Initial notional target at 10×: $${(estimatedMargin * 10).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · ${riskWarning} · Realized from partial exits: ${fmtUsdPnl(realized)} · Floating PnL on remaining quantity: ${fmtUsdPnl(floatingPnl)} · Remaining notional exposure: $${remainingNotional.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}. ${protectionStatus} Fee-covering stop uses estimated entry + exit fees and a small $0.05 minimum / 10% fee buffer. This is paper-only; PnL otherwise excludes fees, spread, slippage and instrument-specific contract sizing.`;
+                    const earlyReversalStatus = (p.hitTP1 || p.profitProtectionActive || p.earlyReversalPermanentlyOff)
+                        ? 'OFF for this position; profit protection has priority.'
+                        : (p.earlyReversalActive
+                            ? 'ACTIVE; watching confirmed 5-minute reversal conditions while price is adverse.'
+                            : (p.earlyReversalRearmAllowed === false
+                                ? 'OFF after confirmed recovery; waiting for a fresh non-losing phase before re-arming.'
+                                : 'OFF; waiting for price to move against the position.'));
+                                        $('demoPositionPnlBreakdown').textContent = `Initial margin allocation: $${estimatedMargin.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · Initial notional target at 10×: $${(estimatedMargin * 10).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · ${riskWarning} · Realized from partial exits: ${fmtUsdPnl(realized)} · Floating PnL on remaining quantity: ${fmtUsdPnl(floatingPnl)} · Remaining notional exposure: $${remainingNotional.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}. ${protectionStatus} Early Reversal: ${earlyReversalStatus} Fee-covering stop uses estimated entry + exit fees and a small $0.05 minimum / 10% fee buffer. This is paper-only; PnL otherwise excludes fees, spread, slippage and instrument-specific contract sizing.`;
 
                 }
                 positionEl.style.display = 'block';
@@ -6571,6 +6578,9 @@ setInterval(refreshMultiTimeframePanel, 60000);
             realizedR: 0,
             profitProtectionActive: false,
             profitProtectionStop: null,
+            earlyReversalActive: false,
+            earlyReversalActivatedAt: 0,
+            earlyReversalPermanentlyOff: false,
             openedAt: new Date(),
             level: level.price,
             entryMode: options.manualAdvanced ? 'advanced_manual_limit' : (isLimitFill ? 'paper_limit' : 'confirmed_rejection'),
@@ -6713,8 +6723,42 @@ setInterval(refreshMultiTimeframePanel, 60000);
         const candleMs = 5 * 60 * 1000;
         const confirmWindowBars = 3;
         const swingLookbackBars = 3;
-        if (!state.earlyReversalProtection || !p || !Array.isArray(bars) || bars.length < swingLookbackBars + 1) return false;
+        if (!p) return false;
 
+        // Pre-TP1 protection and TP1 take priority over Early Reversal for the
+        // remainder of this position. This flag is stored on the position so a
+        // refresh cannot accidentally re-enable Early Reversal mid-trade.
+        if (p.hitTP1 || p.profitProtectionActive || p.earlyReversalPermanentlyOff) {
+            if (!p.earlyReversalPermanentlyOff) {
+                p.earlyReversalPermanentlyOff = true;
+                p.earlyReversalActive = false;
+                p.earlyReversalActivatedAt = 0;
+                state.earlyReversalRetestSetup = null;
+                logEvent(`Early Reversal switched OFF permanently for this ${p.direction.toUpperCase()} position because ${p.hitTP1 ? 'TP1' : 'Pre-TP1 protection'} activated. Profit protection now controls the exit.`);
+            }
+            return false;
+        }
+
+        if (!state.earlyReversalProtection) {
+            p.earlyReversalActive = false;
+            p.earlyReversalActivatedAt = 0;
+            state.earlyReversalRetestSetup = null;
+            return false;
+        }
+
+        const direction = p.direction;
+        const adverseNow = direction === 'long' ? markPrice < Number(p.entry) : markPrice > Number(p.entry);
+        if (!p.earlyReversalActive) {
+            // Arm only once the live mark is on the losing side of entry. Start
+            // the confirmation clock now so older candles cannot close the trade.
+            if (!adverseNow) return false;
+            p.earlyReversalActive = true;
+            p.earlyReversalActivatedAt = Date.now();
+            state.earlyReversalRetestSetup = null;
+            logEvent(`Early Reversal switched ON for ${direction.toUpperCase()}: current price is moving against the open position. Waiting for the existing confirmed 5-minute swing-break setup.`);
+        }
+
+        if (!Array.isArray(bars) || bars.length < swingLookbackBars + 1) return false;
         const closed = bars.filter(c => c && c[6] !== true &&
             Number.isFinite(Number(c[0])) && Number.isFinite(Number(c[1])) &&
             Number.isFinite(Number(c[2])) && Number.isFinite(Number(c[3])) &&
@@ -6726,13 +6770,12 @@ setInterval(refreshMultiTimeframePanel, 60000);
             ? p.openedAt.getTime()
             : new Date(p.openedAt || 0).getTime();
         const validOpenedAt = Number.isFinite(openedAt) && openedAt > 0 ? openedAt : 0;
-        const direction = p.direction;
+        const activatedAt = Number(p.earlyReversalActivatedAt) || Date.now();
         let setup = state.earlyReversalRetestSetup;
         let processedAny = false;
 
-        // Process every newly completed 5m candle in order. This prevents a delayed
-        // polling cycle from skipping a confirmation candle and avoids using bars
-        // that were already fully closed before this position was opened.
+        // Process newly completed candles in order. Only candles closed after
+        // both entry and activation are eligible for this Early Reversal cycle.
         for (let i = 0; i < closed.length; i++) {
             const candle = closed[i];
             const candleTime = Number(candle[0]);
@@ -6740,9 +6783,8 @@ setInterval(refreshMultiTimeframePanel, 60000);
 
             state.lastEarlyReversalCandleTime = candleTime;
             processedAny = true;
-
-            // A bar is eligible when it closed after the position was opened.
-            if (validOpenedAt && candleTime + candleMs <= validOpenedAt) {
+            const candleCloseTime = candleTime + candleMs;
+            if ((validOpenedAt && candleCloseTime <= validOpenedAt) || candleCloseTime <= activatedAt) {
                 setup = null;
                 state.earlyReversalRetestSetup = null;
                 continue;
@@ -6761,24 +6803,32 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 state.earlyReversalRetestSetup = null;
             }
 
+            // Even without an active warning, a completed 5m close back to the
+            // non-losing side of entry confirms recovery and disarms the feature.
+            if (p.earlyReversalActive && !setup) {
+                const recoveredToEntry = direction === 'long' ? close >= Number(p.entry) : close <= Number(p.entry);
+                if (recoveredToEntry) {
+                    p.earlyReversalActive = false;
+                    p.earlyReversalActivatedAt = 0;
+                    logEvent(`Early Reversal switched OFF: ${direction.toUpperCase()} recovery confirmed by a completed 5-minute candle closing back to the non-losing side of entry ${formatPrice(Number(p.entry))}. Position remains open; Early Reversal may reactivate only if price moves against it again before Pre-TP1 protection.`);
+                    state.earlyReversalRetestSetup = null;
+                    setup = null;
+                    break;
+                }
+            }
+
             if (setup && candleTime > Number(setup.warningTime)) {
                 const barsAfterWarning = (Number(setup.barsAfterWarning) || 0) + 1;
                 const warningOpen = Number(setup.warningOpen);
                 const swingLevel = Number(setup.swingLevel);
-                let recovered = false;
-                let structureBreak = false;
+                const recoveredThroughWarning = direction === 'long' ? close >= warningOpen : close <= warningOpen;
+                const recoveredToEntry = direction === 'long' ? close >= Number(p.entry) : close <= Number(p.entry);
+                const recovered = recoveredThroughWarning || recoveredToEntry;
+                const structureBreak = direction === 'long'
+                    ? (isBearish && close < swingLevel)
+                    : (isBullish && close > swingLevel);
 
-                if (direction === 'long') {
-                    // A long is protected against a genuine bearish structure break.
-                    recovered = close >= warningOpen;
-                    structureBreak = isBearish && close < swingLevel;
-                } else if (direction === 'short') {
-                    // A short is protected against a genuine bullish structure break.
-                    recovered = close <= warningOpen;
-                    structureBreak = isBullish && close > swingLevel;
-                }
-
-                if (structureBreak) {
+                if (structureBreak && adverseNow) {
                     const qty = Number.isFinite(Number(p.remainingQuantity)) ? Number(p.remainingQuantity) : Number(p.quantity);
                     const pnlMetrics = updatePositionPnlMetrics(p, markPrice);
                     const realized = Number(p.realizedPnlUsd) || 0;
@@ -6789,17 +6839,20 @@ setInterval(refreshMultiTimeframePanel, 60000);
                     const risk = Math.max(0.01, Number(p.riskUsd) || DEMO_RISK_USD);
                     const outcomeR = exitPnlUsd / risk;
                     const reason = `early reversal confirmed: closed 5m candle broke ${direction === 'long' ? 'swing support' : 'swing resistance'} at ${formatPrice(swingLevel)}`;
-                    logEvent(`Early Reversal CONFIRMED: ${direction.toUpperCase()} position; completed 5m candle closed beyond the prior ${swingLookbackBars}-candle swing level ${formatPrice(swingLevel)}. Peak PnL ${fmtUsdPnl(peakPnlUsd)}; PnL at exit ${fmtUsdPnl(exitPnlUsd)}; giveback from peak ${fmtUsdAmount(givebackFromPeakUsd)}. Closing the paper position.`);
+                    logEvent(`Early Reversal CONFIRMED: ${direction.toUpperCase()} position; completed 5m candle closed beyond the prior ${swingLookbackBars}-candle swing level ${formatPrice(swingLevel)} while the trade remained adverse. Peak PnL ${fmtUsdPnl(peakPnlUsd)}; PnL at exit ${fmtUsdPnl(exitPnlUsd)}; giveback from peak ${fmtUsdAmount(givebackFromPeakUsd)}. Closing the paper position.`);
                     state.earlyReversalRetestSetup = null;
                     closePaperPosition(outcomeR, reason, markPrice);
                     return true;
                 }
 
                 if (recovered) {
-                    logEvent(`Early Reversal warning CANCELLED: ${direction.toUpperCase()} price recovered through the warning candle open ${formatPrice(warningOpen)}. Position remains open.`);
+                    p.earlyReversalActive = false;
+                    p.earlyReversalActivatedAt = 0;
+                    logEvent(`Early Reversal switched OFF: ${direction.toUpperCase()} recovery confirmed by a completed 5-minute candle closing back through ${recoveredToEntry ? 'entry' : 'the warning candle open'} at ${formatPrice(recoveredToEntry ? Number(p.entry) : warningOpen)}. Position remains open; Early Reversal may reactivate only if price moves against it again before Pre-TP1 protection.`);
                     setup = null;
                     state.earlyReversalRetestSetup = null;
                     setupResolvedOnThisBar = true;
+                    break;
                 } else if (barsAfterWarning >= confirmWindowBars) {
                     logEvent(`Early Reversal warning EXPIRED: no confirmed ${direction === 'long' ? 'bearish' : 'bullish'} 5m swing break within ${confirmWindowBars} subsequent closed candles. Position remains open.`);
                     setup = null;
@@ -6811,9 +6864,9 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 }
             }
 
-            // The first opposing candle is only an alert. Record the prior 3-candle
-            // swing boundary and wait for a later CLOSE beyond that level.
-            if (!setup && !setupResolvedOnThisBar && i >= swingLookbackBars) {
+            // Do not create a new warning while the position is no longer losing.
+            // Existing warnings may still resolve through confirmed recovery above.
+            if (p.earlyReversalActive && adverseNow && !setup && !setupResolvedOnThisBar && i >= swingLookbackBars) {
                 const prior = closed.slice(i - swingLookbackBars, i);
                 const priorLows = prior.map(c => Number(c[3])).filter(Number.isFinite);
                 const priorHighs = prior.map(c => Number(c[2])).filter(Number.isFinite);
@@ -6830,7 +6883,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
                         barsAfterWarning: 0
                     };
                     state.earlyReversalRetestSetup = setup;
-                    logEvent(`Early Reversal WARNING for LONG: bearish 5m candle closed. No exit yet. Waiting up to ${confirmWindowBars} completed candles for a bearish close below prior swing support ${formatPrice(swingLevel)}.`);
+                    logEvent(`Early Reversal WARNING for LONG: bearish 5m candle closed while the position is losing. No exit yet. Waiting up to ${confirmWindowBars} completed candles for a bearish close below prior swing support ${formatPrice(swingLevel)}.`);
                 } else if (direction === 'short' && isBullish && priorHighs.length === swingLookbackBars) {
                     const swingLevel = Math.max(...priorHighs);
                     setup = {
@@ -6843,7 +6896,7 @@ setInterval(refreshMultiTimeframePanel, 60000);
                         barsAfterWarning: 0
                     };
                     state.earlyReversalRetestSetup = setup;
-                    logEvent(`Early Reversal WARNING for SHORT: bullish 5m candle closed. No exit yet. Waiting up to ${confirmWindowBars} completed candles for a bullish close above prior swing resistance ${formatPrice(swingLevel)}.`);
+                    logEvent(`Early Reversal WARNING for SHORT: bullish 5m candle closed while the position is losing. No exit yet. Waiting up to ${confirmWindowBars} completed candles for a bullish close above prior swing resistance ${formatPrice(swingLevel)}.`);
                 }
             }
         }
@@ -6874,8 +6927,6 @@ setInterval(refreshMultiTimeframePanel, 60000);
             }
             return;
         }
-
-        if (checkEarlyReversalExit(markPrice)) return;
 
         const tp1Hit = p.direction === 'long' ? markPrice >= p.tp1 : markPrice <= p.tp1;
         if (!p.hitTP1 && tp1Hit) {
@@ -6917,6 +6968,10 @@ setInterval(refreshMultiTimeframePanel, 60000);
                 }
             }
         }
+
+        // Run Early Reversal after profit-protection activation, ensuring Pre-TP1
+        // immediately takes precedence if both conditions become true on this tick.
+        if (checkEarlyReversalExit(markPrice)) return;
 
         const tp2Hit = p.direction === 'long' ? markPrice >= p.tp2 : markPrice <= p.tp2;
         if (p.hitTP1 && tp2Hit) {
