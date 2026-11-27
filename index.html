@@ -1,6 +1,6 @@
 
 
-<!DOCTYPE html>    DEMO
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -374,6 +374,7 @@
         margin-bottom: 15px;
     }
 
+    .live-signal-gif { width: 20px; height: 20px; object-fit: contain; display: inline-block; vertical-align: middle; flex: 0 0 auto; }
     .live-indicator {
         display: inline-flex;
         align-items: center;
@@ -1074,21 +1075,18 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   }
 }
 
-/* Live signal indicator: pulsing radio-signal emoji plus the existing live dot. */
-.live-indicator::before {
-  content: "📡";
-  display: inline-block;
-  margin-right: 1px;
-  transform-origin: center;
-  animation: liveSignalFlash 1.15s ease-in-out infinite;
-}
-@keyframes liveSignalFlash {
-  0%, 100% { opacity: .55; transform: scale(.92); filter: brightness(.9); }
-  50% { opacity: 1; transform: scale(1.12); filter: brightness(1.35); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .live-indicator::before { animation: none; opacity: 1; }
-}
+/* Layout-only correction: keep the LIVE label limited to its live GIF and text.
+   Target icons remain with their TP/target status, not beside LIVE. */
+.live-indicator::before { content: none !important; display: none !important; }
+
+
+    .development-demo-banner { display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; margin:0 0 14px; padding:10px 14px; border:1px solid #854d0e; border-radius:10px; background:rgba(120,53,15,.22); color:#fde68a; font-size:13px; line-height:1.45; text-align:center; overflow-wrap:anywhere; }
+    .development-demo-pill { display:inline-flex; align-items:center; justify-content:center; padding:4px 9px; border-radius:999px; background:#f59e0b; color:#111827; font-size:11px; font-weight:900; letter-spacing:.08em; flex:0 0 auto; }
+    .live-indicator { flex-wrap:wrap; overflow-wrap:anywhere; }
+    .live-signal-gif { animation: liveGifPulse 1.1s ease-in-out infinite; }
+    @keyframes liveGifPulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:.72; transform:scale(1.08); } }
+    @media (max-width: 600px) { .development-demo-banner { font-size:12px; padding:9px 10px; } .live-indicator { max-width:100%; } }
+    @media (prefers-reduced-motion: reduce) { .live-signal-gif { animation:none; } }
 
 </style>
 <style id="professionalTerminalVisualLayer">
@@ -1858,6 +1856,10 @@ a{color:#68dfff!important}
 
 
 <div class="container">
+    <div class="development-demo-banner" role="status" aria-label="Development demo notice">
+      <span class="development-demo-pill">DEMO</span>
+      <span>Under development. This dashboard is a demo and may change while features are being implemented.</span>
+    </div>
 
     <!-- Supabase sign-in and Cloudflare token verification -->
     <section class="supabase-auth-card" id="supabaseAuthCard" aria-labelledby="supabaseAuthTitle">
@@ -2006,9 +2008,9 @@ a{color:#68dfff!important}
 
             <div class="stat">
                 <div id="marketPriceLabel" class="label">
-                    <span id="marketPriceLabelText">Gold Live Price (Binance Spot PAXG/USDT)</span>
+                    <span id="marketPriceLabelText">BingX Gold Live Price</span>
                     <span id="marketPriceLive" class="live-indicator" style="margin-left:8px;">
-                        <span class="live-dot"></span>
+                        <img class="live-signal-gif" src="https://cdn3.emoji.gg/emojis/8218-alert.gif" alt="Live signal" width="20" height="20">
                         <span>LIVE</span>
                     </span>
                 </div>
@@ -3448,7 +3450,7 @@ async function fetchCurrentPrice() {
         if (requestMarket === "GOLD") { const capPrice = document.getElementById("terminalMarketCapValue"); if (capPrice) capPrice.textContent = `$${(currentPrice / 1000).toFixed(2)}K`; }
         const marketPriceLive = document.getElementById("marketPriceLive");
         if (marketPriceLive) {
-            marketPriceLive.innerHTML = `<span class="live-dot"></span><span>LIVE • ${getMarketPriceSourceBadge(requestMarket)}</span>`;
+            marketPriceLive.innerHTML = `<img class="live-signal-gif" src="https://cdn3.emoji.gg/emojis/8218-alert.gif" alt="Live signal" width="20" height="20"><span>LIVE • ${getMarketPriceSourceBadge(requestMarket)}</span>`;
             marketPriceLive.style.color = "#22c55e";
         }
         const market = getMarketConfig();
@@ -3468,7 +3470,7 @@ async function fetchCurrentPrice() {
                 if (capPrice) capPrice.textContent = `$${(currentPrice / 1000).toFixed(2)}K`;
                 const marketPriceLive = document.getElementById("marketPriceLive");
                 if (marketPriceLive) {
-                    marketPriceLive.innerHTML = '<span class="live-dot"></span><span>LIVE • BINANCE SPOT PAXG/USDT (DIRECT FALLBACK)</span>';
+                    marketPriceLive.innerHTML = '<img class="live-signal-gif" src="https://cdn3.emoji.gg/emojis/8218-alert.gif" alt="Live signal" width="20" height="20"><span>LIVE • BINANCE SPOT PAXG/USDT (DIRECT FALLBACK)</span>';
                     marketPriceLive.style.color = "#22c55e";
                 }
                 const priceLine = document.getElementById("priceLine");
